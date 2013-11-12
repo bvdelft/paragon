@@ -1,0 +1,28 @@
+Name:                   paragon
+Version:                0.3.0
+License:                BSD3
+License-File:           LICENSE
+Author:                 Niklas Broberg
+Maintainer:             Niklas Broberg <niklas.broberg@chalmers.se>
+Category:               Language
+Synopsis:               Paragon
+Description:            Paragon suite
+Stability:              Experimental
+Tested-with:            GHC==7.0.2
+Build-Type:             Simple
+Cabal-Version:          >= 1.8
+
+Flag base4
+
+Executable parac
+  Hs-source-dirs:       src
+  Main-is:              Language/Java/Paragon.hs
+
+  if flag(base4)
+    Build-depends:      base >= 4 && < 5, syb
+    cpp-options:        -DBASE4
+  else
+    Build-depends:      base >= 3 && < 4
+
+  GHC-options:          -Wall -O2 -rtsopts
+
