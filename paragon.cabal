@@ -19,10 +19,14 @@ Executable parac
   Main-is:              Language/Java/Paragon.hs
   
   Other-modules:        Language.Java.Paragon.Error,
+                        Language.Java.Paragon.Flags,
+                        Language.Java.Paragon.Headers,
                         Language.Java.Paragon.SourcePos,
                         Language.Java.Paragon.Error.Error,
                         Language.Java.Paragon.Error.ErrorLabel,
-                        Language.Java.Paragon.Error.ExampleErrors
+                        Language.Java.Paragon.Error.ExampleErrors,
+                        Language.Java.Paragon.Monad.Base,
+                        Language.Java.Paragon.Monad.Helpers
 
 
   if flag(base4)
