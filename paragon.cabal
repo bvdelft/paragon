@@ -22,7 +22,7 @@ Executable parac
                         Language.Java.Paragon.Flags,
                         Language.Java.Paragon.Headers,
                         Language.Java.Paragon.SourcePos,
-                        Language.Java.Paragon.Error.Error,
+                        Language.Java.Paragon.Error,
                         Language.Java.Paragon.Error.ErrorLabel,
                         Language.Java.Paragon.Error.ExampleErrors,
                         Language.Java.Paragon.Monad.Base,

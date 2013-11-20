@@ -41,7 +41,8 @@ type ErrCtxt = Error -> Error
 -- and the Maybe monad is used to short-circuit computation in case of fatal
 -- errors. If a non-fatal error occurs, the compuation continues with a Just
 -- value, but the list of errors is extended
-newtype BaseM a = BaseM (ErrCtxt -> Uniq -> [Flag] -> StateT [Error] IO (Maybe a))
+newtype BaseM a = 
+  BaseM (ErrCtxt -> Uniq -> [Flag] -> StateT [Error] IO (Maybe a))
 
 instance Monad BaseM where
   return x      = BaseM $ \_ _ -> return . Just $ x
@@ -150,7 +151,6 @@ getUniqRef = liftBase $ BaseM $ \_ u _ -> return . Just $ u
 getFlags :: MonadBase m => m [Flag]
 getFlags = liftBase $ BaseM $ \_ _ fl -> return . Just $ fl
 
-
 -- | Get a fresh, unused number from the unique number generator
 getFreshInt :: MonadBase m => m Int
 getFreshInt = do
@@ -190,4 +190,3 @@ checkC b err = if b then return () else failEC () err
 -- | Fail (but allow continuation?) if monadic computation evaluates to False
 checkM :: MonadBase m => m Bool -> Error -> m ()
 checkM mb err = mb >>= flip check err
-

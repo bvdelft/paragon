@@ -3,7 +3,7 @@ module Main where
 import System.Environment (getArgs)
 
 import Language.Java.Paragon.SourcePos
-import Language.Java.Paragon.Error.Error
+import Language.Java.Paragon.Error
 import Language.Java.Paragon.Flags
 import Language.Java.Paragon.Error.ExampleErrors
 

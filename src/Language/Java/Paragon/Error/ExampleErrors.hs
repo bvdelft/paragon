@@ -9,7 +9,7 @@ module Language.Java.Paragon.Error.ExampleErrors
   ) where
 
 import Language.Java.Paragon.SourcePos
-import Language.Java.Paragon.Error.Error
+import Language.Java.Paragon.Error
 import Language.Java.Paragon.Error.ErrorLabel
 
 -- | Example error A, in practise the arguments to the error should be relevant
