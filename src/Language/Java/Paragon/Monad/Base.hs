@@ -72,8 +72,6 @@ instance MonadIO IO where
 instance MonadIO BaseM where
   liftIO ioa = BaseM $ \_ _ _-> StateT (\s -> do x <- ioa
                                                  return (Just x, s))
-                               -- ^Just execute the action without touching
-                               -- the (error) state
 
 class MonadIO m => MonadBase m where
   -- | Lift BaseM computations to member of the MonadBase class
