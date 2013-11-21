@@ -16,7 +16,9 @@ module Language.Java.Paragon.Flags
   , getSourcePath
   ) where
 
+import Control.Monad (when)
 import System.Console.GetOpt
+import System.Exit (exitSuccess)
 
 import Language.Java.Paragon.Headers
 
@@ -59,8 +61,10 @@ options :: [OptDescr Flag]
 options =
   [ Option ['v'] ["verbose"]
       (OptArg (Verbose . maybe 3 read) "n") -- default verbosity is 3
-      ("Control verbosity (n is 0--4, normal verbosity level is 1, -v alone " ++
-       "is equivalent to -v3)")
+      ("Control verbosity\n" ++
+       "  n is 0--4\n" ++
+       "  normal verbosity level is 1\n" ++
+       "  -v alone is equivalent to -v3")
   , Option ['V'] ["version"]
       (NoArg Version)
       "Show version number"
@@ -69,20 +73,23 @@ options =
       "Show this help"
   , Option ['p'] ["pipath"]
       (ReqArg PiPath "<path>") -- required argument
-      ( "Path to the root directory for Paragon interface (.pi) files (default" ++
-       " is . )" )
+      ( "Path to the root directory for Paragon\n" ++
+        "interface (.pi) files (default is . )" )
   , Option [] ["javaOut"]
       (ReqArg JavaOutputPath "<path>")
-      "Output directory for generated .java files (default is same as source)"
+      ( "Output directory for generated .java files\n" ++
+        "(default is same as source)" )
   , Option [] ["piOut"]
       (ReqArg PiOutputPath "<path>")
-      "Output directory for generated .pi files (default is same as source)"
+      ( "Output directory for generated .pi files\n" ++
+        "(default is same as source)" )
   , Option ['s'] ["source"]
       (ReqArg SourcePath "<path>")
       "Source directory for .para files (default is .)"
   , Option ['n'] ["nonull"]
       (NoArg NoNullCheck)
-      "Do not check for flows via unchecked nullpointer exceptions"
+      ( "Do not check for flows via unchecked\n" ++
+        "nullpointer exceptions" )
   ]
 
 -- | Converts the input arguments to a set of flags and the set of files to be
@@ -92,10 +99,15 @@ compilerOpts :: [String]              -- ^ Compiler arguments
 compilerOpts argv =
   -- RequireOrder --> no option processing after first non-option 
   case getOpt RequireOrder options argv of
-    (o,n,[]) -> return (o,n)
+    (flags,files,[]) -> do
+      when (Help    `elem` flags || null flags && null files) $ do
+         putStrLn $ usageInfo usageHeader options
+         exitSuccess
+      return (flags,files)
     -- in case of errors: show errors parsing arguments + usage info
     (_,_,errs) -> ioError $ userError 
       (concat errs ++ usageInfo usageHeader options)
+  
 
 -- | Returns the verbosity if specified, defaults to 1.
 getVerbosity :: [Flag] -> Int

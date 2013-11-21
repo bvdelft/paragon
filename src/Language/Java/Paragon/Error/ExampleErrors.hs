@@ -8,13 +8,12 @@ module Language.Java.Paragon.Error.ExampleErrors
   , exampleErrorB
   ) where
 
-import Language.Java.Paragon.SourcePos
 import Language.Java.Paragon.Error
 import Language.Java.Paragon.Error.ErrorLabel
 
 -- | Example error A, in practise the arguments to the error should be relevant
 -- types, likely not strings.
-exampleErrorA :: String -> SourcePos -> Error
+exampleErrorA :: String -> MError
 exampleErrorA info =
   mkError $ defaultError 
     { pretty    = "Something about " ++ info
@@ -23,7 +22,7 @@ exampleErrorA info =
     }
     
 -- | Example error B
-exampleErrorB :: Int -> SourcePos -> Error
+exampleErrorB :: Int -> MError
 exampleErrorB i =
   mkError $ defaultError 
     { pretty    = "Something about " ++ (show i)

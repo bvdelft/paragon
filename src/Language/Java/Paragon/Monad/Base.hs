@@ -1,24 +1,23 @@
-{-# LANGUAGE MultiParamTypeClasses
-           , FlexibleInstances
-           , FlexibleContexts
-           , FunctionalDependencies
-#-}
--- | This mpdule contains the implementation of the BaseM monad, the monad
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FunctionalDependencies #-}
+-- | This module contains the implementation of the BaseM monad, the monad
 -- that is at the bottom of our monad stack and adds error-handling and
 -- unique number generation on top of IO.
 -- The module also contains some general monadic functions / combinators.
 module Language.Java.Paragon.Monad.Base 
   (
-{-    ErrCtxt, BaseM, runBaseM,
+    BaseM, runBaseM,
     raiseErrors,
 
     MonadIO(..), MonadBase(..), 
-    liftEither, liftEitherMB, tryCatch,
+    liftEitherMB, tryCatch,
+    getFlags,
 
-    getFreshInt, getErrCtxt, withErrCtxt,
+    getFreshInt, getErrCtxt,
 
-    check, checkC, checkM, ignore, orElse, orM, anyM,
-    maybeM, withFold, withFoldMap-}
+    check, checkM
   ) where
 
 import Control.Applicative
@@ -28,24 +27,20 @@ import Control.Monad.Trans.State (StateT(..),runStateT,modify,get)
 import Data.Maybe
 
 import Language.Java.Paragon.Error
+import Language.Java.Paragon.Flags
 import Language.Java.Paragon.Monad.Uniq
-
-type ErrCtxt = Error -> Error
-
--- TODO error contexts
--- TODO Uniq not via IORef?
 
 -- | The base monad deals adds error handling and unique number generation to IO
 -- The error-handling is somewhat involved because we assume the existence of
 -- both /fatal/ and /non-fatal/ errors: Errors are accumulated as state,
 -- and the Maybe monad is used to short-circuit computation in case of fatal
 -- errors. If a non-fatal error occurs, the compuation continues with a Just
--- value, but the list of errors is extended
+-- value, but the list of errors is extended.
 newtype BaseM a = 
-  BaseM (ErrCtxt -> Uniq -> [Flag] -> StateT [Error] IO (Maybe a))
+  BaseM ([ErrorContext] -> Uniq -> [Flag] -> StateT [Error] IO (Maybe a))
 
 instance Monad BaseM where
-  return x      = BaseM $ \_ _ -> return . Just $ x
+  return x      = BaseM $ \_ _ _-> return . Just $ x
   BaseM f >>= k = 
       BaseM $ \ec u fl -> 
           do esa <- f ec u fl
@@ -57,8 +52,8 @@ instance Monad BaseM where
 
   -- Provided for the sake of completeness;
   -- failE and failEC should be used instead
-  fail err = BaseM $ \ec _ -> do
-               modify (\s -> ec (toUndef err) : s)
+  fail err = BaseM $ \ec _ _ -> do
+               modify (\s -> ( undefinedError err ec) : s)
                return Nothing
 
 instance Applicative BaseM where
@@ -76,7 +71,7 @@ instance MonadIO IO where
 
 instance MonadIO BaseM where
   liftIO ioa = BaseM $ \_ _ _-> StateT (\s -> do x <- ioa
-                                                return (Just x, s))
+                                                 return (Just x, s))
                                -- ^Just execute the action without touching
                                -- the (error) state
 
@@ -84,17 +79,17 @@ class MonadIO m => MonadBase m where
   -- | Lift BaseM computations to member of the MonadBase class
   liftBase :: BaseM a -> m a
   -- | Run computation with modified error context
-  withErrCtxt' :: ( ErrCtxt -> ErrCtxt) -> m a -> m a
+  withErrCtxt :: ErrorContext -> m a -> m a
   -- | Try computation, returning the result in case of success or the errors
   tryM :: m a -> m (Either [Error] a)
   -- | Fatal error: abort computation (like fail, but on Error, not String)
-  failE :: Error -> m a       
+  failE :: ContextFreeError -> m a       
   -- | Non-fatal error: continue computation from provided default value
-  failEC :: a -> Error -> m a
+  failEC :: a -> ContextFreeError -> m a
 
 instance MonadBase BaseM where
   liftBase = id
-  withErrCtxt' extendEC (BaseM f) = BaseM $ \ec u fl -> f (extendEC ec) u fl
+  withErrCtxt ectxt (BaseM f) = BaseM $ \ec u fl -> f (ec ++ [ectxt]) u fl
 
   -- Construct Either value based on error state
   -- Note that tryM does not distinguish between fatal and non-fatal errors:
@@ -112,21 +107,19 @@ instance MonadBase BaseM where
                              [] -> return . fmap Right $ maybeA
                              e  -> return . Just . Left $ e
   -- Fatal error => Log error, but Nothing from here
-  failE  err     = BaseM $ \ec _ fl -> do modify (\s -> ec err : s)
-                                       return Nothing
+  failE  err     = BaseM $ \ec _ _ -> do modify (\s -> err ec: s)
+                                         return Nothing
   -- Non-fatal error => Log error, but continue with Just value
-  failEC def err = BaseM $ \ec _ fl -> do modify (\s -> ec err : s)
-                                       return . Just $ def
-
-
+  failEC def err = BaseM $ \ec _ _ -> do modify (\s -> err ec: s)
+                                         return . Just $ def
 
 -- | Running a BaseM computation, which will result in either a
 -- non-empty list of errors or the result of successfully running
 -- the monadic computation
-runBaseM :: [Flags] -> BaseM a -> IO (Either [Error] a)
-runBaseM (BaseM f) flags = do
+runBaseM :: [Flag] -> BaseM a -> IO (Either [Error] a)
+runBaseM flags (BaseM f) = do
   initU <- initUniq
-  (a,s) <- runStateT (f id initU flags) []
+  (a,s) <- runStateT (f [] initU flags) []
   case s of [] -> return . Right . fromJust $ a -- No error => Just value
             e  -> return . Left $ e
 
@@ -158,12 +151,8 @@ getFreshInt = do
   liftIO $ getUniq u
 
 -- | Access the ErrCtxt environment
-getErrCtxt :: MonadBase m => m ErrCtxt
+getErrCtxt :: MonadBase m => m [ErrorContext]
 getErrCtxt = liftBase $ BaseM $ \ec _ _ -> return . Just $ ec
-
--- | Set the error context for the computation
-withErrCtxt :: MonadBase m => ContextInfo -> m a -> m a
-withErrCtxt err = withErrCtxt' (. (addContextInfo err))
 
 -- | Try first argument. If and only it fails, execute catch computation 
 -- given as second argument.
@@ -174,19 +163,15 @@ tryCatch tr ctch = do esa <- tryM tr
                         Left err -> ctch err
 
 -- | Lift Either value into monad by mapping Left to fail and Right to return
-liftEitherMB :: MonadBase m => Either Error a -> m a
+liftEitherMB :: MonadBase m => Either ContextFreeError a -> m a
 liftEitherMB eerra = case eerra of
                        Left err -> failE $ err
                        Right x  -> return x
 
-check :: MonadBase m => Bool -> Error -> m ()
--- check b err = if b then return () else failE err
-check = checkC
-
 -- | Fail (but allow continuation?) if predicate does not hold
-checkC :: MonadBase m => Bool -> Error -> m ()
-checkC b err = if b then return () else failEC () err
+check :: MonadBase m => Bool -> ContextFreeError -> m ()
+check b err = if b then return () else failEC () err
 
 -- | Fail (but allow continuation?) if monadic computation evaluates to False
-checkM :: MonadBase m => m Bool -> Error -> m ()
+checkM :: MonadBase m => m Bool -> ContextFreeError -> m ()
 checkM mb err = mb >>= flip check err

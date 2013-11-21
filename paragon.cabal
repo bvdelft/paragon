@@ -1,39 +1,40 @@
-Name:                   paragon
-Version:                0.3.0
-License:                BSD3
-License-File:           LICENSE
-Author:                 Niklas Broberg
-Maintainer:             Niklas Broberg <niklas.broberg@chalmers.se>
-Category:               Language
-Synopsis:               Paragon
-Description:            Paragon suite
-Stability:              Experimental
-Tested-with:            GHC==7.0.2
-Build-Type:             Simple
-Cabal-Version:          >= 1.8
-
-Flag base4
-
-Executable parac
-  Hs-source-dirs:       src
-  Main-is:              Language/Java/Paragon.hs
-  
-  Other-modules:        Language.Java.Paragon.Error,
-                        Language.Java.Paragon.Flags,
-                        Language.Java.Paragon.Headers,
-                        Language.Java.Paragon.SourcePos,
-                        Language.Java.Paragon.Error,
-                        Language.Java.Paragon.Error.ErrorLabel,
-                        Language.Java.Paragon.Error.ExampleErrors,
-                        Language.Java.Paragon.Monad.Base,
-                        Language.Java.Paragon.Monad.Helpers
-
-
-  if flag(base4)
-    Build-depends:      base >= 4 && < 5, syb
-    cpp-options:        -DBASE4
-  else
-    Build-depends:      base >= 3 && < 4
-
-  GHC-options:          -Wall -O2 -rtsopts
-
+name: paragon
+version: 0.3.0
+cabal-version: >=1.8
+build-type: Simple
+license: BSD3
+license-file: LICENSE
+maintainer: Niklas Broberg <niklas.broberg@chalmers.se>
+stability: Experimental
+synopsis: Paragon
+description: Paragon suite
+category: Language
+author: Niklas Broberg
+tested-with: GHC ==7.0.2
+data-dir: ""
+ 
+flag base4
+ 
+executable parac
+    build-depends: transformers -any
+     
+    if flag(base4)
+        build-depends: base >=4 && <5, syb -any
+        buildable: True
+        cpp-options: -DBASE4
+    else
+        build-depends: base >=3 && <4
+        buildable: True
+    main-is: Language/Java/Paragon.hs
+    buildable: True
+    hs-source-dirs: src
+    other-modules: Language.Java.Paragon.Monad.Uniq
+                   Language.Java.Paragon.Error Language.Java.Paragon.Flags
+                   Language.Java.Paragon.Headers Language.Java.Paragon.SourcePos
+                   Language.Java.Paragon.Error Language.Java.Paragon.Error.ErrorLabel
+                   Language.Java.Paragon.Error.ExampleErrors
+                   Language.Java.Paragon.Error.Contexts
+                   Language.Java.Paragon.Monad.Base
+                   Language.Java.Paragon.Monad.Helpers
+    ghc-options: -Wall -O2 -rtsopts
+ 

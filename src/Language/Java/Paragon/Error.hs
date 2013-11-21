@@ -3,12 +3,16 @@ module Language.Java.Paragon.Error
   (
     -- * The @Error@ data type
     Error(..)
+  , ContextFreeError
   , defaultError
   , mkError
+  , MError
+  , undefinedError
    -- * The @ErrorContext@ data type
   , ErrorContext(..)
   , defaultContext
   , mkContext
+  , MErrorContext
   ) where
 
 import Language.Java.Paragon.SourcePos
@@ -18,33 +22,51 @@ import Language.Java.Paragon.Error.ErrorLabel
 -- information:
 data Error = Error
   { -- | A pretty-printed version of this error, to be used in console output.
-    pretty    :: String
+    pretty     :: String
     -- | A pretty-printed version of this error, to be used in console output.
     -- This message contains more detailed information explaining the 
     -- information-flow related causes of the error.
-  , explained :: String
+  , explained  :: String
     -- | The source code position where this error originated.
-  , location  :: SourcePos
+  , location   :: SourcePos
+    -- | Context in which the error occurred.
+  , errContext :: [ErrorContext]
     -- | The various labels an error might have. This /must/ always be a
     -- non-empty list, but might contain various labels. For example, an error
     -- can be both labeled as Error and as ImplicitFlow.
-  , labels    :: [ErrorLabel]
+  , labels     :: [ErrorLabel]
   }
+
+type ContextFreeError = [ErrorContext] -> Error
 
 -- | Error containing default values for each field in the record. This error
 -- should be used in all error-constructing functions to ensure that the 
 -- addition of new record fields does not break existing errors.
 defaultError :: Error
 defaultError = Error
-  { pretty    = "This error has no pretty printing"
-  , explained = "This error has no explained printing"
-  , location  = defaultPos
-  , labels    = [LBLError]
+  { pretty     = "This error has no pretty printing"
+  , explained  = "This error has no explained printing"
+  , location   = defaultPos
+  , errContext = [defaultContext]
+  , labels     = [LBLError]
   }
 
--- | Adds the source code location to the error.
-mkError :: Error -> SourcePos -> Error
-mkError err sp = err { location = sp }
+-- | Adds the source code location and error context to the error.
+mkError :: Error -> SourcePos -> ContextFreeError
+mkError err sp ctx = err { location = sp, errContext = ctx }
+
+-- | Type abbreviation to simplify error-defining source code
+type MError = SourcePos -> ContextFreeError
+
+
+-- | For lazy or for handling errors via 'fail'
+undefinedError :: String -> ContextFreeError
+undefinedError err ec =
+  defaultError 
+    { pretty     = "undefinedError: " ++ err
+    , explained  = "undefinedError: " ++ err
+    , errContext = ec
+    }
 
 -- | Context in which errors can occur.
 data ErrorContext = ErrorContext
@@ -65,3 +87,5 @@ defaultContext = ErrorContext
 -- | Adds the source code location to the error context.
 mkContext :: ErrorContext -> SourcePos -> ErrorContext
 mkContext ec sp = ec { contextStart = sp }
+
+type MErrorContext = SourcePos -> ErrorContext
