@@ -13,7 +13,7 @@ import Language.Java.Paragon.Error.ErrorLabel
 
 -- | Example error A, in practise the arguments to the error should be relevant
 -- types, likely not strings.
-exampleErrorA :: String -> MError
+exampleErrorA :: String -> MkError
 exampleErrorA info =
   mkError $ defaultError 
     { pretty    = "Something about " ++ info
@@ -22,7 +22,7 @@ exampleErrorA info =
     }
     
 -- | Example error B
-exampleErrorB :: Int -> MError
+exampleErrorB :: Int -> MkError
 exampleErrorB i =
   mkError $ defaultError 
     { pretty    = "Something about " ++ (show i)

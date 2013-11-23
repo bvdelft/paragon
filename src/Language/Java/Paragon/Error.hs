@@ -3,10 +3,10 @@ module Language.Java.Paragon.Error
   (
     -- * The @Error@ data type
     Error(..)
-  , ContextFreeError
+  , ContextualError
   , defaultError
   , mkError
-  , MError
+  , MkError
   , undefinedError
    -- * The @ErrorContext@ data type
   , ErrorContext(..)
@@ -37,7 +37,8 @@ data Error = Error
   , labels     :: [ErrorLabel]
   }
 
-type ContextFreeError = [ErrorContext] -> Error
+-- | Error that is needs to be put in context
+type ContextualError = [ErrorContext] -> Error
 
 -- | Error containing default values for each field in the record. This error
 -- should be used in all error-constructing functions to ensure that the 
@@ -52,15 +53,14 @@ defaultError = Error
   }
 
 -- | Adds the source code location and error context to the error.
-mkError :: Error -> SourcePos -> ContextFreeError
+mkError :: Error -> SourcePos -> [ErrorContext] -> Error
 mkError err sp ctx = err { location = sp, errContext = ctx }
 
 -- | Type abbreviation to simplify error-defining source code
-type MError = SourcePos -> ContextFreeError
-
+type MkError = SourcePos -> ContextualError
 
 -- | For lazy or for handling errors via 'fail'
-undefinedError :: String -> ContextFreeError
+undefinedError :: String -> [ErrorContext] -> Error
 undefinedError err ec =
   defaultError 
     { pretty     = "undefinedError: " ++ err

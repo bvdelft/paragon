@@ -93,9 +93,9 @@ class MonadIO m => MonadBase m where
   -- | Try computation, returning the result in case of success or the errors
   tryM :: m a -> m (Either [Error] a)
   -- | Fatal error: abort computation (like fail, but on Error, not String)
-  failE :: ContextFreeError -> m a       
+  failE :: ContextualError -> m a       
   -- | Non-fatal error: continue computation from provided default value
-  failEC :: a -> ContextFreeError -> m a
+  failEC :: a -> ContextualError -> m a
 
 instance MonadBase BaseM where
   liftBase = id
@@ -181,15 +181,15 @@ tryCatch tr ctch = do esa <- tryM tr
                         Left err -> ctch err
 
 -- | Lift Either value into monad by mapping Left to fail and Right to return
-liftEitherMB :: MonadBase m => Either ContextFreeError a -> m a
+liftEitherMB :: MonadBase m => Either ContextualError a -> m a
 liftEitherMB eerra = case eerra of
                        Left err -> failE $ err
                        Right x  -> return x
 
 -- | Fail (but allow continuation?) if predicate does not hold
-check :: MonadBase m => Bool -> ContextFreeError -> m ()
+check :: MonadBase m => Bool -> ContextualError -> m ()
 check b err = if b then return () else failEC () err
 
 -- | Fail (but allow continuation?) if monadic computation evaluates to False
-checkM :: MonadBase m => m Bool -> ContextFreeError -> m ()
+checkM :: MonadBase m => m Bool -> ContextualError -> m ()
 checkM mb err = mb >>= flip check err
