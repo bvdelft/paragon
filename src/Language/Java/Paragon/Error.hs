@@ -12,7 +12,7 @@ module Language.Java.Paragon.Error
   , ErrorContext(..)
   , defaultContext
   , mkContext
-  , MErrorContext
+  , MkErrorContext
   ) where
 
 import Language.Java.Paragon.SourcePos
@@ -88,4 +88,5 @@ defaultContext = ErrorContext
 mkContext :: ErrorContext -> SourcePos -> ErrorContext
 mkContext ec sp = ec { contextStart = sp }
 
-type MErrorContext = SourcePos -> ErrorContext
+-- | Type abbreviation to simplify error context defining source code
+type MkErrorContext = SourcePos -> ErrorContext
