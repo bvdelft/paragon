@@ -19,10 +19,11 @@ main = do
       i <- getFreshInt
       f <- getFlags
       when (getVerbosity f == 3) (liftIO $ putStrLn "Verbosity rulez")
-      failE (exampleErrorB i defaultPos)
+      _ <- failE (exampleErrorB i defaultPos)
+      when (getVerbosity f == 3) (liftIO $ putStrLn "Verbosity rulez2")
   case erOrA of
     Left  e  -> showErrors e
-    Right _  -> putStrLn "jeeuj a"
+    Right _  -> putStrLn $ "jeeuj a"
 
 showErrors :: [Error] -> IO ()
 showErrors []     = return ()

@@ -5,30 +5,45 @@
 -- | This module contains the implementation of the BaseM monad, the monad
 -- that is at the bottom of our monad stack and adds error-handling and
 -- unique number generation on top of IO.
--- The module also contains some general monadic functions / combinators.
 module Language.Java.Paragon.Monad.Base 
   (
-    BaseM, runBaseM,
-    raiseErrors,
-
-    MonadIO(..), MonadBase(..), 
-    liftEitherMB, tryCatch,
-    getFlags,
-
-    getFreshInt, getErrCtxt,
-
-    check, checkM
+    -- * The @BaseM@ monad 
+    BaseM
+  , runBaseM
+  , raiseErrors
+    -- * The @MonadIO@ class
+  , MonadIO(..)
+    -- * The @MonadBase@ class
+  , MonadBase(..) 
+  , liftEitherMB
+  , tryCatch
+  , getFlags
+  , getFreshInt
+  , getErrCtxt
+  , check
+  , checkM
   ) where
 
 import Control.Applicative
 import Control.Monad
-import Control.Monad.Trans.State (StateT(..),runStateT,modify,get)
+import Control.Monad.Trans.State (StateT(..),runStateT,modify,get,put)
 
 import Data.Maybe
 
 import Language.Java.Paragon.Error
 import Language.Java.Paragon.Flags
-import Language.Java.Paragon.Monad.Uniq
+
+-- | State of the base monad, as a record for easier extensibility.
+data BaseState = BaseState
+  { -- | Accumulates the errors.
+    bsErrors       :: [Error]
+    -- | For generating fresh integers.
+  , bsNextUniq     :: Int
+    -- | Current context (class, method) to identify where errors are raised.
+  , bsErrorContext :: [ErrorContext]
+    -- | The flags given to the compilation.
+  , bsFlags        :: [Flag]
+  }
 
 -- | The base monad deals adds error handling and unique number generation to IO
 -- The error-handling is somewhat involved because we assume the existence of
@@ -36,25 +51,22 @@ import Language.Java.Paragon.Monad.Uniq
 -- and the Maybe monad is used to short-circuit computation in case of fatal
 -- errors. If a non-fatal error occurs, the compuation continues with a Just
 -- value, but the list of errors is extended.
-newtype BaseM a = 
-  BaseM ([ErrorContext] -> Uniq -> [Flag] -> StateT [Error] IO (Maybe a))
+newtype BaseM a = BaseM (StateT BaseState IO (Maybe a))
 
 instance Monad BaseM where
-  return x      = BaseM $ \_ _ _-> return . Just $ x
+  return x      = BaseM $ return . Just $ x
   BaseM f >>= k = 
-      BaseM $ \ec u fl -> 
-          do esa <- f ec u fl
-             case esa of
-               Nothing -> return Nothing
+      BaseM $
+          do maybeA <- f
+             case maybeA of
+               Nothing -> return Nothing  -- Fatal error occurred, short-circuit
                Just a ->
                  let BaseM g = k a
-                  in g ec u fl
+                  in g
 
   -- Provided for the sake of completeness;
   -- failE and failEC should be used instead
-  fail err = BaseM $ \ec _ _ -> do
-               modify (\s -> ( undefinedError err ec) : s)
-               return Nothing
+  fail err = failE $ undefinedError err
 
 instance Applicative BaseM where
   pure = return
@@ -70,8 +82,8 @@ instance MonadIO IO where
   liftIO = id
 
 instance MonadIO BaseM where
-  liftIO ioa = BaseM $ \_ _ _-> StateT (\s -> do x <- ioa
-                                                 return (Just x, s))
+  liftIO ioa = BaseM $ StateT (\s -> do x <- ioa
+                                        return (Just x, s))
 
 class MonadIO m => MonadBase m where
   -- | Lift BaseM computations to member of the MonadBase class
@@ -87,70 +99,78 @@ class MonadIO m => MonadBase m where
 
 instance MonadBase BaseM where
   liftBase = id
-  withErrCtxt ectxt (BaseM f) = BaseM $ \ec u fl -> f (ec ++ [ectxt]) u fl
+
+  -- Run the subcomputation in an extended error context, then put the context
+  -- back to the way it was.
+  withErrCtxt ectxt (BaseM f) = BaseM $
+    do oldSt <- get
+       modify $ \st -> st {  bsErrorContext = (bsErrorContext st) ++ [ectxt] }
+       a <- f
+       modify $ \st -> st {  bsErrorContext = (bsErrorContext oldSt) }
+       return a
 
   -- Construct Either value based on error state
   -- Note that tryM does not distinguish between fatal and non-fatal errors:
   -- If an error occured, we return that rather than any computation result
-  tryM (BaseM f) = BaseM $ \ec u fl -> do
-                           olderr <- get     -- store collected errs so far
-                           modify (\_ -> []) -- start with empty list of err
-                           maybeA <- f ec u fl  -- run code
-                           err <- get        -- get errs specific to this code
-                           modify (\_ -> olderr) -- restore old collection
-                           case err of
-                             -- No error => The result of the computation is
-                             -- of the form Just a
-                             -- What we need is a Just (Right a)
-                             [] -> return . fmap Right $ maybeA
-                             e  -> return . Just . Left $ e
+  tryM (BaseM f) = BaseM $
+    do st <- get
+       put $ st { bsErrors = [] } -- start with try-block empty error list
+       maybeA <- f                -- run code of try block
+       nSt <- get                 -- get errors from try block
+       put $ nSt { bsErrors = bsErrors st}  -- restore original errors
+       case bsErrors nSt of
+         [] -> return . fmap Right $ maybeA  -- No errors, return result
+         e  -> return . Just . Left $ e      -- Return errors
+        
   -- Fatal error => Log error, but Nothing from here
-  failE  err     = BaseM $ \ec _ _ -> do modify (\s -> err ec: s)
-                                         return Nothing
+  failE  err     = BaseM $
+    do modify (\s -> s { bsErrors = err (bsErrorContext s) : bsErrors s})
+       return Nothing
+       
   -- Non-fatal error => Log error, but continue with Just value
-  failEC def err = BaseM $ \ec _ _ -> do modify (\s -> err ec: s)
-                                         return . Just $ def
+  failEC def err = BaseM $
+    do modify (\s -> s { bsErrors = err (bsErrorContext s) : bsErrors s})
+       return . Just $ def
 
 -- | Running a BaseM computation, which will result in either a
 -- non-empty list of errors or the result of successfully running
 -- the monadic computation
 runBaseM :: [Flag] -> BaseM a -> IO (Either [Error] a)
 runBaseM flags (BaseM f) = do
-  initU <- initUniq
-  (a,s) <- runStateT (f [] initU flags) []
-  case s of [] -> return . Right . fromJust $ a -- No error => Just value
-            e  -> return . Left $ e
+  (a,s) <- runStateT f (BaseState { bsErrors       = []
+                                  , bsErrorContext = []
+                                  , bsNextUniq     = 0
+                                  , bsFlags        = flags
+                                  } )
+  case bsErrors s of
+    [] -> return . Right . fromJust $ a -- No error => Just value
+    e  -> return . Left $ e
 
 -- | Abort computation if any non-fatal errors have been logged via failEC
 -- The idea is that non-fatal errors collected with failEC do become fatal
 -- in later stages of compilation, so we need a mechanism to fail based on
 -- previous errors
 raiseErrors :: BaseM ()
-raiseErrors = BaseM $ \_ _ _->
-  do err <- get
-     case err of
+raiseErrors = BaseM $
+  do st <- get
+     case bsErrors st of
        [] -> return $ Just ()
        _e -> return Nothing
 
--- | Access the unique number generation context of a MonadBase monad
--- It should never be necessary to call this, use getFreshInt to get a new
--- number directly. (This function is therefore not exported.)
-getUniqRef :: MonadBase m => m Uniq
-getUniqRef = liftBase $ BaseM $ \_ u _ -> return . Just $ u
+-- | Get a fresh, unused number from the unique number generator
+getFreshInt :: MonadBase m => m Int
+getFreshInt = liftBase $ BaseM $ do
+  st <- get
+  put $ st { bsNextUniq = bsNextUniq st + 1}
+  return $ Just (bsNextUniq st)
 
 -- | Get the flags passed to the compiler
 getFlags :: MonadBase m => m [Flag]
-getFlags = liftBase $ BaseM $ \_ _ fl -> return . Just $ fl
-
--- | Get a fresh, unused number from the unique number generator
-getFreshInt :: MonadBase m => m Int
-getFreshInt = do
-  u <- getUniqRef
-  liftIO $ getUniq u
+getFlags = liftBase $ BaseM $ get >>= (return . Just . bsFlags)
 
 -- | Access the ErrCtxt environment
 getErrCtxt :: MonadBase m => m [ErrorContext]
-getErrCtxt = liftBase $ BaseM $ \ec _ _ -> return . Just $ ec
+getErrCtxt = liftBase $ BaseM $ get >>= (return . Just . bsErrorContext)
 
 -- | Try first argument. If and only it fails, execute catch computation 
 -- given as second argument.
