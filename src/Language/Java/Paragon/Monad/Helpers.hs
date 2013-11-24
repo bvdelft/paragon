@@ -12,9 +12,6 @@ module Language.Java.Paragon.Monad.Helpers
   , withFoldMap
   ) where
 
-import Control.Monad
-import Data.Maybe
-
 -- | Lift Either value into monad by mapping Left to fail and Right to return
 liftEither :: Monad m => Either String a -> m a
 liftEither esa = case esa of

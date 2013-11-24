@@ -12,13 +12,35 @@ category: Language
 author: Niklas Broberg
 tested-with: GHC ==7.0.2
 data-dir: ""
- 
+
 flag base4
- 
+
+Library
+  Build-Depends:        transformers -any, bytestring -any, directory -any,
+                        filepath -any
+  if flag(base4)
+    Build-depends:      base >= 4 && < 5, syb
+    cpp-options:        -DBASE4
+  else
+    Build-depends:      base >= 3 && < 4
+  GHC-options:          -Wall
+  Exposed-modules:      Language.Java.Paragon.Interaction
+                        Language.Java.Paragon.Error
+                        Language.Java.Paragon.Flags
+                        Language.Java.Paragon.Headers
+                        Language.Java.Paragon.SourcePos
+                        Language.Java.Paragon.Error.ErrorLabel
+                        Language.Java.Paragon.Error.ExampleErrors
+                        Language.Java.Paragon.Error.Contexts
+                        Language.Java.Paragon.Monad.Base
+                        Language.Java.Paragon.Monad.Helpers
+  Hs-source-dirs:       src
+  ghc-options:         -Wall -Werror -O2 -rtsopts
+
 executable parac
     build-depends: transformers -any, bytestring -any, directory -any,
                    filepath -any
-     
+
     if flag(base4)
         build-depends: base >=4 && <5, syb -any
         buildable: True
@@ -30,13 +52,21 @@ executable parac
     buildable: True
     hs-source-dirs: src
     other-modules: Language.Java.Paragon.Interaction
-                   Language.Java.Paragon.Error Language.Java.Paragon.Flags
-                   Language.Java.Paragon.Headers Language.Java.Paragon.SourcePos
-                   Language.Java.Paragon.Error Language.Java.Paragon.Error.ErrorLabel
+                   Language.Java.Paragon.Flags
+                   Language.Java.Paragon.Headers
+                   Language.Java.Paragon.SourcePos
+                   Language.Java.Paragon.Error
+                   Language.Java.Paragon.Error.ErrorLabel
                    Language.Java.Paragon.Error.ExampleErrors
                    Language.Java.Paragon.Error.Contexts
                    Language.Java.Paragon.Monad.Base
                    Language.Java.Paragon.Monad.Helpers
                    Language.Java.Paragon.Monad.PiReader
-    ghc-options: -Wall -O2 -rtsopts
- 
+    ghc-options: -Wall -Werror -O2 -rtsopts
+
+test-suite base
+    main-is:        TestBase.hs
+    type:           exitcode-stdio-1.0
+    ghc-options:    -Wall -Werror -threaded
+    hs-source-dirs: test/base
+    build-depends:  base >= 4 && < 5, hspec, QuickCheck, paragon >= 0.3
