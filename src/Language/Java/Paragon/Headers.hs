@@ -5,6 +5,9 @@ module Language.Java.Paragon.Headers
     usageHeader
   , paracVersionString
   , versionString
+  , issueTracker
+  , libraryBase
+  , typeCheckerBase
   ) where
 
 -- | Version of the compiler.
@@ -18,3 +21,15 @@ paracVersionString = "Paragon Compiler version: " ++ versionString
 -- | How to invoke the compiler.
 usageHeader :: String
 usageHeader = "Usage: parac [OPTION...] files..."
+
+-- | URL pointing to the current issue tracker for paragon.
+issueTracker :: String
+issueTracker = "https://github.com/bvdelft/paragon/issues"
+
+-- | Base path to the paragon module for error reporting.
+libraryBase :: String
+libraryBase = "Language.Java.Paragon"
+
+-- | Base path to the paragon typecheck module for error reporting.
+typeCheckerBase :: String
+typeCheckerBase = libraryBase ++ ".TypeCheck"

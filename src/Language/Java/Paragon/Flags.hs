@@ -25,9 +25,8 @@ import Language.Java.Paragon.Headers
 -- | All different flags that can be provided to the Paragon compiler
 data Flag
   = -- | Verbosity level. Throughout the compiler, the various levels have the
-    -- following verbosity:
-    --
-    --   0. No verbosity, the only result from the compiler is its return value.
+    -- following verbosity (where 0 is no verbosity at all, i.e. only the return
+    -- value of the compiler):
     --
     --   1. Default verbosity. The compiler reports warnings and errors.
     --
@@ -36,7 +35,9 @@ data Flag
     --   3. Reports mile-stone steps for each compilation phase. Default when
     --      argument is omitted.
     --
-    --   4. Crazy.
+    --   4. Include all debug output
+    --
+    --   5. Include all state and environment changes
     Verbose Int
   | -- | Current version number of the Paragon compiler, defined in "Paragon".
     Version

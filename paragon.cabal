@@ -12,12 +12,13 @@ category: Language
 author: Niklas Broberg
 tested-with: GHC ==7.0.2
 data-dir: ""
-
+ 
 flag base4
-
+ 
 executable parac
-    build-depends: transformers -any
-
+    build-depends: transformers -any, bytestring -any, directory -any,
+                   filepath -any
+     
     if flag(base4)
         build-depends: base >=4 && <5, syb -any
         buildable: True
@@ -28,12 +29,14 @@ executable parac
     main-is: Language/Java/Paragon.hs
     buildable: True
     hs-source-dirs: src
-    other-modules: Language.Java.Paragon.Error Language.Java.Paragon.Flags
+    other-modules: Language.Java.Paragon.Interaction
+                   Language.Java.Paragon.Error Language.Java.Paragon.Flags
                    Language.Java.Paragon.Headers Language.Java.Paragon.SourcePos
                    Language.Java.Paragon.Error Language.Java.Paragon.Error.ErrorLabel
                    Language.Java.Paragon.Error.ExampleErrors
                    Language.Java.Paragon.Error.Contexts
                    Language.Java.Paragon.Monad.Base
                    Language.Java.Paragon.Monad.Helpers
+                   Language.Java.Paragon.Monad.PiReader
     ghc-options: -Wall -O2 -rtsopts
-
+ 

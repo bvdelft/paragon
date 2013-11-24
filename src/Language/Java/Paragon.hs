@@ -6,6 +6,7 @@ import System.Environment (getArgs)
 import Language.Java.Paragon.SourcePos
 import Language.Java.Paragon.Error
 import Language.Java.Paragon.Flags
+import Language.Java.Paragon.Interaction
 import Language.Java.Paragon.Error.ExampleErrors
 import Language.Java.Paragon.Error.Contexts
 import Language.Java.Paragon.Monad.Base
@@ -20,7 +21,7 @@ main = do
       f <- getFlags
       when (getVerbosity f == 3) (liftIO $ putStrLn "Verbosity rulez")
       _ <- failE (exampleErrorB i defaultPos)
-      when (getVerbosity f == 3) (liftIO $ putStrLn "Verbosity rulez2")
+      when (getVerbosity f == 3) (debugPrint "Verbosity rulez2")
   case erOrA of
     Left  e  -> showErrors e
     Right _  -> putStrLn $ "jeeuj a"
