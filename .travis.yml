@@ -1,0 +1,9 @@
+language: haskell
+env: 
+  - PIPATH=./lib
+branches:
+  only:
+    - master
+notifications:
+  email:
+    - vandeba@chalmers.se
