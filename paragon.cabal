@@ -61,7 +61,6 @@ executable parac
                    Language.Java.Paragon.Error.Contexts
                    Language.Java.Paragon.Monad.Base
                    Language.Java.Paragon.Monad.Helpers
-                   Language.Java.Paragon.Monad.PiReader
     ghc-options: -Wall -Werror -O2 -rtsopts
 
 test-suite base
