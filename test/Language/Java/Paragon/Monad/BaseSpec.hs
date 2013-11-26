@@ -1,12 +1,18 @@
-module Main where
+-- | Parser tests.
+module Language.Java.Paragon.Monad.BaseSpec (main, spec) where
+
+import Test.Hspec
 
 import Language.Java.Paragon.Error
 import Language.Java.Paragon.Monad.Base
 
-import Test.Hspec
-
+-- | To be able to run this module from GHCi.
 main :: IO ()
-main = hspec $ do
+main = hspec spec
+
+-- | Main specification function.
+spec :: Spec
+spec = do
   describe "Error accumulation" $ do
     it "gives no errors when no errors are thrown" $ do
       (Right res) <- runBaseM [] $ return "done"
@@ -16,3 +22,4 @@ main = hspec $ do
          _ <- tryM (failE $ undefinedError "prr")
          return "done"
       res `shouldBe` "done"
+
