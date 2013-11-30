@@ -28,7 +28,7 @@ Library
                         Language.Java.Paragon.Error
                         Language.Java.Paragon.Flags
                         Language.Java.Paragon.Headers
-                        Language.Java.Paragon.SourcePos
+                        Language.Java.Paragon.SrcPos
                         Language.Java.Paragon.Error.ErrorLabel
                         Language.Java.Paragon.Error.ExampleErrors
                         Language.Java.Paragon.Error.Contexts
@@ -54,7 +54,7 @@ executable parac
     other-modules: Language.Java.Paragon.Interaction
                    Language.Java.Paragon.Flags
                    Language.Java.Paragon.Headers
-                   Language.Java.Paragon.SourcePos
+                   Language.Java.Paragon.SrcPos
                    Language.Java.Paragon.Error
                    Language.Java.Paragon.Error.ErrorLabel
                    Language.Java.Paragon.Error.ExampleErrors

@@ -15,7 +15,7 @@ module Language.Java.Paragon.Error
   , MkErrorContext
   ) where
 
-import Language.Java.Paragon.SourcePos
+import Language.Java.Paragon.SrcPos
 import Language.Java.Paragon.Error.ErrorLabel
 
 -- | Error record structure. Each error should provide the following
@@ -28,7 +28,7 @@ data Error = Error
     -- information-flow related causes of the error.
   , explained  :: String
     -- | The source code position where this error originated.
-  , location   :: SourcePos
+  , location   :: SrcPos
     -- | Context in which the error occurred.
   , errContext :: [ErrorContext]
     -- | The various labels an error might have. This /must/ always be a
@@ -53,11 +53,11 @@ defaultError = Error
   }
 
 -- | Adds the source code location and error context to the error.
-mkError :: Error -> SourcePos -> [ErrorContext] -> Error
+mkError :: Error -> SrcPos -> [ErrorContext] -> Error
 mkError err sp ctx = err { location = sp, errContext = ctx }
 
 -- | Type abbreviation to simplify error-defining source code
-type MkError = SourcePos -> ContextualError
+type MkError = SrcPos -> ContextualError
 
 -- | For lazy or for handling errors via 'fail'
 undefinedError :: String -> [ErrorContext] -> Error
@@ -73,7 +73,7 @@ data ErrorContext = ErrorContext
   { -- | A pretty-printed version of this context, used in console output.
     context      :: String
     -- | The location where this context started
-  , contextStart :: SourcePos
+  , contextStart :: SrcPos
   }
 
 -- | Default context; any context should be extending this context for the sake
@@ -85,8 +85,8 @@ defaultContext = ErrorContext
   }
 
 -- | Adds the source code location to the error context.
-mkContext :: ErrorContext -> SourcePos -> ErrorContext
+mkContext :: ErrorContext -> SrcPos -> ErrorContext
 mkContext ec sp = ec { contextStart = sp }
 
 -- | Type abbreviation to simplify error context defining source code
-type MkErrorContext = SourcePos -> ErrorContext
+type MkErrorContext = SrcPos -> ErrorContext

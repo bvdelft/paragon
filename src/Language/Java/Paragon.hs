@@ -3,7 +3,7 @@ module Main where
 import Control.Monad (when)
 import System.Environment (getArgs)
 
-import Language.Java.Paragon.SourcePos
+import Language.Java.Paragon.SrcPos
 import Language.Java.Paragon.Error
 import Language.Java.Paragon.Flags
 import Language.Java.Paragon.Interaction
