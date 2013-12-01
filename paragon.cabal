@@ -18,7 +18,7 @@ extra-source-files: src/Language/Java/Paragon/Lexer.x
 flag base4
 
 Library
-  build-tools:          alex
+  build-tools:          alex >= 2.3
   Build-Depends:        transformers -any, bytestring -any, directory -any,
                         filepath -any, array >= 0.1, parsec >= 2.1 && < 3
   if flag(base4)
@@ -43,7 +43,7 @@ Library
   ghc-options:         -Wall -Werror -O2 -rtsopts
 
 executable parac
-    build-tools:   alex
+    build-tools:   alex >= 2.3
     build-depends: transformers -any, bytestring -any, directory -any,
                    filepath -any, array >= 0.1, parsec >= 2.1 && < 3
 
