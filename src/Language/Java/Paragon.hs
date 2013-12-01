@@ -10,11 +10,13 @@ import Language.Java.Paragon.Interaction
 import Language.Java.Paragon.Error.ExampleErrors
 import Language.Java.Paragon.Error.Contexts
 import Language.Java.Paragon.Monad.Base
+import Language.Java.Paragon.Parser
 
 -- | Main method, invokes the compiler
 main :: IO ()
 main = do
   (flags, _files) <- compilerOpts =<< getArgs
+  let _ast = parse "package paragon.lang;" "Test.para"
   erOrA <- runBaseM flags $ do
     withErrCtxt (exampleContextA "clz" defaultPos) $ do
       i <- getFreshInt

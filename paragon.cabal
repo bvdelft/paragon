@@ -13,11 +13,14 @@ author: Niklas Broberg
 tested-with: GHC ==7.0.2
 data-dir: ""
 
+extra-source-files: src/Language/Java/Paragon/Lexer.x
+
 flag base4
 
 Library
+  build-tools:          alex >= 2.3
   Build-Depends:        transformers -any, bytestring -any, directory -any,
-                        filepath -any
+                        filepath -any, array >= 0.1, parsec >= 2.1 && < 3
   if flag(base4)
     Build-depends:      base >= 4 && < 5, syb
     cpp-options:        -DBASE4
@@ -34,12 +37,15 @@ Library
                         Language.Java.Paragon.Error.Contexts
                         Language.Java.Paragon.Monad.Base
                         Language.Java.Paragon.Monad.Helpers
+                        Language.Java.Paragon.Lexer
+                        Language.Java.Paragon.Parser
   Hs-source-dirs:       src
   ghc-options:         -Wall -Werror -O2 -rtsopts
 
 executable parac
+    build-tools:   alex >= 2.3
     build-depends: transformers -any, bytestring -any, directory -any,
-                   filepath -any
+                   filepath -any, array >= 0.1, parsec >= 2.1 && < 3
 
     if flag(base4)
         build-depends: base >=4 && <5, syb -any
@@ -61,6 +67,8 @@ executable parac
                    Language.Java.Paragon.Error.Contexts
                    Language.Java.Paragon.Monad.Base
                    Language.Java.Paragon.Monad.Helpers
+                   Language.Java.Paragon.Lexer
+                   Language.Java.Paragon.Parser
     ghc-options: -Wall -Werror -O2 -rtsopts
 
 test-suite spec

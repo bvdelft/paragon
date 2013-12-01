@@ -11,6 +11,7 @@ module Language.Java.Paragon.SrcPos
   , SrcSpan(..)
   , mkSrcSpanFromPos
   , srcSpanToPos
+  , combineSrcSpan
   ) where
 
 -- | Paragon representation of source positions.
@@ -48,4 +49,13 @@ mkSrcSpanFromPos (SrcPos fileName startLine startColumn)
 -- | Convert source span to source position by taking the start position.
 srcSpanToPos :: SrcSpan -> SrcPos
 srcSpanToPos (SrcSpan fileName l c _ _) = SrcPos fileName l c
+
+-- | Combines two source spans into one by taking minimum of start positions
+-- and maximum of end positions.
+-- File name is taken from the first source span.
+combineSrcSpan :: SrcSpan -> SrcSpan -> SrcSpan
+combineSrcSpan (SrcSpan fileName startLine1 startColumn1 endLine1 endColumn1)
+               (SrcSpan _        startLine2 startColumn2 endLine2 endColumn2) =
+  SrcSpan fileName (min startLine1 startLine2) (min startColumn1 startColumn2)
+                   (max endLine1   endLine2)   (max endColumn1   endColumn2)
 
