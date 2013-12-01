@@ -4,6 +4,9 @@ env:
 branches:
   only:
     - master
+install:
+  - cabal install alex>=2.3
+  - cabal install --only-dependencies --enable-tests
 notifications:
   email:
     - vandeba@chalmers.se
