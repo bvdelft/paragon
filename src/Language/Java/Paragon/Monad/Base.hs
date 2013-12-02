@@ -26,43 +26,56 @@ module Language.Java.Paragon.Monad.Base
 
 import Control.Applicative
 import Control.Monad
-import Control.Monad.Trans.State (StateT(..),runStateT,modify,get,put)
-
-import Data.Maybe
+import Data.Monoid
 
 import Language.Java.Paragon.Error
 import Language.Java.Paragon.Flags
 
 -- | State of the base monad, as a record for easier extensibility.
 data BaseState = BaseState
-  { -- | Accumulates the errors.
-    bsErrors       :: [Error]
-    -- | For generating fresh integers.
-  , bsNextUniq     :: Int
-    -- | Current context (class, method) to identify where errors are raised.
-  , bsErrorContext :: [ErrorContext]
-    -- | The flags given to the compilation.
-  , bsFlags        :: [Flag]
+  { -- | For generating fresh integers.
+    bNextUniq     :: Int
   }
 
--- | The base monad deals adds error handling and unique number generation to IO
+-- | Reader environment for the base monad.
+data BaseEnv = BaseEnv
+  { -- | The flags given to the compilation.
+    bFlags        :: [Flag]
+    -- | Current context (class, method) to identify where errors are raised.
+  , bErrorContext :: [ErrorContext]
+  }
+
+-- | Writer of the base monad, accumulates the errors raised by the compiler.
+data BaseWrite = BaseWrite
+  { -- | Accumulates the errors.
+    bErrors       :: [Error]
+  }
+
+-- | The writer of the monad is a monoid, mempty being the initial write result,
+-- mappend joining two write results.
+instance Monoid BaseWrite where
+  mempty      = BaseWrite { bErrors = [] }
+  mappend a b = a { bErrors = (bErrors a) ++ (bErrors b) }
+
+-- | The base monad adds error handling and unique number generation to IO.
 -- The error-handling is somewhat involved because we assume the existence of
--- both /fatal/ and /non-fatal/ errors: Errors are accumulated as state,
--- and the Maybe monad is used to short-circuit computation in case of fatal
--- errors. If a non-fatal error occurs, the compuation continues with a Just
--- value, but the list of errors is extended.
-newtype BaseM a = BaseM (StateT BaseState IO (Maybe a))
+-- both /fatal/ and /non-fatal/ errors: Errors are accumulated according to the
+-- Writer pattern, and the Maybe monad is used to short-circuit computation in
+-- case of fatal errors. If a non-fatal error occurs, the compuation continues
+-- with a Just value, but the list of errors is extended.
+newtype BaseM a =
+  BaseM (BaseEnv -> BaseState -> IO (Maybe a, BaseState, BaseWrite))
 
 instance Monad BaseM where
-  return x      = BaseM $ return . Just $ x
+  return x      = BaseM $ \_ st -> return (Just x, st, mempty)
   BaseM f >>= k = 
-      BaseM $
-          do maybeA <- f
+      BaseM $ \env st ->
+          do (maybeA, stA, wrA) <- f env st
              case maybeA of
-               Nothing -> return Nothing  -- Fatal error occurred, short-circuit
-               Just a ->
-                 let BaseM g = k a
-                  in g
+               Nothing -> return (Nothing, stA, wrA)
+               Just a  -> do let BaseM g = k a
+                             (maybeB, stB, wrB) <- g env stA
+                             return (maybeB, stB, mappend wrA wrB)
 
   -- Provided for the sake of completeness;
   -- failE and failEC should be used instead
@@ -82,8 +95,8 @@ instance MonadIO IO where
   liftIO = id
 
 instance MonadIO BaseM where
-  liftIO ioa = BaseM $ StateT (\s -> do x <- ioa
-                                        return (Just x, s))
+  liftIO ioa = BaseM $ \_ st -> do x <- ioa
+                                   return (Just x, st, mempty)
 
 class MonadIO m => MonadBase m where
   -- | Lift BaseM computations to member of the MonadBase class
@@ -100,79 +113,73 @@ class MonadIO m => MonadBase m where
 instance MonadBase BaseM where
   liftBase = id
 
-  -- Run the subcomputation in an extended error context, then put the context
-  -- back to the way it was.
-  withErrCtxt ectxt (BaseM f) = BaseM $
-    do oldSt <- get
-       modify $ \st -> st {  bsErrorContext = (bsErrorContext st) ++ [ectxt] }
-       a <- f
-       modify $ \st -> st {  bsErrorContext = (bsErrorContext oldSt) }
-       return a
+  -- Run the subcomputation in an extended error context.
+  withErrCtxt ectxt (BaseM f) = BaseM $ \env st ->
+    do let newEnv = env {bErrorContext = (bErrorContext env) ++ [ectxt]}
+       f newEnv st
 
   -- Construct Either value based on error state
   -- Note that tryM does not distinguish between fatal and non-fatal errors:
-  -- If an error occured, we return that rather than any computation result
-  tryM (BaseM f) = BaseM $
-    do st <- get
-       put $ st { bsErrors = [] } -- start with try-block empty error list
-       maybeA <- f                -- run code of try block
-       nSt <- get                 -- get errors from try block
-       put $ nSt { bsErrors = bsErrors st}  -- restore original errors
-       case bsErrors nSt of
-         [] -> return . fmap Right $ maybeA  -- No errors, return result
-         e  -> return . Just . Left $ e      -- Return errors
+  -- If an error occured, we return the error rather than adding it to the
+  -- writer part of the monad.
+  tryM (BaseM f) = BaseM $ \env st ->
+    do (maybeA, stA, wrA) <- f env st
+       case bErrors wrA of
+         [] -> return (fmap Right $ maybeA, stA, wrA)  
+         e  -> return (Just . Left $ e, stA, wrA {bErrors = mempty} )
         
   -- Fatal error => Log error, but Nothing from here
-  failE  err     = BaseM $
-    do modify (\s -> s { bsErrors = err (bsErrorContext s) : bsErrors s})
-       return Nothing
+  failE  err     = BaseM $ \env st ->
+    return (Nothing, st, mempty { bErrors = [err $ bErrorContext env]})
        
-  -- Non-fatal error => Log error, but continue with Just value
-  failEC def err = BaseM $
-    do modify (\s -> s { bsErrors = err (bsErrorContext s) : bsErrors s})
-       return . Just $ def
+  -- Non-fatal error => Log error, but continue with default value
+  failEC def err = BaseM $ \env st ->
+    return (Just def, st, mempty { bErrors = [err $ bErrorContext env]})
 
 -- | Running a BaseM computation, which will result in either a
 -- non-empty list of errors or the result of successfully running
 -- the monadic computation
 runBaseM :: [Flag] -> BaseM a -> IO (Either [Error] a)
 runBaseM flags (BaseM f) = do
-  (a,s) <- runStateT f (BaseState { bsErrors       = []
-                                  , bsErrorContext = []
-                                  , bsNextUniq     = 0
-                                  , bsFlags        = flags
+  (maybeA, _, wr) <- f (BaseEnv   { bErrorContext = []
+                                  , bFlags        = flags
                                   } )
-  case bsErrors s of
-    [] -> return . Right . fromJust $ a -- No error => Just value
+                       (BaseState { bNextUniq     = 0
+                                  } )
+  case bErrors wr of
+    [] -> let (Just a) = maybeA
+          in return $ Right a
     e  -> return . Left $ e
 
--- | Abort computation if any non-fatal errors have been logged via failEC
--- The idea is that non-fatal errors collected with failEC do become fatal
--- in later stages of compilation, so we need a mechanism to fail based on
--- previous errors
-raiseErrors :: BaseM ()
-raiseErrors = BaseM $
-  do st <- get
-     case bsErrors st of
-       [] -> return $ Just ()
-       _e -> return Nothing
+-- | Run a computation and afterwards fail if any errors, including non-fatal
+-- ones, have been raised. This function can be used to e.g. wrap a phase, where
+-- the phase itself might continue on non-fatal errors, but the rest of the
+-- computation may not.
+raiseErrors :: BaseM a -> BaseM a
+raiseErrors (BaseM f) = BaseM $ \env st ->
+  do (maybeA, stA, wrA) <- f env st
+     case bErrors wrA of
+       [] -> return (maybeA, stA, wrA)
+       _  -> return (Nothing, stA, wrA)
 
 -- | Get a fresh, unused number from the unique number generator
 getFreshInt :: MonadBase m => m Int
-getFreshInt = liftBase $ BaseM $ do
-  st <- get
-  put $ st { bsNextUniq = bsNextUniq st + 1}
-  return $ Just (bsNextUniq st)
+getFreshInt = liftBase $ BaseM $ \_ st ->
+  let n = bNextUniq st
+  in  return (Just n, st {bNextUniq = n + 1}, mempty)
+  
 
 -- | Get the flags passed to the compiler
 getFlags :: MonadBase m => m [Flag]
-getFlags = liftBase $ BaseM $ get >>= (return . Just . bsFlags)
+getFlags = liftBase $ BaseM $ \env st ->
+  return (Just $ bFlags env, st, mempty)
 
 -- | Access the ErrCtxt environment
 getErrCtxt :: MonadBase m => m [ErrorContext]
-getErrCtxt = liftBase $ BaseM $ get >>= (return . Just . bsErrorContext)
+getErrCtxt = liftBase $ BaseM $ \env st ->
+  return (Just $ bErrorContext env, st, mempty)
 
--- | Try first argument. If and only it fails, execute catch computation 
+-- | Try first argument. If and only if it fails, execute catch computation 
 -- given as second argument.
 tryCatch :: MonadBase m => m a -> ([Error] -> m a) -> m a
 tryCatch tr ctch = do esa <- tryM tr
