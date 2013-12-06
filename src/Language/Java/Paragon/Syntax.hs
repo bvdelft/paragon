@@ -8,7 +8,7 @@ type AST = CompilationUnit
 data Id a = Id
   { idAnn  :: a      -- ^ Annotation.
   , idName :: String -- ^ Identifier's string.
-  } deriving Show
+  } deriving (Show, Eq)
 
 -- | Qualified identifier. A period-separated list of identifiers.
 data QId a = QId
@@ -16,7 +16,7 @@ data QId a = QId
   , qIdName     :: Id a          -- ^ Identifier.
   , qIdNameType :: NameType      -- ^ Type of the name.
   , qIdPrevName :: Maybe (QId a) -- ^ Possibly, name part before the period.
-  } deriving Show
+  } deriving (Show, Eq)
 
 -- | Types of the names, e.g. expression, method, type etc.
 data NameType = ExpName
@@ -28,7 +28,7 @@ data NameType = ExpName
               | MethodOrLockName
               | ExprOrLockName
               | AmbigName
-  deriving Show
+  deriving (Show, Eq)
 
 -- | Compilation unit.
 data CompilationUnit a = CompilationUnit
@@ -36,13 +36,13 @@ data CompilationUnit a = CompilationUnit
   , cuPkgDecl     :: Maybe (PackageDecl a) -- ^ Package declaration.
   , cuImportDecls :: [ImportDecl a]        -- ^ Import declarations.
   , cuTypeDecls   :: [TypeDecl a]          -- ^ Type declarations.
-  } deriving Show
+  } deriving (Show, Eq)
 
 -- | Package declaration.
 data PackageDecl a = PackageDecl
   { pdAnn :: a     -- ^ Annotation.
   , pdId  :: QId a -- ^ Package identifier.
-  } deriving Show
+  } deriving (Show, Eq)
 
 -- | Import declaration.
 data ImportDecl a =
@@ -61,20 +61,20 @@ data ImportDecl a =
     -- | Static import of all members.
     -- Example: import static java.lang.Math.*;
   | StaticImportOnDemand a (QId a)
-  deriving Show
+  deriving (Show, Eq)
 
 -- | Class or interface declaration.
 data TypeDecl a = ClassTypeDecl a (ClassDecl a)
                 | InterfaceTypeDecl a (InterfaceDecl a)
-  deriving Show
+  deriving (Show, Eq)
 
 -- | Class declaration.
 data ClassDecl a = C
-  deriving Show
+  deriving (Show, Eq)
 
 -- | Interface declaration.
 data InterfaceDecl a = I
-  deriving Show
+  deriving (Show, Eq)
 
 -- Helper functions
 
