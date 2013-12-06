@@ -14,6 +14,8 @@ module Language.Java.Paragon.Lexer
   , TokenWithSpan(..)
   ) where
 
+import Data.List (intercalate)
+
 import Language.Java.Paragon.SrcPos
 }
 
@@ -309,7 +311,7 @@ data Token
 data TokenWithSpan = TokWSpan
   { twsTok     :: Token
   , twsSrcSpan :: SrcSpan
-  } deriving (Eq, Show)
+  } deriving Eq
 
 instance Show Token where
   -- Keywords
@@ -439,6 +441,11 @@ instance Show Token where
   show Colon    = ":"
   show AtSign   = "@"
   show Ellipsis = "..."
+
+instance Show TokenWithSpan where
+  show (TokWSpan t _) = show t
+
+  showList ts s = intercalate ", " (map show ts) ++ s
 
 -- | Converts Alex source position to Paragon source span.
 -- Takes token string for length calculation.
