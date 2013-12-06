@@ -10,3 +10,4 @@ install:
 notifications:
   email:
     - vandeba@chalmers.se
+    - lypai@chalmers.se
