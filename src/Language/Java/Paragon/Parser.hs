@@ -49,9 +49,9 @@ qIdent nameFun = nameFun <$> seplist1 ident period
 compilationUnit :: P (CompilationUnit SrcSpan)
 compilationUnit = do
   startPos <- getParaPos
-  pkgDecl <- opt packageDecl
-  impDecls <- list importDecl
-  typeDecls <- fmap catMaybes (list typeDecl)
+  pkgDecl <- opt packageDecl <?> "package declaration"
+  impDecls <- list importDecl <?> "import declarations"
+  typeDecls <- fmap catMaybes (list typeDecl) <?> "type declarations"
   endPos <- getParaPos
   return $ CompilationUnit (mkSrcSpanFromPos startPos endPos)
                            pkgDecl impDecls typeDecls
