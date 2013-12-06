@@ -97,14 +97,14 @@ instance Applicative (GenParser s a) where
   pure  = return
   (<*>) = ap
 
--- | Match a given token.
+-- | Matches a given token.
 tok :: Token -> P ()
 tok t = do
     fileName <- getFileName
     token (show . twsTok) (posFromTok fileName) testT
   where testT tws = if t == twsTok tws then Just () else Nothing
 
--- | Parse a token which is accepted by a given function.
+-- | Parses a token which is accepted by a given function.
 tokWithSpan :: (Token -> SrcSpan -> Maybe a) -> P a
 tokWithSpan test = do
     fileName <- getFileName
@@ -139,13 +139,13 @@ getParaPos = do
 getFileName :: P String
 getFileName = sourceName <$> getPosition
 
--- | Convert Parsec source position to Paragon representation.
+-- | Converts Parsec source position to Paragon representation.
 parsecToSrcPos :: SourcePos -> SrcPos
 parsecToSrcPos pos = SrcPos (sourceName pos)
                             (sourceLine pos)
                             (sourceColumn pos)
 
--- | Convert Paragon source position to Parsec representation.
+-- | Converts Paragon source position to Parsec representation.
 srcPosToParsec :: SrcPos -> SourcePos
 srcPosToParsec (SrcPos fileName l c) = newPos fileName l c
 
@@ -159,11 +159,11 @@ opt = optionMaybe
 bopt :: P a -> P Bool
 bopt p = isJust <$> opt p
 
--- | Parse zero or more occurences with a given parser.
+-- | Parses zero or more occurences with a given parser.
 list :: P a -> P [a]
 list = option [] . list1
 
--- | Parse one or more occurences with a given parser.
+-- | Parses one or more occurences with a given parser.
 list1 :: P a -> P [a]
 list1 = many1
 
