@@ -66,3 +66,17 @@ spec = do
                                 \unexpected end of input\n\
                                 \expecting . or ;"
 
+    context "given a package declaration with missing package name" $
+      it "gives an error message" $
+        let Left err = parse "package ;" "PkgDecl"
+        in show err `shouldBe` "\"PkgDecl\" (line 1, column 9):\n\
+                                \unexpected ;\n\
+                                \expecting package name"
+
+    context "given a package declaration with a typo in package keyword" $
+      it "gives an error message" $
+        let Left err = parse "packag paragon;" "PkgDecl"
+        in show err `shouldBe` "\"PkgDecl\" (line 1, column 1):\n\
+                                \unexpected packag\n\
+                                \expecting package declaration, import declarations, type declarations or end of input"
+
