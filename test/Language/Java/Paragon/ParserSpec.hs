@@ -62,5 +62,7 @@ spec = do
     context "given a package declaration with missing semicolon" $
       it "gives an error message" $
         let Left err = parse "package paragon" "PkgDecl"
-        in show err `shouldBe` "\"PkgDecl\" (line 1, column 9):\nunexpected end of input"
+        in show err `shouldBe` "\"PkgDecl\" (line 1, column 9):\n\
+                                \unexpected end of input\n\
+                                \expecting . or ;"
 

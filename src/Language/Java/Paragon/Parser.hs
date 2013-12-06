@@ -59,8 +59,8 @@ compilationUnit = do
 packageDecl :: P (PackageDecl SrcSpan)
 packageDecl = do
   startPos <- getParaPos
-  tok KW_Package
-  pName <- qIdent pkgName
+  keyword KW_Package
+  pName <- qIdent pkgName <?> "package name"
   semiColon
   endPos <- getParaPos
   return $ PackageDecl (mkSrcSpanFromPos startPos endPos) pName
@@ -68,10 +68,10 @@ packageDecl = do
 importDecl :: P (ImportDecl SrcSpan)
 importDecl = do
     startPos <- getParaPos
-    tok KW_Import
-    isStatic <- bopt $ tok KW_Static
-    qId <- qIdent ambigName
-    hasStar <- bopt $ period >> tok Op_Star
+    keyword KW_Import
+    isStatic <- bopt $ keyword KW_Static
+    qId <- qIdent ambigName <?> "package name"
+    hasStar <- bopt $ period >> (tok Op_Star <?> "* or identifier")
     semiColon
     endPos <- getParaPos
     return $ mkImportDecl isStatic hasStar (mkSrcSpanFromPos startPos endPos) qId
@@ -86,10 +86,10 @@ typeDecl = const Nothing <$> semiColon
 -- Separators
 
 semiColon :: P ()
-semiColon = tok SemiColon
+semiColon = tok SemiColon <?> show SemiColon
 
 period :: P ()
-period = tok Period
+period = tok Period <?> show Period
 
 -- Parser helpers
 
@@ -111,6 +111,10 @@ tokWithSpan test = do
     token (show . twsTok) (posFromTok fileName) (testT fileName)
   where testT fileName (TokWSpan t sp) = test t (sp { srcSpanFileName = fileName })
         -- testT also fixes the file name in the source span
+
+-- | Matches a given keyword with better error message in case of failure.
+keyword :: Token -> P ()
+keyword t = tok t <?> "keyword " ++ show t
 
 -- | Returns the Parsec source position for a given file name and token.
 -- One of the main purposes: fix the file name in the token with the given name.
