@@ -6,42 +6,42 @@ type AST = CompilationUnit
 
 -- | Identifier data type.
 data Id a = Id
-  { idAnn  :: a      -- ^ Annotation.
-  , idName :: String -- ^ Identifier's string.
+  { idAnn  :: a       -- ^ Annotation.
+  , idName :: String  -- ^ Identifier's string.
   } deriving (Show, Eq)
 
 -- | Qualified identifier. A period-separated list of identifiers.
 data QId a = QId
-  { qIdAnn      :: a             -- ^ Annotation.
-  , qIdName     :: Id a          -- ^ Identifier.
-  , qIdNameType :: NameType      -- ^ Type of the name.
-  , qIdPrevName :: Maybe (QId a) -- ^ Possibly, name part before the period.
+  { qIdAnn      :: a              -- ^ Annotation.
+  , qIdName     :: Id a           -- ^ Identifier.
+  , qIdNameType :: NameType       -- ^ Type of the name.
+  , qIdPrevName :: Maybe (QId a)  -- ^ Possibly, name part before the period.
   } deriving (Show, Eq)
 
 -- | Types of the names, e.g. expression, method, type etc.
-data NameType = ExpName
-              | MethodName
-              | TypeName
-              | PkgName
-              | LockName
-              | PkgOrTypeName
-              | MethodOrLockName
-              | ExprOrLockName
-              | AmbigName
+data NameType = ExpName           -- ^ Expression name.
+              | MethodName        -- ^ Method name.
+              | TypeName          -- ^ Type name.
+              | PkgName           -- ^ Package name
+              | LockName          -- ^ Lock name.
+              | PkgOrTypeName     -- ^ Package or type name.
+              | MethodOrLockName  -- ^ Method or lock name.
+              | ExprOrLockName    -- ^ Expression or lock name.
+              | AmbigName         -- ^ Ambiguous name.
   deriving (Show, Eq)
 
 -- | Compilation unit.
 data CompilationUnit a = CompilationUnit
-  { cuAnn         :: a                     -- ^ Annotation.
-  , cuPkgDecl     :: Maybe (PackageDecl a) -- ^ Package declaration.
-  , cuImportDecls :: [ImportDecl a]        -- ^ Import declarations.
-  , cuTypeDecls   :: [TypeDecl a]          -- ^ Type declarations.
+  { cuAnn         :: a                      -- ^ Annotation.
+  , cuPkgDecl     :: Maybe (PackageDecl a)  -- ^ Package declaration.
+  , cuImportDecls :: [ImportDecl a]         -- ^ Import declarations.
+  , cuTypeDecls   :: [TypeDecl a]           -- ^ Type declarations.
   } deriving (Show, Eq)
 
 -- | Package declaration.
 data PackageDecl a = PackageDecl
-  { pdAnn :: a     -- ^ Annotation.
-  , pdId  :: QId a -- ^ Package identifier.
+  { pdAnn :: a      -- ^ Annotation.
+  , pdId  :: QId a  -- ^ Package identifier.
   } deriving (Show, Eq)
 
 -- | Import declaration.
@@ -85,5 +85,5 @@ mkQId combine nameType ids = mkQId' (reverse ids)
   where mkQId' [i]    = QId (idAnn i) i nameType Nothing
         mkQId' (i:is) = let pre = mkQId' is
                         in QId (combine (qIdAnn pre) (idAnn i)) i nameType (Just pre)
-        mkQId' [] = undefined -- TODO
+        mkQId' [] = undefined  -- TODO
 

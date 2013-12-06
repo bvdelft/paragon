@@ -32,11 +32,11 @@ defaultPos = SrcPos
 -- | Source span. Delimits a portion of a source file.
 -- All positions start at 1.
 data SrcSpan = SrcSpan
-  { srcSpanFileName    :: String -- ^ Name of the source file.
-  , srcSpanStartLine   :: Int    -- ^ Line number of the beginning of the span.
-  , srcSpanStartColumn :: Int    -- ^ Column number of the beginning of the span.
-  , srcSpanEndLine     :: Int    -- ^ Line number of the end of the span.
-  , srcSpanEndColumn   :: Int    -- ^ Column number of the end of the span.
+  { srcSpanFileName    :: String  -- ^ Name of the source file.
+  , srcSpanStartLine   :: Int     -- ^ Line number of the beginning of the span.
+  , srcSpanStartColumn :: Int     -- ^ Column number of the beginning of the span.
+  , srcSpanEndLine     :: Int     -- ^ Line number of the end of the span.
+  , srcSpanEndColumn   :: Int     -- ^ Column number of the end of the span.
   } deriving (Show, Eq)
 
 -- | Construct source span from two source positions (start, end).
