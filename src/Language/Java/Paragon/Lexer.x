@@ -303,13 +303,142 @@ data Token
     | Colon
     | AtSign
     | Ellipsis
-  deriving (Eq, Show)
+  deriving Eq
 
 -- | Token with it's source span.
 data TokenWithSpan = TokWSpan
   { twsTok     :: Token
   , twsSrcSpan :: SrcSpan
   } deriving (Eq, Show)
+
+instance Show Token where
+  -- Keywords
+  show KW_Abstract     = "abstract"
+  show KW_Assert       = "assert"
+  show KW_Boolean      = "boolean"
+  show KW_Break        = "break"
+  show KW_Byte         = "byte"
+  show KW_Case         = "case"
+  show KW_Catch        = "catch"
+  show KW_Char         = "char"
+  show KW_Class        = "class"
+  show KW_Const        = "const"
+  show KW_Continue     = "continue"
+  show KW_Default      = "default"
+  show KW_Do           = "do"
+  show KW_Double       = "double"
+  show KW_Else         = "else"
+  show KW_Enum         = "enum"
+  show KW_Extends      = "extends"
+  show KW_Final        = "final"
+  show KW_Finally      = "finally"
+  show KW_Float        = "float"
+  show KW_For          = "for"
+  show KW_Goto         = "goto"
+  show KW_If           = "if"
+  show KW_Implements   = "implements"
+  show KW_Import       = "import"
+  show KW_Instanceof   = "instanceof"
+  show KW_Int          = "int"
+  show KW_Interface    = "interface"
+  show KW_Long         = "long"
+  show KW_Native       = "native"
+  show KW_New          = "new"
+  show KW_Package      = "package"
+  show KW_Private      = "private"
+  show KW_Protected    = "protected"
+  show KW_Public       = "public"
+  show KW_Return       = "return"
+  show KW_Short        = "short"
+  show KW_Static       = "static"
+  show KW_Strictfp     = "strictfp"
+  show KW_Super        = "super"
+  show KW_Switch       = "switch"
+  show KW_Synchronized = "synchronized"
+  show KW_This         = "this"
+  show KW_Throw        = "throw"
+  show KW_Throws       = "throws"
+  show KW_Transient    = "transient"
+  show KW_Try          = "try"
+  show KW_Void         = "void"
+  show KW_Volatile     = "volatile"
+  show KW_While        = "while"
+  -- Paragon specific
+  show KW_P_Actor      = "actor"
+  show KW_P_Close      = "close"
+  show KW_P_Lock       = "lock"
+  show KW_P_Notnull    = "notnull"
+  show KW_P_Open       = "open"
+  show KW_P_Policy     = "policy"
+  show KW_P_When       = "when"
+  show KW_P_Typemethod = "typemethod"
+  show KW_P_Policyof   = "policyof"
+  show KW_P_Readonly   = "readonly"
+  show KW_P_Reflexive  = "reflexive"
+  show KW_P_Transitive = "transitive"
+  show KW_P_Symmetric  = "symmetric"
+  -- Separators
+  show OpenParen   = "("
+  show CloseParen  = ")"
+  show OpenSquare  = "["
+  show CloseSquare = "]"
+  show OpenCurly   = "{"
+  show CloseCurly  = "}"
+  show SemiColon   = ";"
+  show Comma       = ","
+  show Period      = "."
+  -- Literals
+  show (IntLit i)      = show i
+  show (LongLit l)     = show l
+  show (DoubleLit d)   = show d
+  show (FloatLit f)    = show f
+  show (CharLit c)     = show c
+  show (StringLit str) = str
+  show (BoolLit b)     = if b then "true" else "false"
+  show NullLit         = "null"
+  -- Identifiers
+  show (IdTok ident) = ident
+  -- Operators
+  show Op_Assign             = "="
+  show Op_GT                 = ">"
+  show Op_LT                 = "<"
+  show Op_Bang               = "!"
+  show Op_Tilde              = "~"
+  show Op_Equal              = "=="
+  show Op_LE                 = "<="
+  show Op_GE                 = ">="
+  show Op_NotEq              = "!="
+  show Op_And                = "&&"
+  show Op_Or                 = "||"
+  show Op_Inc                = "++"
+  show Op_Dec                = "--"
+  show Op_Plus               = "+"
+  show Op_Minus              = "-"
+  show Op_Star               = "*"
+  show Op_Slash              = "/"
+  show Op_BitAnd             = "&"
+  show Op_BitOr              = "|"
+  show Op_Caret              = "^"
+  show Op_Percent            = "%"
+  show Op_LShift             = "<<"
+  show Op_RShift             = ">>"
+  show Op_UnSignRShift       = ">>>"
+  show Op_PlusAssign         = "+="
+  show Op_MinusAssign        = "-="
+  show Op_StarAssign         = "*="
+  show Op_SlashAssign        = "/="
+  show Op_BitAndAssign       = "&="
+  show Op_BitOrAssign        = "|="
+  show Op_CaretAssign        = "^="
+  show Op_PercentAssign      = "%="
+  show Op_LShiftAssign       = "<<="
+  show Op_RShiftAssign       = ">>="
+  show Op_UnSignRShiftAssign = ">>>="
+  -- Symbols
+  show Question = "?"
+  show Colon    = ":"
+  show AtSign   = "@"
+  show Ellipsis = "..."
 
 -- | Converts Alex source position to Paragon source span.
 -- Takes token string for length calculation.
