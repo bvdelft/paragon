@@ -30,7 +30,8 @@ parse = runParser compilationUnit
 
 -- | Runner for different parsers. Takes a parser, a string to parse and a file name.
 runParser :: P a -> String -> String -> Either ParseError a
-runParser p input fileName = Parsec.runParser p () fileName $ lexer input
+runParser p input fileName =
+  Parsec.runParser (p >>= \r -> eof >> return r) () fileName $ lexer input
 
 -- Parser building blocks. They almost follow the syntax tree structure.
 
