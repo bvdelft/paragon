@@ -43,7 +43,7 @@ ident =
       _       -> Nothing
 
 qIdent :: ([Id SrcSpan] -> QId SrcSpan) -> P (QId SrcSpan)
-qIdent nameFun = nameFun <$> ident `sepBy1` period
+qIdent nameFun = nameFun <$> seplist1 ident period
 
 -- | Parser for the top-level syntax node.
 compilationUnit :: P (CompilationUnit SrcSpan)
@@ -166,4 +166,15 @@ list = option [] . list1
 -- | Parse one or more occurences with a given parser.
 list1 :: P a -> P [a]
 list1 = many1
+
+-- | Parses one or more occurences with a parser given as the first argument,
+-- separated by a separator given as the second argument.
+-- Doesn't consume a separator if it occures at the end!
+seplist1 :: P a -> P sep -> P [a]
+seplist1 p sep = do
+  a <- p
+  try (do _ <- sep
+          as <- seplist1 p sep
+          return (a:as))
+    <|> return [a]
 
