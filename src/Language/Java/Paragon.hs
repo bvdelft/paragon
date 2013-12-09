@@ -5,8 +5,7 @@ import System.Environment (getArgs)
 
 import Language.Java.Paragon.SrcPos
 import Language.Java.Paragon.Error
-import Language.Java.Paragon.Flags
-import Language.Java.Paragon.Interaction
+import Language.Java.Paragon.Interaction hiding (pretty)
 import Language.Java.Paragon.Error.ExampleErrors
 import Language.Java.Paragon.Error.Contexts
 import Language.Java.Paragon.Monad.Base

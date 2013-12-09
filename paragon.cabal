@@ -19,20 +19,26 @@ Library
     build-tools:        alex >= 2.3
     build-depends:      transformers -any, bytestring -any, directory -any,
                         filepath -any, array >= 0.1, parsec >= 2.1 && < 3,
-                        base >= 4 && < 5, syb
+                        base >= 4 && < 5, syb, pretty
     cpp-options:        -DBASE4
-    exposed-modules:    Language.Java.Paragon.Interaction
-                        Language.Java.Paragon.Error
-                        Language.Java.Paragon.Flags
-                        Language.Java.Paragon.Headers
-                        Language.Java.Paragon.SrcPos
+    exposed-modules:    Language.Java.Paragon.Error
+                        Language.Java.Paragon.Error.Contexts
                         Language.Java.Paragon.Error.ErrorLabel
                         Language.Java.Paragon.Error.ExampleErrors
-                        Language.Java.Paragon.Error.Contexts
+                        Language.Java.Paragon.Interaction
+                        Language.Java.Paragon.Interaction.Debugging
+                        Language.Java.Paragon.Interaction.Flags
+                        Language.Java.Paragon.Interaction.Headers
+                        Language.Java.Paragon.Interaction.Panic
+                        Language.Java.Paragon.Interaction.Pretty
+                        Language.Java.Paragon.Lexer
                         Language.Java.Paragon.Monad.Base
                         Language.Java.Paragon.Monad.Helpers
-                        Language.Java.Paragon.Lexer
+                        Language.Java.Paragon.Monad.PiReader
+                        Language.Java.Paragon.Monad.PiReader.Helpers
+                        Language.Java.Paragon.Monad.PiReader.MonadPR
                         Language.Java.Paragon.Parser
+                        Language.Java.Paragon.SrcPos
                         Language.Java.Paragon.Syntax
   hs-source-dirs:       src
   ghc-options:          -Wall -Werror -O2 -rtsopts
@@ -41,7 +47,7 @@ executable parac
     build-tools:        alex >= 2.3
     build-depends:      transformers -any, bytestring -any, directory -any,
                         filepath -any, array >= 0.1, parsec >= 2.1 && < 3, 
-                        paragon >= 0.3, base >=4 && <5, syb -any
+                        paragon >= 0.3, base >=4 && <5, syb -any, pretty
     buildable:          True
     cpp-options:        -DBASE4
     hs-source-dirs:     src

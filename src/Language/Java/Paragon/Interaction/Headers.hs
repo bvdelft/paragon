@@ -1,5 +1,5 @@
 -- | Module defining various header constants used in the compiler.
-module Language.Java.Paragon.Headers
+module Language.Java.Paragon.Interaction.Headers
   (
     -- * Headers
     usageHeader

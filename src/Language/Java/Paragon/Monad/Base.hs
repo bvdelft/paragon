@@ -29,7 +29,8 @@ import Control.Monad
 import Data.Monoid
 
 import Language.Java.Paragon.Error
-import Language.Java.Paragon.Flags
+import Language.Java.Paragon.Interaction.Panic
+import Language.Java.Paragon.Interaction.Flags
 
 -- | State of the base monad, as a record for easier extensibility.
 data BaseState = BaseState
@@ -79,7 +80,7 @@ instance Monad BaseM where
 
   -- Provided for the sake of completeness;
   -- failE and failEC should be used instead
-  fail err = failE $ undefinedError err
+  fail err = panic "BaseM fail-call" err
 
 instance Applicative BaseM where
   pure = return

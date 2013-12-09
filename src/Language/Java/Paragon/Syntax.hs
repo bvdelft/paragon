@@ -16,7 +16,13 @@ data QId a = QId
   , qIdName     :: Id a           -- ^ Identifier.
   , qIdNameType :: NameType       -- ^ Type of the name.
   , qIdPrevName :: Maybe (QId a)  -- ^ Possibly, name part before the period.
-  } deriving (Show, Eq)
+  } deriving (Eq)
+
+instance Show (QId a) where
+  show qid =
+    case qIdPrevName qid of
+      Nothing   ->  show (idName (qIdName qid))
+      Just pre  ->  show pre ++ show (idName (qIdName qid))
 
 -- | Types of the names, e.g. expression, method, type etc.
 data NameType = ExpName           -- ^ Expression name.

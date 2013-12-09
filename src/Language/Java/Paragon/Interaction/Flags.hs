@@ -1,5 +1,5 @@
 -- | Module for handling the flags parsed to the compiler.
-module Language.Java.Paragon.Flags
+module Language.Java.Paragon.Interaction.Flags
   (
     -- * The @Flag@ data type
     Flag(..)
@@ -20,7 +20,7 @@ import Control.Monad (when)
 import System.Console.GetOpt
 import System.Exit (exitSuccess)
 
-import Language.Java.Paragon.Headers
+import Language.Java.Paragon.Interaction.Headers
 
 -- | All different flags that can be provided to the Paragon compiler
 data Flag
