@@ -9,9 +9,11 @@ public class B {
     public void m1() {
 
         // This integer has the policy that everyone can read its value.
-        ?A.low int lowInt  = 4;
+        ?A.low int lowInt;
+        lowInt  = 4;
         // This integer's policy has no clauses, so no one can read it.
-        ?{}    int highInt = 5;
+        ?{}    int highInt;
+        highInt = 5;
 
         lowInt = highInt; // This is an illegal flow and should be detected.
         highInt = lowInt: // Should be allowed.
@@ -23,9 +25,11 @@ public class B {
     public void m2() {
 
         // This integer has the policy that everyone can read its value.
-        ?A.low int lowInt  = 4;
+        ?A.low int lowInt;
+        lowInt  = 4;
         // This integer's policy has no clauses, so no one can read it.
-        ?{}    int highInt = 5;
+        ?{}    int highInt;
+        highInt = 5;
 
         highInt = lowInt: // Should be allowed.
         lowInt = highInt; // Should be detected.
