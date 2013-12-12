@@ -5,12 +5,10 @@ import Test.Hspec
 
 import Control.Monad
 
--- Uncomment imports when enabling java compilation check
--- import System.Cmd (system)
 import System.Directory
--- import System.Exit (ExitCode(..))
 import System.FilePath
 
+import Language.Java.Paragon.Error
 import Language.Java.Paragon.Interaction.Flags
 import Language.Java.Paragon.Parac
 
@@ -27,32 +25,18 @@ spec = do
   describe "Basic tests" $ do
     it "The first elementary test" $ do
       cf <- getCompFiles $ testDir </> "elementary"
-      mapM_ testCompilation cf
+      err <- mapM callParac cf
+      mapM_ (\e -> length e `shouldBe` 2) err
 
 -- | Given a filepath that contains a .compile file which instructs which files
 -- should be compiled and in which order, relatively to that filepath. Runs the
--- paragon compiler on these files and expects an empty output. Runs the java
--- compiler on the resulting .java files and expects an @ExitSuccess@.
-testCompilation :: FilePath -> IO ()
-testCompilation fp = do
+-- paragon compiler on these files and returns the total list of errors.
+callParac :: FilePath -> IO [Error]
+callParac fp = do
   files <- fmap lines $ readFile (fp </> ".compile")
   res   <- mapM (\file-> parac [PiPath fp, SourcePath fp] file) files
-  -- Should we clean up generate java/pi files here?
-  concat res `shouldBe` ""
-  {- -- Disabled for now: java compilation
-  exits <- mapM (\f -> system $ "javac " ++ (paraToJava (fp </> f))) files
-  -- Should we clean up class files here?
-  mapM_ (shouldBe ExitSuccess) exits
-  -}
-
-{-
--- | Changes file extension from .para to .java
-paraToJava :: FilePath -> FilePath
-paraToJava file =
-  let (f,_ext) = splitExtension file
-  in f <.> "java"
--}
-
+  return $ concat res
+  
 -- | Returns all paths that contain .compile files found under the provided
 -- path.
 getCompFiles :: FilePath -> IO [FilePath]
@@ -64,3 +48,18 @@ getCompFiles fp = do
   if ".compile" `elem` cont                      -- Possibly add this path
     then return $ fp : rec
     else return rec
+
+{- Code for calling java compiler:
+import System.Cmd (system)
+import System.Exit (ExitCode(..))
+
+  exits <- mapM (\f -> system $ "javac " ++ (paraToJava (fp </> f))) files
+  -- Should we clean up class files here?
+  mapM_ (shouldBe ExitSuccess) exits
+  
+-- | Changes file extension from .para to .java
+paraToJava :: FilePath -> FilePath
+paraToJava file =
+  let (f,_ext) = splitExtension file
+  in f <.> "java"
+-}
