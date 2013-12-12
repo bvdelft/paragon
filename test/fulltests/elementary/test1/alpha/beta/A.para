@@ -1,0 +1,7 @@
+package alpha.beta;
+
+public class A {
+
+    public final policy low = { Object x : };
+
+}

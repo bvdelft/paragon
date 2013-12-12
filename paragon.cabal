@@ -37,6 +37,7 @@ Library
                         Language.Java.Paragon.Monad.PiReader
                         Language.Java.Paragon.Monad.PiReader.Helpers
                         Language.Java.Paragon.Monad.PiReader.MonadPR
+                        Language.Java.Paragon.Parac
                         Language.Java.Paragon.Parser
                         Language.Java.Paragon.SrcPos
                         Language.Java.Paragon.Syntax
@@ -62,6 +63,9 @@ test-suite spec
     ghc-options:        -Wall -Werror -threaded
     hs-source-dirs:     test
     build-depends:      base >= 4 && < 5,
+                        directory,
+                        filepath,
                         hspec,
                         parsec >= 2.1 && < 3,
-                        paragon >= 0.3
+                        paragon >= 0.3,
+                        process
