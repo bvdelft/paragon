@@ -1,6 +1,11 @@
 -- | Paragon Abstract Syntax Tree.
 module Language.Java.Paragon.Syntax where
 
+import Language.Java.Paragon.Interaction (panic, libraryBase)
+
+syntaxModule :: String
+syntaxModule = libraryBase ++ ".Syntax"
+
 -- | Type synonym for top-level AST node.
 type AST = CompilationUnit
 
@@ -84,12 +89,12 @@ data InterfaceDecl a = I
 
 -- Helper functions
 
--- | Create a qualified identifier from name type and list of identifiers.
+-- | Creates a qualified identifier from name type and list of identifiers.
 -- Takes a function to combine annotations.
 mkQId :: (a -> a -> a) -> NameType -> [Id a] -> QId a
 mkQId combine nameType ids = mkQId' (reverse ids)
   where mkQId' [i]    = QId (idAnn i) i nameType Nothing
         mkQId' (i:is) = let pre = mkQId' is
                         in QId (combine (qIdAnn pre) (idAnn i)) i nameType (Just pre)
-        mkQId' [] = undefined  -- TODO
+        mkQId' [] = panic (syntaxModule ++ ".mkQId") "empty list of identifiers"
 
