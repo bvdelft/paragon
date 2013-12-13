@@ -128,3 +128,24 @@ spec = do
                                 \unexpected packag\n\
                                 \expecting package declaration, import declarations, type declarations or end of input"
 
+    context "given an import declaration with missing semicolon" $
+      it "gives an error message" $
+        let Left err = parse "import paragon" "ImportDecl"
+        in show err `shouldBe` "\"ImportDecl\" (line 1, column 8):\n\
+                                \unexpected end of input\n\
+                                \expecting . or ;"
+
+    context "given an import declaration with missing package name" $
+      it "gives an error message" $
+        let Left err = parse "import ;" "ImportDecl"
+        in show err `shouldBe` "\"ImportDecl\" (line 1, column 8):\n\
+                                \unexpected ;\n\
+                                \expecting keyword static or package/type name"
+
+    context "given an unfinished import declaration" $
+      it "gives an error message" $
+        let Left err = parse "import paragon.;" "ImportDecl"
+        in show err `shouldBe` "\"ImportDecl\" (line 1, column 16):\n\
+                                \unexpected ;\n\
+                                \expecting * or identifier"
+
