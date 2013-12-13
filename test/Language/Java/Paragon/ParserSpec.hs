@@ -57,6 +57,54 @@ spec = do
       parse "package se.chalmers.paragon;" fileName
         `shouldBe`
       Right (CompilationUnit cuSrcSpan (Just $ PackageDecl pdSrcSpan (QId qIdSrcSpan paragonId PkgName (Just chalmersQId))) [] [])
+    -- TODO: fix name types
+    it "parses single type import declaration" $
+      let fileName = "ImportDecl"
+          cuSrcSpan = SrcSpan fileName 1 1 1 22
+          impdSrcSpan = SrcSpan fileName 1 1 1 22
+          qIdSrcSpan = SrcSpan fileName 1 8 1 21
+          policyId = Id (SrcSpan fileName 1 16 1 21) "Policy"
+          paragonQId = QId (SrcSpan fileName 1 8 1 14) paragonId AmbigName Nothing
+          paragonId = Id (SrcSpan fileName 1 8 1 14) "paragon" in
+      parse "import paragon.Policy;" fileName
+        `shouldBe`
+      Right (CompilationUnit cuSrcSpan Nothing [SingleTypeImport impdSrcSpan (QId qIdSrcSpan policyId AmbigName (Just paragonQId))] [])
+
+    it "parses import declaration for all the types in a package" $
+      let fileName = "ImportDecl"
+          cuSrcSpan = SrcSpan fileName 1 1 1 17
+          impdSrcSpan = SrcSpan fileName 1 1 1 17
+          qIdSrcSpan = SrcSpan fileName 1 8 1 14
+          paragonId = Id (SrcSpan fileName 1 8 1 14) "paragon" in
+      parse "import paragon.*;" fileName
+        `shouldBe`
+      Right (CompilationUnit cuSrcSpan Nothing [TypeImportOnDemand impdSrcSpan (QId qIdSrcSpan paragonId AmbigName Nothing)] [])
+
+    it "parses static import declaration of a single type" $
+      let fileName = "ImportDecl"
+          cuSrcSpan = SrcSpan fileName 1 1 1 27
+          impdSrcSpan = SrcSpan fileName 1 1 1 27
+          qIdSrcSpan = SrcSpan fileName 1 15 1 26
+          piId = Id (SrcSpan fileName 1 25 1 26) "PI"
+          mathQId = QId (SrcSpan fileName 1 15 1 23) mathId AmbigName (Just langQId)
+          mathId = Id (SrcSpan fileName 1 20 1 23) "Math"
+          langQId = QId (SrcSpan fileName 1 15 1 18) langId AmbigName Nothing
+          langId = Id (SrcSpan fileName 1 15 1 18) "lang" in
+      parse "import static lang.Math.PI;" fileName
+        `shouldBe`
+      Right (CompilationUnit cuSrcSpan Nothing [SingleStaticImport impdSrcSpan (QId qIdSrcSpan piId AmbigName (Just mathQId))] [])
+
+    it "parses static import declaration for all members" $
+      let fileName = "ImportDecl"
+          cuSrcSpan = SrcSpan fileName 1 1 1 26
+          impdSrcSpan = SrcSpan fileName 1 1 1 26
+          qIdSrcSpan = SrcSpan fileName 1 15 1 23
+          mathId = Id (SrcSpan fileName 1 20 1 23) "Math"
+          langQId = QId (SrcSpan fileName 1 15 1 18) langId AmbigName Nothing
+          langId = Id (SrcSpan fileName 1 15 1 18) "lang" in
+      parse "import static lang.Math.*;" fileName
+        `shouldBe`
+      Right (CompilationUnit cuSrcSpan Nothing [StaticImportOnDemand impdSrcSpan (QId qIdSrcSpan mathId AmbigName (Just langQId))] [])
 
     -- Failure
     context "given a package declaration with missing semicolon" $
