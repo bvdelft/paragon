@@ -106,6 +106,24 @@ spec = do
         `shouldBe`
       Right (CompilationUnit cuSrcSpan Nothing [StaticImportOnDemand impdSrcSpan (QId qIdSrcSpan mathId AmbigName (Just langQId))] [])
 
+    it "parses semicolon type declaration" $
+      let fileName = "SemiColonDecl"
+          cuSrcSpan = SrcSpan fileName 1 1 1 1 in
+      parse ";" fileName
+        `shouldBe`
+      Right (CompilationUnit cuSrcSpan Nothing [] [])
+
+    it "parses empty class declaration" $
+      let fileName = "ClassDecl"
+          cuSrcSpan = SrcSpan fileName 1 1 1 10
+          ctdSrcSpan = SrcSpan fileName 1 1 1 10
+          cd = ClassDecl cdSrcSpan [] cId [] Nothing [] CB
+          cdSrcSpan = SrcSpan fileName 1 1 1 10
+          cId = Id (SrcSpan fileName 1 7 1 7) "C" in
+      parse "class C {}" fileName
+        `shouldBe`
+      Right (CompilationUnit cuSrcSpan Nothing [] [ClassTypeDecl ctdSrcSpan cd])
+
     -- Failure
     context "given a package declaration with missing semicolon" $
       it "gives an error message" $
@@ -148,4 +166,25 @@ spec = do
         in show err `shouldBe` "\"ImportDecl\" (line 1, column 16):\n\
                                 \unexpected ;\n\
                                 \expecting * or identifier"
+
+    context "given a class declaration with missing name" $
+      it "gives an error message" $
+        let Left err = parse "class {}" "ClassDecl"
+        in show err `shouldBe` "\"ClassDecl\" (line 1, column 7):\n\
+                                \unexpected {\n\
+                                \expecting class name"
+
+    context "given a class declaration with missing opening brace" $
+      it "gives an error message" $
+        let Left err = parse "class C }" "ClassDecl"
+        in show err `shouldBe` "\"ClassDecl\" (line 1, column 9):\n\
+                                \unexpected }\n\
+                                \expecting {"
+
+    context "given a class declaration with missing closing brace" $
+      it "gives an error message" $
+        let Left err = parse "class C {" "ClassDecl"
+        in show err `shouldBe` "\"ClassDecl\" (line 1, column 9):\n\
+                                \unexpected end of input\n\
+                                \expecting }"
 

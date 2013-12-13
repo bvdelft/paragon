@@ -80,11 +80,29 @@ data TypeDecl a = ClassTypeDecl a (ClassDecl a)
   deriving (Show, Eq)
 
 -- | Class declaration.
-data ClassDecl a = C
-  deriving (Show, Eq)
+data ClassDecl a = ClassDecl
+  { cdAnn        :: a                    -- ^ Annotation.
+  , cdModifiers  :: [Modifier a]         -- ^ List of modifiers.
+  , cdId         :: Id a                 -- ^ Class identifier.
+  , cdTypeParams :: [TypeParam a]        -- ^ List of type parameters.
+  , cdSuperClass :: Maybe (ClassType a)  -- ^ Super class if the class has one.
+  , cdInterfaces :: [ClassType a]        -- ^ List of interfaces it implements.
+  , cdBody       :: ClassBody a          -- ^ Class body.
+  } deriving (Show, Eq)
 
 -- | Interface declaration.
 data InterfaceDecl a = I
+
+data Modifier a = M
+  deriving (Show, Eq)
+
+data TypeParam a = TP
+  deriving (Show, Eq)
+
+data ClassType a = CT
+  deriving (Show, Eq)
+
+data ClassBody a = CB
   deriving (Show, Eq)
 
 -- Helper functions

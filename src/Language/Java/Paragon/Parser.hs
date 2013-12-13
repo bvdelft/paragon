@@ -81,7 +81,30 @@ importDecl = do
         mkImportDecl True  True  = StaticImportOnDemand
 
 typeDecl :: P (Maybe (TypeDecl SrcSpan))
-typeDecl = const Nothing <$> semiColon
+typeDecl = Just <$> classOrInterfaceDecl
+       <|> const Nothing <$> semiColon
+
+classOrInterfaceDecl :: P (TypeDecl SrcSpan)
+classOrInterfaceDecl = withModifiers $
+  (do startPos <- getParaPos
+      cdModsFun <- classDeclModsFun
+      endPos <- getParaPos
+      return $ \mods ->
+        ClassTypeDecl (mkSrcSpanFromPos startPos endPos) (cdModsFun mods))
+
+classDeclModsFun :: P (ModifiersFun (ClassDecl SrcSpan))
+classDeclModsFun = normalClassDeclModsFun
+
+normalClassDeclModsFun :: P (ModifiersFun (ClassDecl SrcSpan))
+normalClassDeclModsFun = do
+  startPos <- getParaPos
+  keyword KW_Class
+  className <- ident <?> "class name"
+  openCurly
+  closeCurly
+  endPos <- getParaPos
+  return $ \mods ->
+    ClassDecl (mkSrcSpanFromPos startPos endPos) mods className [] Nothing [] CB
 
 -- Separators
 
@@ -90,6 +113,12 @@ semiColon = tok SemiColon <?> show SemiColon
 
 period :: P ()
 period = tok Period <?> show Period
+
+openCurly :: P ()
+openCurly = tok OpenCurly <?> show OpenCurly
+
+closeCurly :: P ()
+closeCurly = tok CloseCurly <?> show CloseCurly
 
 -- Parser helpers
 
@@ -112,15 +141,27 @@ tokWithSpan test = do
   where testT fileName (TokWSpan t sp) = test t (sp { srcSpanFileName = fileName })
         -- testT also fixes the file name in the source span
 
--- | Matches a given keyword with better error message in case of failure.
-keyword :: Token -> P ()
-keyword t = tok t <?> "keyword " ++ show t
-
 -- | Returns the Parsec source position for a given file name and token.
 -- One of the main purposes: fix the file name in the token with the given name.
 posFromTok :: String -> TokenWithSpan -> SourcePos
 posFromTok fileName (TokWSpan _ sp) =
   srcPosToParsec $ srcSpanToPos (sp { srcSpanFileName = fileName })
+
+-- | Matches a given keyword with better error message in case of failure.
+keyword :: Token -> P ()
+keyword t = tok t <?> "keyword " ++ show t
+
+-- | There are several syntax tree nodes that have a list of modifiers data field. 
+-- This type synonym is for the nodes that have this gap to be filled in (by 'withModifiers').
+type ModifiersFun a = [Modifier SrcSpan] -> a
+
+-- | Takes a parser for an entity that expects modifiers before it.
+-- Parses zero or more modifiers, runs a given parser which results in
+-- a function of type 'ModifiersFun' and applies this function to modifiers.
+withModifiers :: P (ModifiersFun a) -> P a
+withModifiers pmf = do
+  mf <- pmf
+  return $ mf []
 
 -- Name type helpers.
 -- Create qualified identifiers of different name types from list of identifiers.
