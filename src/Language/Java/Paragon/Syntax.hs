@@ -1,6 +1,15 @@
--- | Paragon Abstract Syntax Tree.
-module Language.Java.Paragon.Syntax where
+{-# LANGUAGE TemplateHaskell
+           , DeriveFunctor
+ #-}
 
+-- | Paragon Abstract Syntax Tree.
+module Language.Java.Paragon.Syntax
+  (
+    module Language.Java.Paragon.Syntax
+  , module Language.Java.Paragon.Annotated
+  ) where
+
+import Language.Java.Paragon.Annotated
 import Language.Java.Paragon.Interaction (panic, libraryBase)
 
 syntaxModule :: String
@@ -100,8 +109,11 @@ data InterfaceDecl a = InterfaceDecl
   , intdBody       :: InterfaceBody a  -- ^ Interface body.
   } deriving (Show, Eq)
 
-data Modifier a = M
-  deriving (Show, Eq)
+data Modifier a
+  = Public    a  -- ^ public.
+  | Private   a  -- ^ private.
+  | Protected a  -- ^ protected.
+  deriving (Show, Eq, Functor)
 
 data TypeParam a = TP
   deriving (Show, Eq)
@@ -125,4 +137,6 @@ mkQId combine nameType ids = mkQId' (reverse ids)
         mkQId' (i:is) = let pre = mkQId' is
                         in QId (combine (qIdAnn pre) (idAnn i)) i nameType (Just pre)
         mkQId' [] = panic (syntaxModule ++ ".mkQId") "empty list of identifiers"
+
+$(deriveAnnotatedMany [''Modifier])
 

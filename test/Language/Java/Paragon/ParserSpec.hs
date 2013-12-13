@@ -135,6 +135,30 @@ spec = do
         `shouldBe`
       Right (CompilationUnit cuSrcSpan Nothing [] [InterfaceTypeDecl inttdSrcSpan intd])
 
+    it "parses empty class declaration with modifiers" $
+      let fileName = "ClassDecl"
+          cuSrcSpan = SrcSpan fileName 1 1 1 17
+          ctdSrcSpan = SrcSpan fileName 1 1 1 17
+          cd = ClassDecl cdSrcSpan [Public pblSrcSpan] cId [] Nothing [] CB
+          cdSrcSpan = SrcSpan fileName 1 1 1 17
+          pblSrcSpan = SrcSpan fileName 1 1 1 6
+          cId = Id (SrcSpan fileName 1 14 1 14) "C" in
+      parse "public class C {}" fileName
+        `shouldBe`
+      Right (CompilationUnit cuSrcSpan Nothing [] [ClassTypeDecl ctdSrcSpan cd])
+
+    it "parses empty interface declaration with modifiers" $
+      let fileName = "InterfaceDecl"
+          cuSrcSpan = SrcSpan fileName 1 1 1 21
+          inttdSrcSpan = SrcSpan fileName 1 1 1 21
+          intd = InterfaceDecl intdSrcSpan [Public pblSrcSpan] intId [] [] IB
+          intdSrcSpan = SrcSpan fileName 1 1 1 21
+          pblSrcSpan = SrcSpan fileName 1 1 1 6
+          intId = Id (SrcSpan fileName 1 18 1 18) "I" in
+      parse "public interface I {}" fileName
+        `shouldBe`
+      Right (CompilationUnit cuSrcSpan Nothing [] [InterfaceTypeDecl inttdSrcSpan intd])
+
     -- Failure
     context "given a package declaration with missing semicolon" $
       it "gives an error message" $
@@ -219,4 +243,18 @@ spec = do
         in show err `shouldBe` "\"InterfaceDecl\" (line 1, column 13):\n\
                                 \unexpected end of input\n\
                                 \expecting }"
+
+    context "given a class declaration with misspelled modifier" $
+      it "gives an error message" $
+        let Left err = parse "privat class C {}" "ClassDecl"
+        in show err `shouldBe` "\"ClassDecl\" (line 1, column 1):\n\
+                                \unexpected privat\n\
+                                \expecting package declaration, import declarations, type declarations or end of input"
+
+    context "given an interface declaration with misspelled modifier" $
+      it "gives an error message" $
+        let Left err = parse "publc interface I {}" "InterfaceDecl"
+        in show err `shouldBe` "\"InterfaceDecl\" (line 1, column 1):\n\
+                                \unexpected publc\n\
+                                \expecting package declaration, import declarations, type declarations or end of input"
 

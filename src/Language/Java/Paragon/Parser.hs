@@ -90,13 +90,15 @@ classOrInterfaceDecl = withModifiers $
       cdModsFun <- classDeclModsFun
       endPos <- getParaPos
       return $ \mods ->
-        ClassTypeDecl (mkSrcSpanFromPos startPos endPos) (cdModsFun mods))
+        let startPos' = getModifiersStartPos mods startPos
+        in ClassTypeDecl (mkSrcSpanFromPos startPos' endPos) (cdModsFun mods))
     <|>
   (do startPos <- getParaPos
       intdModsFun <- interfaceDeclModsFun
       endPos <- getParaPos
       return $ \mods ->
-        InterfaceTypeDecl (mkSrcSpanFromPos startPos endPos) (intdModsFun mods))
+        let startPos' = getModifiersStartPos mods startPos
+        in InterfaceTypeDecl (mkSrcSpanFromPos startPos' endPos) (intdModsFun mods))
 
 classDeclModsFun :: P (ModifiersFun (ClassDecl SrcSpan))
 classDeclModsFun = normalClassDeclModsFun
@@ -110,7 +112,8 @@ interfaceDeclModsFun = do
   closeCurly
   endPos <- getParaPos
   return $ \mods ->
-    InterfaceDecl (mkSrcSpanFromPos startPos endPos) mods iName [] [] IB
+    let startPos' = getModifiersStartPos mods startPos
+    in InterfaceDecl (mkSrcSpanFromPos startPos' endPos) mods iName [] [] IB
 
 normalClassDeclModsFun :: P (ModifiersFun (ClassDecl SrcSpan))
 normalClassDeclModsFun = do
@@ -121,7 +124,14 @@ normalClassDeclModsFun = do
   closeCurly
   endPos <- getParaPos
   return $ \mods ->
-    ClassDecl (mkSrcSpanFromPos startPos endPos) mods className [] Nothing [] CB
+    let startPos' = getModifiersStartPos mods startPos
+    in ClassDecl (mkSrcSpanFromPos startPos' endPos) mods className [] Nothing [] CB
+
+modifier :: P (Modifier SrcSpan)
+modifier =
+      Public    <$> keywordWithSpan KW_Public
+  <|> Private   <$> keywordWithSpan KW_Private
+  <|> Protected <$> keywordWithSpan KW_Protected
 
 -- Separators
 
@@ -168,6 +178,11 @@ posFromTok fileName (TokWSpan _ sp) =
 keyword :: Token -> P ()
 keyword t = tok t <?> "keyword " ++ show t
 
+-- | Matches a given keyword and returns a source span for this keyword.
+keywordWithSpan :: Token -> P SrcSpan
+keywordWithSpan k =
+  (tokWithSpan $ \t sp -> if t == k then Just sp else Nothing) <?> "keyword " ++ show k
+
 -- | There are several syntax tree nodes that have a list of modifiers data field. 
 -- This type synonym is for the nodes that have this gap to be filled in (by 'withModifiers').
 type ModifiersFun a = [Modifier SrcSpan] -> a
@@ -177,8 +192,9 @@ type ModifiersFun a = [Modifier SrcSpan] -> a
 -- a function of type 'ModifiersFun' and applies this function to modifiers.
 withModifiers :: P (ModifiersFun a) -> P a
 withModifiers pmf = do
+  mods <- list modifier <?> "modifiers"
   mf <- pmf
-  return $ mf []
+  return $ mf mods
 
 -- Name type helpers.
 -- Create qualified identifiers of different name types from list of identifiers.
@@ -210,6 +226,13 @@ parsecToSrcPos pos = SrcPos (sourceName pos)
 -- | Converts Paragon source position to Parsec representation.
 srcPosToParsec :: SrcPos -> SourcePos
 srcPosToParsec (SrcPos fileName l c) = newPos fileName l c
+
+-- | Takes a list of modifiers annotated with source spans and a default starting position.
+-- If there are no modifiers - returns the default, otherwise - returns the starting 
+-- position of the first modifier.
+getModifiersStartPos :: [Modifier SrcSpan] -> SrcPos -> SrcPos
+getModifiersStartPos []    defaultSrcPos = defaultSrcPos
+getModifiersStartPos (m:_) _             = srcSpanToPos (ann m)
 
 -- Parser combinators
 
