@@ -92,6 +92,7 @@ data ClassDecl a = ClassDecl
 
 -- | Interface declaration.
 data InterfaceDecl a = I
+  deriving (Show, Eq)
 
 data Modifier a = M
   deriving (Show, Eq)
