@@ -91,9 +91,26 @@ classOrInterfaceDecl = withModifiers $
       endPos <- getParaPos
       return $ \mods ->
         ClassTypeDecl (mkSrcSpanFromPos startPos endPos) (cdModsFun mods))
+    <|>
+  (do startPos <- getParaPos
+      intdModsFun <- interfaceDeclModsFun
+      endPos <- getParaPos
+      return $ \mods ->
+        InterfaceTypeDecl (mkSrcSpanFromPos startPos endPos) (intdModsFun mods))
 
 classDeclModsFun :: P (ModifiersFun (ClassDecl SrcSpan))
 classDeclModsFun = normalClassDeclModsFun
+
+interfaceDeclModsFun :: P (ModifiersFun (InterfaceDecl SrcSpan))
+interfaceDeclModsFun = do
+  startPos <- getParaPos
+  keyword KW_Interface
+  iName <- ident <?> "interface name"
+  openCurly
+  closeCurly
+  endPos <- getParaPos
+  return $ \mods ->
+    InterfaceDecl (mkSrcSpanFromPos startPos endPos) mods iName [] [] IB
 
 normalClassDeclModsFun :: P (ModifiersFun (ClassDecl SrcSpan))
 normalClassDeclModsFun = do

@@ -124,6 +124,17 @@ spec = do
         `shouldBe`
       Right (CompilationUnit cuSrcSpan Nothing [] [ClassTypeDecl ctdSrcSpan cd])
 
+    it "parses empty interface declaration" $
+      let fileName = "InterfaceDecl"
+          cuSrcSpan = SrcSpan fileName 1 1 1 14
+          inttdSrcSpan = SrcSpan fileName 1 1 1 14
+          intd = InterfaceDecl intdSrcSpan [] intId [] [] IB
+          intdSrcSpan = SrcSpan fileName 1 1 1 14
+          intId = Id (SrcSpan fileName 1 11 1 11) "I" in
+      parse "interface I {}" fileName
+        `shouldBe`
+      Right (CompilationUnit cuSrcSpan Nothing [] [InterfaceTypeDecl inttdSrcSpan intd])
+
     -- Failure
     context "given a package declaration with missing semicolon" $
       it "gives an error message" $
@@ -185,6 +196,27 @@ spec = do
       it "gives an error message" $
         let Left err = parse "class C {" "ClassDecl"
         in show err `shouldBe` "\"ClassDecl\" (line 1, column 9):\n\
+                                \unexpected end of input\n\
+                                \expecting }"
+
+    context "given an interface declaration with missing name" $
+      it "gives an error message" $
+        let Left err = parse "interface {}" "InterfaceDecl"
+        in show err `shouldBe` "\"InterfaceDecl\" (line 1, column 11):\n\
+                                \unexpected {\n\
+                                \expecting interface name"
+
+    context "given a interface declaration with missing opening brace" $
+      it "gives an error message" $
+        let Left err = parse "interface I }" "InterfaceDecl"
+        in show err `shouldBe` "\"InterfaceDecl\" (line 1, column 13):\n\
+                                \unexpected }\n\
+                                \expecting {"
+
+    context "given a interface declaration with missing closing brace" $
+      it "gives an error message" $
+        let Left err = parse "interface I {" "InterfaceDecl"
+        in show err `shouldBe` "\"InterfaceDecl\" (line 1, column 13):\n\
                                 \unexpected end of input\n\
                                 \expecting }"
 

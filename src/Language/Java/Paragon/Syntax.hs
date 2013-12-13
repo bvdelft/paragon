@@ -91,8 +91,14 @@ data ClassDecl a = ClassDecl
   } deriving (Show, Eq)
 
 -- | Interface declaration.
-data InterfaceDecl a = I
-  deriving (Show, Eq)
+data InterfaceDecl a = InterfaceDecl
+  { intdAnn        :: a                -- ^ Annotation.
+  , intdModifiers  :: [Modifier a]     -- ^ List of modifiers.
+  , intdId         :: Id a             -- ^ Interface identifier.
+  , intdTypeParams :: [TypeParam a]    -- ^ List of type parameters.
+  , intdInterfaces :: [ClassType a]    -- ^ List of interfaces it extends.
+  , intdBody       :: InterfaceBody a  -- ^ Interface body.
+  } deriving (Show, Eq)
 
 data Modifier a = M
   deriving (Show, Eq)
@@ -104,6 +110,9 @@ data ClassType a = CT
   deriving (Show, Eq)
 
 data ClassBody a = CB
+  deriving (Show, Eq)
+
+data InterfaceBody a = IB
   deriving (Show, Eq)
 
 -- Helper functions
