@@ -6,7 +6,6 @@
 module Language.Java.Paragon.Parser
   (
     parse
-  , runParser
   ) where
 
 import Control.Applicative (Applicative(..), (<$>), (<*>))
