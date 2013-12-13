@@ -206,14 +206,14 @@ spec = do
                                 \unexpected {\n\
                                 \expecting interface name"
 
-    context "given a interface declaration with missing opening brace" $
+    context "given an interface declaration with missing opening brace" $
       it "gives an error message" $
         let Left err = parse "interface I }" "InterfaceDecl"
         in show err `shouldBe` "\"InterfaceDecl\" (line 1, column 13):\n\
                                 \unexpected }\n\
                                 \expecting {"
 
-    context "given a interface declaration with missing closing brace" $
+    context "given an interface declaration with missing closing brace" $
       it "gives an error message" $
         let Left err = parse "interface I {" "InterfaceDecl"
         in show err `shouldBe` "\"InterfaceDecl\" (line 1, column 13):\n\
