@@ -74,6 +74,7 @@ importDecl = do
     semiColon
     endPos <- getParaPos
     return $ mkImportDecl isStatic hasStar (mkSrcSpanFromPos startPos endPos) qId
+    -- TODO: fix name types
   where mkImportDecl False False = SingleTypeImport
         mkImportDecl False True  = TypeImportOnDemand
         mkImportDecl True  False = SingleStaticImport
