@@ -69,7 +69,7 @@ importDecl = do
     startPos <- getParaPos
     keyword KW_Import
     isStatic <- bopt $ keyword KW_Static
-    qId <- qIdent ambigName <?> "package name"
+    qId <- qIdent ambigName <?> "package/type name"
     hasStar <- bopt $ period >> (tok Op_Star <?> "* or identifier")
     semiColon
     endPos <- getParaPos
