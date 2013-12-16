@@ -10,7 +10,8 @@ module Language.Java.Paragon.Syntax
   ) where
 
 import Language.Java.Paragon.Annotated
-import Language.Java.Paragon.Interaction (panic, libraryBase)
+import Language.Java.Paragon.Interaction (panic, libraryBase, Pretty(..))
+import Text.PrettyPrint
 
 syntaxModule :: String
 syntaxModule = libraryBase ++ ".Syntax"
@@ -36,7 +37,10 @@ instance Show (QId a) where
   show qid =
     case qIdPrevName qid of
       Nothing   ->  show (idName (qIdName qid))
-      Just pre  ->  show pre ++ show (idName (qIdName qid))
+      Just pre  ->  show pre ++ "." ++ show (idName (qIdName qid))
+
+instance Pretty (QId a) where
+  pretty q = text (show q) <> text " : " <> text (show $ qIdNameType q)
 
 -- | Types of the names, e.g. expression, method, type etc.
 data NameType = ExpName           -- ^ Expression name.

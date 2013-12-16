@@ -10,7 +10,7 @@ module Language.Java.Paragon.Interaction.Flags
   , requestsVersion
   , requestsHelp
   , requestsNullCheck
-  , getPiPath
+  , getFlagPiPath
   , getJavaOutputPath
   , getPiOutputPath
   , getSourcePath
@@ -130,8 +130,8 @@ requestsNullCheck :: [Flag] -> Bool
 requestsNullCheck = not . elem NoNullCheck
 
 -- | Returns PiPath if specified, defaults to .
-getPiPath :: [Flag] -> String
-getPiPath flags =
+getFlagPiPath :: [Flag] -> String
+getFlagPiPath flags =
   case [p | PiPath p <- flags] of
     [p] -> p
     _   -> "." -- Default.

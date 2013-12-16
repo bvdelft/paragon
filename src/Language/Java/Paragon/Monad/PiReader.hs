@@ -6,6 +6,12 @@ module Language.Java.Paragon.Monad.PiReader
   , liftToBaseM
   , MonadPR(..)
   , getPiPath
+  , doesPkgExist
+  , doesTypeExist
+  , getPkgContents
+  , getPiPathContents
+  , getTypeContents
   ) where
 
 import Language.Java.Paragon.Monad.PiReader.MonadPR
+import Language.Java.Paragon.Monad.PiReader.PiFunc

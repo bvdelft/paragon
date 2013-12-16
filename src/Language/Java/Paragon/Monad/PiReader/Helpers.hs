@@ -1,4 +1,4 @@
--- | This module reads pi files.
+-- | Helper functions for the Pi-reader.
 module Language.Java.Paragon.Monad.PiReader.Helpers
   (
     -- * Helper functions for the @PiReader@.

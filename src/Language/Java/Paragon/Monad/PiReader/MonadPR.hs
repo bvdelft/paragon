@@ -1,4 +1,4 @@
--- | This module reads pi files.
+-- | Defines the @MonadPR@ monad; adding the PiPath.
 module Language.Java.Paragon.Monad.PiReader.MonadPR
   ( 
     module Language.Java.Paragon.Monad.Base
