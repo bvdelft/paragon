@@ -20,6 +20,7 @@ import Language.Java.Paragon.Monad.PiReader.MonadPR
 import Language.Java.Paragon.Parser (parse)
 import Language.Java.Paragon.SrcPos
 import Language.Java.Paragon.Syntax (QId(..),CompilationUnit)
+import Language.Java.Paragon.Unparse (unparsePrint)
 
 piReaderModule :: String
 piReaderModule = libraryBase ++ ".Monad.PiReader.PiFunc"
@@ -62,7 +63,7 @@ getPkgContents pkgName = liftPR $ do
       where selectFirstPkg :: FilePath -> [FilePath] -> PiReader FilePath
             selectFirstPkg _ [] = panic (piReaderModule ++ ".getPkgContents")
                                 ("No such package exists - doesPkgExist not called successfully"
-                                 ++ show pkgName)
+                                 ++ unparsePrint pkgName)
             selectFirstPkg path (pip:pips) = do
                      isP <- liftIO $ doesDirectoryExist $ pip </> path
                      if isP then return $ pip </> path
@@ -103,7 +104,7 @@ getTypeContents n = liftPR $ do
       where findFirstPi :: FilePath -> [FilePath] -> PiReader (CompilationUnit SrcSpan)
             findFirstPi _ [] = panic (piReaderModule ++ ".getTypeContents")
                                ("No such type exists - doesTypeExist not called successfully: "
-                                ++ show n)
+                                ++ unparsePrint n)
             findFirstPi path (pip:pips) = do
                       isT <- liftIO $ doesFileExist $ pip </> path
                       if isT
@@ -112,6 +113,6 @@ getTypeContents n = liftPR $ do
                                case pRes of
                                  Right cu -> return cu
                                  Left pe  -> fail $ "Parse error in pi file for type " 
-                                                   ++ prettyPrint n ++ ":\n"
+                                                   ++ unparsePrint n ++ ":\n"
                                                    ++ show pe
                        else findFirstPi path pips

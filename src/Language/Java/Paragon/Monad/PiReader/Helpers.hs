@@ -19,6 +19,7 @@ import System.Directory (doesDirectoryExist)
 import Language.Java.Paragon.Interaction (panic, libraryBase)
 import Language.Java.Paragon.Monad.Base (MonadIO(..))
 import Language.Java.Paragon.Syntax (QId(..),NameType(..),Id(..))
+import Language.Java.Paragon.Unparse (unparsePrint)
 
 prHelperModule :: String
 prHelperModule = libraryBase ++ ".Monad.PiReader.Helpers"
@@ -49,7 +50,7 @@ packNameToDir packName =
         Nothing   ->  idName (qIdName packName)
     TypeName  ->  panic (prHelperModule ++ ".packNameToDir") 
                         "Inner types are not yet supported"
-    _         ->  panic (prHelperModule ++ ".packNameToDir") (show packName)
+    _         ->  panic (prHelperModule ++ ".packNameToDir") (unparsePrint packName)
 
 -- | Convert AST type name into a file path to actual @.pi@ file.
 typeNameToFile :: QId a -> FilePath
@@ -59,4 +60,4 @@ typeNameToFile typeName =
       case qIdPrevName typeName of
         Just pre  ->  packNameToDir pre </> idName (qIdName typeName) <.> "pi"
         Nothing   ->  idName (qIdName typeName) <.> "pi"
-    _         ->  panic (prHelperModule ++ "typeNameToDir") (show typeName)
+    _         ->  panic (prHelperModule ++ "typeNameToDir") (unparsePrint typeName)

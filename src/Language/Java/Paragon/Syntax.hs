@@ -10,7 +10,8 @@ module Language.Java.Paragon.Syntax
   ) where
 
 import Language.Java.Paragon.Annotated
-import Language.Java.Paragon.Interaction (panic, libraryBase, Pretty(..))
+import Language.Java.Paragon.Interaction (panic, libraryBase)
+import Language.Java.Paragon.Unparse (Unparse(..))
 import Text.PrettyPrint
 
 syntaxModule :: String
@@ -31,16 +32,13 @@ data QId a = QId
   , qIdName     :: Id a           -- ^ Identifier.
   , qIdNameType :: NameType       -- ^ Type of the name.
   , qIdPrevName :: Maybe (QId a)  -- ^ Possibly, name part before the period.
-  } deriving (Eq)
+  } deriving (Show, Eq)
 
-instance Show (QId a) where
-  show qid =
+instance Unparse (QId a) where
+  unparse qid =
     case qIdPrevName qid of
-      Nothing   ->  show (idName (qIdName qid))
-      Just pre  ->  show pre ++ "." ++ show (idName (qIdName qid))
-
-instance Pretty (QId a) where
-  pretty q = text (show q) <> text " : " <> text (show $ qIdNameType q)
+      Nothing   ->  text $ show (idName (qIdName qid))
+      Just pre  ->  unparse pre <> text "." <> text (show (idName (qIdName qid)))
 
 -- | Types of the names, e.g. expression, method, type etc.
 data NameType = ExpName           -- ^ Expression name.
