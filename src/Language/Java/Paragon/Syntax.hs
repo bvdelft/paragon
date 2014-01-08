@@ -70,24 +70,37 @@ data PackageDecl a = PackageDecl
 data ImportDecl a =
     -- | Import a single type.
     -- Example: import java.util.LinkedList;
-    SingleTypeImport a (Name a)
+    SingleTypeImport { impdAnn  :: a       -- ^ Annotation.
+                     , impdName :: Name a  -- ^ Type name.
+                     }
 
     -- | Import all the types contained in a package.
     -- Example: import java.util.*;
-  | TypeImportOnDemand a (Name a)
+  | TypeImportOnDemand { impdAnn  :: a       -- ^ Annotation.
+                       , impdName :: Name a  -- ^ Package name.
+                       }
 
     -- | Static import of a single type.
     -- Example: import static java.lang.Math.PI;
-  | SingleStaticImport a (Name a)
+  | SingleStaticImport { impdAnn  :: a       -- ^ Annotation.
+                       , impdName :: Name a  -- ^ Member name.
+                       }
 
     -- | Static import of all members.
     -- Example: import static java.lang.Math.*;
-  | StaticImportOnDemand a (Name a)
+  | StaticImportOnDemand { impdAnn  :: a       -- ^ Annotation.
+                         , impdName :: Name a  -- ^ Package name.
+                         }
   deriving (Show, Eq)
 
 -- | Class or interface declaration.
-data TypeDecl a = ClassTypeDecl a (ClassDecl a)
-                | InterfaceTypeDecl a (InterfaceDecl a)
+data TypeDecl a =
+    ClassTypeDecl     { tdAnn       :: a            -- ^ Annotation.
+                      , tdClassDecl :: ClassDecl a  -- ^ Class declaration.
+                      }
+  | InterfaceTypeDecl { tdAnn     :: a                -- ^ Annotation.
+                      , tdIntDecl :: InterfaceDecl a  -- ^ Interface declaration.
+                      }
   deriving (Show, Eq)
 
 -- | Class declaration.
