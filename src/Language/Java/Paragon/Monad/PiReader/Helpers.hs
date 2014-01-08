@@ -4,7 +4,7 @@ module Language.Java.Paragon.Monad.PiReader.Helpers
     -- * Helper functions for the @PiReader@.
     filterPiIdents
   , filterPkgIdentsM
-  , packNameToDir
+  , pkgNameToDir
   , typeNameToFile
   ) where
 
@@ -18,7 +18,7 @@ import System.Directory (doesDirectoryExist)
 
 import Language.Java.Paragon.Interaction (panic, libraryBase)
 import Language.Java.Paragon.Monad.Base (MonadIO(..))
-import Language.Java.Paragon.Syntax (QId(..),NameType(..),Id(..))
+import Language.Java.Paragon.Syntax (Name(..), NameType(..), Id(..))
 import Language.Java.Paragon.Unparse (unparsePrint)
 
 prHelperModule :: String
@@ -41,23 +41,24 @@ filterPkgIdentsM dir files = liftIO $ do
     return [ f | f <- fs, head f /= '.' ]
 
 -- | Convert an AST package name into a file path to the package directory.
-packNameToDir :: QId a -> FilePath
-packNameToDir packName =
-  case qIdNameType packName of
+pkgNameToDir :: Name a -> FilePath
+pkgNameToDir pkgName =
+  case nameType pkgName of
     PkgName   ->
-      case qIdPrevName packName of
-        Just pre  ->  packNameToDir pre </> idName (qIdName packName)
-        Nothing   ->  idName (qIdName packName)
-    TypeName  ->  panic (prHelperModule ++ ".packNameToDir") 
-                        "Inner types are not yet supported"
-    _         ->  panic (prHelperModule ++ ".packNameToDir") (unparsePrint packName)
+      case namePrefix pkgName of
+        Just pre -> pkgNameToDir pre </> idIdent (nameId pkgName)
+        Nothing  -> idIdent (nameId pkgName)
+    TypeName  -> panic (prHelperModule ++ ".packNameToDir") 
+                       "Inner types are not yet supported"
+    _         -> panic (prHelperModule ++ ".packNameToDir") (unparsePrint pkgName)
 
 -- | Convert AST type name into a file path to actual @.pi@ file.
-typeNameToFile :: QId a -> FilePath
+typeNameToFile :: Name a -> FilePath
 typeNameToFile typeName =
-  case qIdNameType typeName of
+  case nameType typeName of
     TypeName  ->
-      case qIdPrevName typeName of
-        Just pre  ->  packNameToDir pre </> idName (qIdName typeName) <.> "pi"
-        Nothing   ->  idName (qIdName typeName) <.> "pi"
-    _         ->  panic (prHelperModule ++ "typeNameToDir") (unparsePrint typeName)
+      case namePrefix typeName of
+        Just pre -> pkgNameToDir pre </> idIdent (nameId typeName) <.> "pi"
+        Nothing  -> idIdent (nameId typeName) <.> "pi"
+    _         -> panic (prHelperModule ++ "typeNameToDir") (unparsePrint typeName)
+

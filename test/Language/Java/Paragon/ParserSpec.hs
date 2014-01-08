@@ -42,7 +42,7 @@ spec = do
           paragonId = Id (SrcSpan fileName 1 9 1 15) "paragon" in
       parse "package paragon;" fileName
         `shouldBe`
-      Right (CompilationUnit cuSrcSpan (Just $ PackageDecl pdSrcSpan (QId qIdSrcSpan paragonId PkgName Nothing)) [] [])
+      Right (CompilationUnit cuSrcSpan (Just $ PackageDecl pdSrcSpan (Name qIdSrcSpan paragonId PkgName Nothing)) [] [])
 
     it "parses package declaration with qualified identifier" $
       let fileName = "PkgDecl"
@@ -50,13 +50,13 @@ spec = do
           pdSrcSpan = SrcSpan fileName 1 1 1 28
           qIdSrcSpan = SrcSpan fileName 1 9 1 27
           seId = Id (SrcSpan fileName 1 9 1 10) "se"
-          seQId = QId (SrcSpan fileName 1 9 1 10) seId PkgName Nothing
+          seName = Name (SrcSpan fileName 1 9 1 10) seId PkgName Nothing
           chalmersId = Id (SrcSpan fileName 1 12 1 19) "chalmers"
-          chalmersQId = QId (SrcSpan fileName 1 9 1 19) chalmersId PkgName (Just seQId)
+          chalmersName = Name (SrcSpan fileName 1 9 1 19) chalmersId PkgName (Just seName)
           paragonId = Id (SrcSpan fileName 1 21 1 27) "paragon" in
       parse "package se.chalmers.paragon;" fileName
         `shouldBe`
-      Right (CompilationUnit cuSrcSpan (Just $ PackageDecl pdSrcSpan (QId qIdSrcSpan paragonId PkgName (Just chalmersQId))) [] [])
+      Right (CompilationUnit cuSrcSpan (Just $ PackageDecl pdSrcSpan (Name qIdSrcSpan paragonId PkgName (Just chalmersName))) [] [])
     -- TODO: fix name types
     it "parses single type import declaration" $
       let fileName = "ImportDecl"
@@ -64,11 +64,11 @@ spec = do
           impdSrcSpan = SrcSpan fileName 1 1 1 22
           qIdSrcSpan = SrcSpan fileName 1 8 1 21
           policyId = Id (SrcSpan fileName 1 16 1 21) "Policy"
-          paragonQId = QId (SrcSpan fileName 1 8 1 14) paragonId AmbigName Nothing
+          paragonName = Name (SrcSpan fileName 1 8 1 14) paragonId AmbigName Nothing
           paragonId = Id (SrcSpan fileName 1 8 1 14) "paragon" in
       parse "import paragon.Policy;" fileName
         `shouldBe`
-      Right (CompilationUnit cuSrcSpan Nothing [SingleTypeImport impdSrcSpan (QId qIdSrcSpan policyId AmbigName (Just paragonQId))] [])
+      Right (CompilationUnit cuSrcSpan Nothing [SingleTypeImport impdSrcSpan (Name qIdSrcSpan policyId AmbigName (Just paragonName))] [])
 
     it "parses import declaration for all the types in a package" $
       let fileName = "ImportDecl"
@@ -78,7 +78,7 @@ spec = do
           paragonId = Id (SrcSpan fileName 1 8 1 14) "paragon" in
       parse "import paragon.*;" fileName
         `shouldBe`
-      Right (CompilationUnit cuSrcSpan Nothing [TypeImportOnDemand impdSrcSpan (QId qIdSrcSpan paragonId AmbigName Nothing)] [])
+      Right (CompilationUnit cuSrcSpan Nothing [TypeImportOnDemand impdSrcSpan (Name qIdSrcSpan paragonId AmbigName Nothing)] [])
 
     it "parses static import declaration of a single type" $
       let fileName = "ImportDecl"
@@ -86,13 +86,13 @@ spec = do
           impdSrcSpan = SrcSpan fileName 1 1 1 27
           qIdSrcSpan = SrcSpan fileName 1 15 1 26
           piId = Id (SrcSpan fileName 1 25 1 26) "PI"
-          mathQId = QId (SrcSpan fileName 1 15 1 23) mathId AmbigName (Just langQId)
+          mathName = Name (SrcSpan fileName 1 15 1 23) mathId AmbigName (Just langName)
           mathId = Id (SrcSpan fileName 1 20 1 23) "Math"
-          langQId = QId (SrcSpan fileName 1 15 1 18) langId AmbigName Nothing
+          langName = Name (SrcSpan fileName 1 15 1 18) langId AmbigName Nothing
           langId = Id (SrcSpan fileName 1 15 1 18) "lang" in
       parse "import static lang.Math.PI;" fileName
         `shouldBe`
-      Right (CompilationUnit cuSrcSpan Nothing [SingleStaticImport impdSrcSpan (QId qIdSrcSpan piId AmbigName (Just mathQId))] [])
+      Right (CompilationUnit cuSrcSpan Nothing [SingleStaticImport impdSrcSpan (Name qIdSrcSpan piId AmbigName (Just mathName))] [])
 
     it "parses static import declaration for all members" $
       let fileName = "ImportDecl"
@@ -100,11 +100,11 @@ spec = do
           impdSrcSpan = SrcSpan fileName 1 1 1 26
           qIdSrcSpan = SrcSpan fileName 1 15 1 23
           mathId = Id (SrcSpan fileName 1 20 1 23) "Math"
-          langQId = QId (SrcSpan fileName 1 15 1 18) langId AmbigName Nothing
+          langName = Name (SrcSpan fileName 1 15 1 18) langId AmbigName Nothing
           langId = Id (SrcSpan fileName 1 15 1 18) "lang" in
       parse "import static lang.Math.*;" fileName
         `shouldBe`
-      Right (CompilationUnit cuSrcSpan Nothing [StaticImportOnDemand impdSrcSpan (QId qIdSrcSpan mathId AmbigName (Just langQId))] [])
+      Right (CompilationUnit cuSrcSpan Nothing [StaticImportOnDemand impdSrcSpan (Name qIdSrcSpan mathId AmbigName (Just langName))] [])
 
     it "parses semicolon type declaration" $
       let fileName = "SemiColonDecl"

@@ -41,8 +41,8 @@ ident =
       IdTok s -> Just $ Id sp s
       _       -> Nothing
 
-qIdent :: ([Id SrcSpan] -> QId SrcSpan) -> P (QId SrcSpan)
-qIdent nameFun = nameFun <$> seplist1 ident period
+name :: ([Id SrcSpan] -> Name SrcSpan) -> P (Name SrcSpan)
+name nameFun = nameFun <$> seplist1 ident period
 
 -- | Parser for the top-level syntax node.
 compilationUnit :: P (CompilationUnit SrcSpan)
@@ -59,7 +59,7 @@ packageDecl :: P (PackageDecl SrcSpan)
 packageDecl = do
   startPos <- getParaPos
   keyword KW_Package
-  pName <- qIdent pkgName <?> "package name"
+  pName <- name pkgName <?> "package name"
   semiColon
   endPos <- getParaPos
   return $ PackageDecl (mkSrcSpanFromPos startPos endPos) pName
@@ -69,11 +69,11 @@ importDecl = do
     startPos <- getParaPos
     keyword KW_Import
     isStatic <- bopt $ keyword KW_Static
-    qId <- qIdent ambigName <?> "package/type name"
+    pkgTypeName <- name ambigName <?> "package/type name"
     hasStar <- bopt $ period >> (tok Op_Star <?> "* or identifier")
     semiColon
     endPos <- getParaPos
-    return $ mkImportDecl isStatic hasStar (mkSrcSpanFromPos startPos endPos) qId
+    return $ mkImportDecl isStatic hasStar (mkSrcSpanFromPos startPos endPos) pkgTypeName
     -- TODO: fix name types
   where mkImportDecl False False = SingleTypeImport
         mkImportDecl False True  = TypeImportOnDemand
@@ -197,13 +197,13 @@ withModifiers pmf = do
   return $ mf mods
 
 -- Name type helpers.
--- Create qualified identifiers of different name types from list of identifiers.
+-- Create qualified names of different name types from list of identifiers.
 
-pkgName :: [Id SrcSpan] -> QId SrcSpan
-pkgName = mkQId combineSrcSpan PkgName
+pkgName :: [Id SrcSpan] -> Name SrcSpan
+pkgName = mkName combineSrcSpan PkgName
 
-ambigName :: [Id SrcSpan] -> QId SrcSpan
-ambigName = mkQId combineSrcSpan AmbigName
+ambigName :: [Id SrcSpan] -> Name SrcSpan
+ambigName = mkName combineSrcSpan AmbigName
 
 -- Source positions
 

@@ -22,23 +22,23 @@ type AST = CompilationUnit
 
 -- | Identifier data type.
 data Id a = Id
-  { idAnn  :: a       -- ^ Annotation.
-  , idName :: String  -- ^ Identifier's string.
+  { idAnn   :: a       -- ^ Annotation.
+  , idIdent :: String  -- ^ Identifier's string.
   } deriving (Show, Eq)
 
--- | Qualified identifier. A period-separated list of identifiers.
-data QId a = QId
-  { qIdAnn      :: a              -- ^ Annotation.
-  , qIdName     :: Id a           -- ^ Identifier.
-  , qIdNameType :: NameType       -- ^ Type of the name.
-  , qIdPrevName :: Maybe (QId a)  -- ^ Possibly, name part before the period.
+-- | Qualified name. A period-separated list of identifiers.
+data Name a = Name
+  { nameAnn    :: a               -- ^ Annotation.
+  , nameId     :: Id a            -- ^ Identifier.
+  , nameType   :: NameType        -- ^ Type of the name.
+  , namePrefix :: Maybe (Name a)  -- ^ Possibly, name part before the period.
   } deriving (Show, Eq)
 
-instance Unparse (QId a) where
-  unparse qid =
-    case qIdPrevName qid of
-      Nothing   ->  text $ show (idName (qIdName qid))
-      Just pre  ->  unparse pre <> text "." <> text (show (idName (qIdName qid)))
+instance Unparse (Name a) where
+  unparse name =
+    case namePrefix name of
+      Nothing  -> text $ show (idIdent (nameId name))
+      Just pre -> unparse pre <> text "." <> text (show (idIdent (nameId name)))
 
 -- | Types of the names, e.g. expression, method, type etc.
 data NameType = ExpName           -- ^ Expression name.
@@ -62,27 +62,27 @@ data CompilationUnit a = CompilationUnit
 
 -- | Package declaration.
 data PackageDecl a = PackageDecl
-  { pdAnn :: a      -- ^ Annotation.
-  , pdId  :: QId a  -- ^ Package identifier.
+  { pdAnn  :: a       -- ^ Annotation.
+  , pdName :: Name a  -- ^ Package name.
   } deriving (Show, Eq)
 
 -- | Import declaration.
 data ImportDecl a =
     -- | Import a single type.
     -- Example: import java.util.LinkedList;
-    SingleTypeImport a (QId a)
+    SingleTypeImport a (Name a)
 
     -- | Import all the types contained in a package.
     -- Example: import java.util.*;
-  | TypeImportOnDemand a (QId a)
+  | TypeImportOnDemand a (Name a)
 
     -- | Static import of a single type.
     -- Example: import static java.lang.Math.PI;
-  | SingleStaticImport a (QId a)
+  | SingleStaticImport a (Name a)
 
     -- | Static import of all members.
     -- Example: import static java.lang.Math.*;
-  | StaticImportOnDemand a (QId a)
+  | StaticImportOnDemand a (Name a)
   deriving (Show, Eq)
 
 -- | Class or interface declaration.
@@ -131,14 +131,14 @@ data InterfaceBody a = IB
 
 -- Helper functions
 
--- | Creates a qualified identifier from name type and list of identifiers.
+-- | Creates a qualified name from name type and list of identifiers.
 -- Takes a function to combine annotations.
-mkQId :: (a -> a -> a) -> NameType -> [Id a] -> QId a
-mkQId combine nameType ids = mkQId' (reverse ids)
-  where mkQId' [i]    = QId (idAnn i) i nameType Nothing
-        mkQId' (i:is) = let pre = mkQId' is
-                        in QId (combine (qIdAnn pre) (idAnn i)) i nameType (Just pre)
-        mkQId' [] = panic (syntaxModule ++ ".mkQId") "empty list of identifiers"
+mkName :: (a -> a -> a) -> NameType -> [Id a] -> Name a
+mkName combine nameT ids = mkName' (reverse ids)
+  where mkName' [i]    = Name (idAnn i) i nameT Nothing
+        mkName' (i:is) = let pre = mkName' is
+                         in Name (combine (nameAnn pre) (idAnn i)) i nameT (Just pre)
+        mkName' [] = panic (syntaxModule ++ ".mkName") "empty list of identifiers"
 
 $(deriveAnnotatedMany [''Modifier])
 
