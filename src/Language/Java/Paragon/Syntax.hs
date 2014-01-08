@@ -111,10 +111,26 @@ data InterfaceDecl a = InterfaceDecl
   , intdBody       :: InterfaceBody a  -- ^ Interface body.
   } deriving (Show, Eq)
 
+-- | Modifiers for declarations.
 data Modifier a
-  = Public    a  -- ^ public.
-  | Private   a  -- ^ private.
-  | Protected a  -- ^ protected.
+  = Public    a     -- ^ public
+  | Protected a     -- ^ protected
+  | Private   a     -- ^ private
+  | Static    a     -- ^ static
+  | Abstract  a     -- ^ abstract
+  | Final     a     -- ^ final
+  | Native    a     -- ^ native
+  | Synchronized a  -- ^ synchronized
+  | Transient a     -- ^ transient
+  | Volatile  a     -- ^ volatile
+  | StrictFP  a     -- ^ strictfp
+  -- Paragon specific
+  | Typemethod a
+  | Reflexive  a
+  | Transitive a
+  | Symmetric  a
+  | Readonly   a
+  | Notnull    a
   deriving (Show, Eq, Functor)
 
 data TypeParam a = TP

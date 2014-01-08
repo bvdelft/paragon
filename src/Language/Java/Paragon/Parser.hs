@@ -129,9 +129,24 @@ normalClassDeclModsFun = do
 
 modifier :: P (Modifier SrcSpan)
 modifier =
-      Public    <$> keywordWithSpan KW_Public
-  <|> Private   <$> keywordWithSpan KW_Private
-  <|> Protected <$> keywordWithSpan KW_Protected
+      Public       <$> keywordWithSpan KW_Public
+  <|> Protected    <$> keywordWithSpan KW_Protected
+  <|> Private      <$> keywordWithSpan KW_Private
+  <|> Static       <$> keywordWithSpan KW_Static
+  <|> Abstract     <$> keywordWithSpan KW_Abstract
+  <|> Final        <$> keywordWithSpan KW_Final
+  <|> Native       <$> keywordWithSpan KW_Native
+  <|> Synchronized <$> keywordWithSpan KW_Synchronized
+  <|> Transient    <$> keywordWithSpan KW_Transient
+  <|> Volatile     <$> keywordWithSpan KW_Volatile
+  <|> StrictFP     <$> keywordWithSpan KW_Strictfp
+  -- Paragon specific
+  <|> Typemethod   <$> keywordWithSpan KW_P_Typemethod
+  <|> Reflexive    <$> keywordWithSpan KW_P_Reflexive
+  <|> Transitive   <$> keywordWithSpan KW_P_Transitive
+  <|> Symmetric    <$> keywordWithSpan KW_P_Symmetric
+  <|> Readonly     <$> keywordWithSpan KW_P_Readonly
+  <|> Notnull      <$> keywordWithSpan KW_P_Notnull
 
 -- Separators
 
