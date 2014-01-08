@@ -14,6 +14,8 @@ module Language.Java.Paragon.Lexer
   , TokenWithSpan(..)
   ) where
 
+import Numeric
+import Data.Char (toLower, isHexDigit, isOctDigit)
 import Data.List (intercalate)
 
 import Language.Java.Paragon.SrcPos
@@ -35,6 +37,14 @@ $hexdig  = [0-9A-Fa-f]
 $javaLetter = [a-zA-Z\_\$]
 $javaDigit = $digit
 $javaLetterOrDigit = [a-zA-Z0-9\_\$]
+
+@octEscape = [0123]? $octdig{1,2}
+@hexEscape = u $hexdig{4}
+@charEscape = \\ (@octEscape | @hexEscape | [btnfr\"\'\\])
+
+@expsuffix = [\+\-]? $digit+
+@exponent = [eE] @expsuffix
+@pexponent = [pP] @expsuffix
 
 tokens :-
 
@@ -121,7 +131,36 @@ tokens :-
   -- Literals
   true  { \p s -> TokWSpan (BoolLit True)  (posn p s) }
   false { \p s -> TokWSpan (BoolLit False) (posn p s) }
+
   null  { \p s -> TokWSpan NullLit         (posn p s) }
+
+  0               { \p s -> TokWSpan (IntLit 0)  (posn p s) }
+  0 [lL]          { \p s -> TokWSpan (LongLit 0) (posn p s) }
+
+  0 $digit+       { \p s -> TokWSpan (IntLit (pickyReadOct s))         (posn p s) }
+  0 $digit+ [lL]  { \p s -> TokWSpan (LongLit (pickyReadOct (init s))) (posn p s) }
+
+  $nonzero $digit*       { \p s -> TokWSpan (IntLit (read s))         (posn p s) }
+  $nonzero $digit* [lL]  { \p s -> TokWSpan (LongLit (read (init s))) (posn p s) }
+
+  0 [xX] $hexdig+       { \p s -> TokWSpan (IntLit (fst . head $ readHex (drop 2 s)))         (posn p s) }
+  0 [xX] $hexdig+ [lL]  { \p s -> TokWSpan (LongLit (fst . head $ readHex (init (drop 2 s)))) (posn p s) }
+
+  $digit+ \. $digit* @exponent? [dD]?  { \p s -> TokWSpan (DoubleLit (fst . head $ readFloat $ '0':s)) (posn p s) }
+          \. $digit+ @exponent? [dD]?  { \p s -> TokWSpan (DoubleLit (fst . head $ readFloat $ '0':s)) (posn p s) }
+
+  $digit+ \. $digit* @exponent? [fF]  { \p s -> TokWSpan (FloatLit (fst . head $ readFloat $ '0':s)) (posn p s) }
+          \. $digit+ @exponent? [fF]  { \p s -> TokWSpan (FloatLit (fst . head $ readFloat $ '0':s)) (posn p s) }
+
+  $digit+ @exponent        { \p s -> TokWSpan (DoubleLit (fst . head $ readFloat s)) (posn p s) }
+  $digit+ @exponent? [dD]  { \p s -> TokWSpan (DoubleLit (fst . head $ readFloat s)) (posn p s) }
+  $digit+ @exponent? [fF]  { \p s -> TokWSpan (FloatLit  (fst . head $ readFloat s)) (posn p s) }
+
+  0 [xX] $hexdig* \.? $hexdig* @pexponent [dD]?  { \p s -> TokWSpan (DoubleLit (readHexExp (drop 2 s))) (posn p s) }
+  0 [xX] $hexdig* \.? $hexdig* @pexponent [fF]   { \p s -> TokWSpan (FloatLit  (readHexExp (drop 2 s))) (posn p s) }
+
+  ' (@charEscape | ~[\\\']) '     { \p s -> TokWSpan (CharLit   (readCharTok s))   (posn p s) }
+  \" (@charEscape | ~[\\\"])* \"  { \p s -> TokWSpan (StringLit (readStringTok s)) (posn p s) }
 
   -- Identifiers
   $javaLetter $javaLetterOrDigit* { \p s -> TokWSpan (IdTok s) (posn p s) }
@@ -452,6 +491,76 @@ instance Show TokenWithSpan where
 -- NONAME is used as a source file name. Should be replaced in the parser.
 posn :: AlexPosn -> String -> SrcSpan
 posn (AlexPn _ l c) tokStr = SrcSpan "NONAME" l c l (c + length tokStr - 1)
+
+pickyReadOct :: String -> Integer
+pickyReadOct s =
+    if not $ null remn
+      then lexicalError $ "Non-octal digit '" ++ take 1 remn ++ "' in \"" ++ s ++ "\"."
+      else n
+  where (n,remn) = head $ readOct s
+
+readHexExp :: (Eq a, Floating a) => String -> a
+readHexExp s = let (m, suf) = head $ readHex s
+                   (e, _)   = case suf of
+                                p:r | toLower p == 'p' -> head $ readHex r
+                                _ -> (0, "")
+               in m ** e
+
+readCharTok :: String -> Char
+readCharTok s = head . convChar . dropQuotes $ s
+
+readStringTok :: String -> String
+readStringTok = convChar . dropQuotes
+
+-- | Drops quotes by removing first and last characters.
+dropQuotes :: String -> String
+dropQuotes s = take (length s - 2) (tail s)
+
+-- | Converts a sequence of (unquoted) Java character literals, including
+-- escapes, into the sequence of corresponding Chars. The calls to
+-- 'lexicalError' double-check that this function is consistent with
+-- the lexer rules for character and string literals. This function
+-- could be expressed as another Alex lexer, but it's simple enough
+-- to implement by hand.
+convChar :: String -> String
+convChar ('\\':'u':s@(d1:d2:d3:d4:s')) =
+  -- TODO: this is the wrong place for handling unicode escapes
+  -- according to the Java Language Specification. Unicode escapes can
+  -- appear anywhere in the source text, and are best processed
+  -- before lexing.
+  if all isHexDigit [d1,d2,d3,d4]
+    then toEnum (read ['0','x',d1,d2,d3,d4]):convChar s'
+    else lexicalError $ "bad unicode escape \"\\u" ++ take 4 s ++ "\""
+convChar ('\\':'u':s) =
+  lexicalError $ "bad unicode escape \"\\u" ++ take 4 s ++ "\""
+convChar ('\\':c:s) =
+  if isOctDigit c
+    then convOctal maxRemainingOctals
+    else (case c of
+            'b' -> '\b'
+            'f' -> '\f'
+            'n' -> '\n'
+            'r' -> '\r'
+            't' -> '\t'
+            '\'' -> '\''
+            '\\' -> '\\'
+            '"' -> '"'
+            _ -> badEscape):convChar s
+  where maxRemainingOctals =
+          if c <= '3' then 2 else 1
+        convOctal n =
+          let octals  = takeWhile isOctDigit $ take n s
+              noctals = length octals
+              toChar  = toEnum . fst . head . readOct
+          in toChar (c:octals):convChar (drop noctals s)
+        badEscape = lexicalError $ "bad escape \"\\" ++ c:"\""
+convChar ("\\") =
+  lexicalError "bad escape \"\\\""
+convChar (x:s) = x:convChar s
+convChar "" = ""
+
+lexicalError :: String -> a
+lexicalError = error . ("lexical error: " ++)
 
 -- | Top-level lexing function.
 lexer :: String -> [TokenWithSpan]
