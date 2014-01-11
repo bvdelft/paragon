@@ -25,6 +25,6 @@ exampleErrorA info =
 exampleErrorB :: Int -> MkError
 exampleErrorB i =
   mkError $ defaultError 
-    { pretty    = "Something about " ++ (show i)
+    { pretty    = "Something about " ++ show i
     , labels    = [LBLError]
     }

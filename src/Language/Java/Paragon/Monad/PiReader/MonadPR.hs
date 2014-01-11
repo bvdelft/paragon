@@ -44,7 +44,7 @@ instance Functor (PiReader) where
   fmap = liftM
 
 instance MonadBase (PiReader) where
-  liftBase ba = PiReader $ \_ -> ba
+  liftBase ba = PiReader $ const ba
   withErrCtxt ecf (PiReader f) = PiReader $ withErrCtxt ecf . f
   tryM (PiReader f) = PiReader $ tryM . f
   failE = liftBase . failE

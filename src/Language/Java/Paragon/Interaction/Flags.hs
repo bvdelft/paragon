@@ -127,7 +127,7 @@ requestsHelp = elem Help
 
 -- | Returns false if the @NoNullCheck@ flag is present
 requestsNullCheck :: [Flag] -> Bool
-requestsNullCheck = not . elem NoNullCheck
+requestsNullCheck = notElem NoNullCheck
 
 -- | Returns PiPath if specified, defaults to .
 getFlagPiPath :: [Flag] -> String

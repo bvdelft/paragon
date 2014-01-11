@@ -51,7 +51,7 @@ keyword t = tok t <?> "keyword " ++ show t
 -- | Matches a given keyword and returns a source span for this keyword.
 keywordWithSpan :: Token -> P SrcSpan
 keywordWithSpan k =
-  (tokWithSpan $ \t sp -> if t == k then Just sp else Nothing) <?> "keyword " ++ show k
+  tokWithSpan (\t sp -> if t == k then Just sp else Nothing) <?> "keyword " ++ show k
 
 -- Source positions
 

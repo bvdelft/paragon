@@ -1,7 +1,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FunctionalDependencies #-}
+
 -- | This module contains the implementation of the BaseM monad, the monad
 -- that is at the bottom of our monad stack and adds error-handling and
 -- unique number generation on top of IO.
@@ -56,7 +56,7 @@ data BaseWrite = BaseWrite
 -- mappend joining two write results.
 instance Monoid BaseWrite where
   mempty      = BaseWrite { bErrors = [] }
-  mappend a b = a { bErrors = (bErrors a) ++ (bErrors b) }
+  mappend a b = a { bErrors = bErrors a ++ bErrors b }
 
 -- | The base monad adds error handling and unique number generation to IO.
 -- The error-handling is somewhat involved because we assume the existence of
@@ -116,7 +116,7 @@ instance MonadBase BaseM where
 
   -- Run the subcomputation in an extended error context.
   withErrCtxt ectxt (BaseM f) = BaseM $ \env st ->
-    do let newEnv = env {bErrorContext = (bErrorContext env) ++ [ectxt]}
+    do let newEnv = env { bErrorContext = bErrorContext env ++ [ectxt] }
        f newEnv st
 
   -- Construct Either value based on error state
@@ -126,7 +126,7 @@ instance MonadBase BaseM where
   tryM (BaseM f) = BaseM $ \env st ->
     do (maybeA, stA, wrA) <- f env st
        case bErrors wrA of
-         [] -> return (fmap Right $ maybeA, stA, wrA)  
+         [] -> return (fmap Right maybeA, stA, wrA)  
          e  -> return (Just . Left $ e, stA, wrA {bErrors = mempty} )
         
   -- Fatal error => Log error, but Nothing from here
@@ -191,13 +191,14 @@ tryCatch tr ctch = do esa <- tryM tr
 -- | Lift Either value into monad by mapping Left to fail and Right to return
 liftEitherMB :: MonadBase m => Either ContextualError a -> m a
 liftEitherMB eerra = case eerra of
-                       Left err -> failE $ err
+                       Left err -> failE err
                        Right x  -> return x
 
 -- | Fail (but allow continuation?) if predicate does not hold
 check :: MonadBase m => Bool -> ContextualError -> m ()
-check b err = if b then return () else failEC () err
+check b err = unless b $ failEC () err
 
 -- | Fail (but allow continuation?) if monadic computation evaluates to False
 checkM :: MonadBase m => m Bool -> ContextualError -> m ()
 checkM mb err = mb >>= flip check err
+
