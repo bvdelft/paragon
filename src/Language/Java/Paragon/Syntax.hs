@@ -154,11 +154,19 @@ data TypeParam a = TP
 data ClassType a = CT
   deriving (Show, Eq)
 
-data ClassBody a = CB
-  deriving (Show, Eq)
+-- | Class body.
+data ClassBody a = ClassBody
+  { cbAnn   :: a         -- ^ Annotation.
+  , cbDecls :: [Decl a]  -- ^ Declarations.
+  } deriving (Show, Eq)
 
 data InterfaceBody a = IB
   deriving (Show, Eq)
+
+-- | Declaration.
+data Decl a = MemberDecl
+  { declAnn :: a  -- ^ Annotation.
+  } deriving (Show, Eq)
 
 $(deriveAnnotatedMany [''Modifier])
 

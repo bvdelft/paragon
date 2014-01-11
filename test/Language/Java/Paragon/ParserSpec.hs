@@ -117,8 +117,9 @@ spec = do
       let fileName = "ClassDecl"
           cuSrcSpan = SrcSpan fileName 1 1 1 10
           ctdSrcSpan = SrcSpan fileName 1 1 1 10
-          cd = ClassDecl cdSrcSpan [] cId [] Nothing [] CB
           cdSrcSpan = SrcSpan fileName 1 1 1 10
+          cbSrcSpan = SrcSpan fileName 1 9 1 10
+          cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [])
           cId = Id (SrcSpan fileName 1 7 1 7) "C" in
       parse "class C {}" fileName
         `shouldBe`
@@ -128,8 +129,8 @@ spec = do
       let fileName = "InterfaceDecl"
           cuSrcSpan = SrcSpan fileName 1 1 1 14
           inttdSrcSpan = SrcSpan fileName 1 1 1 14
-          intd = InterfaceDecl intdSrcSpan [] intId [] [] IB
           intdSrcSpan = SrcSpan fileName 1 1 1 14
+          intd = InterfaceDecl intdSrcSpan [] intId [] [] IB
           intId = Id (SrcSpan fileName 1 11 1 11) "I" in
       parse "interface I {}" fileName
         `shouldBe`
@@ -139,9 +140,10 @@ spec = do
       let fileName = "ClassDecl"
           cuSrcSpan = SrcSpan fileName 1 1 1 17
           ctdSrcSpan = SrcSpan fileName 1 1 1 17
-          cd = ClassDecl cdSrcSpan [Public pblSrcSpan] cId [] Nothing [] CB
           cdSrcSpan = SrcSpan fileName 1 1 1 17
           pblSrcSpan = SrcSpan fileName 1 1 1 6
+          cbSrcSpan = SrcSpan fileName 1 16 1 17
+          cd = ClassDecl cdSrcSpan [Public pblSrcSpan] cId [] Nothing [] (ClassBody cbSrcSpan [])
           cId = Id (SrcSpan fileName 1 14 1 14) "C" in
       parse "public class C {}" fileName
         `shouldBe`
@@ -151,9 +153,9 @@ spec = do
       let fileName = "InterfaceDecl"
           cuSrcSpan = SrcSpan fileName 1 1 1 21
           inttdSrcSpan = SrcSpan fileName 1 1 1 21
-          intd = InterfaceDecl intdSrcSpan [Public pblSrcSpan] intId [] [] IB
           intdSrcSpan = SrcSpan fileName 1 1 1 21
           pblSrcSpan = SrcSpan fileName 1 1 1 6
+          intd = InterfaceDecl intdSrcSpan [Public pblSrcSpan] intId [] [] IB
           intId = Id (SrcSpan fileName 1 18 1 18) "I" in
       parse "public interface I {}" fileName
         `shouldBe`
@@ -214,7 +216,7 @@ spec = do
         let Left err = parse "class C }" "ClassDecl"
         in show err `shouldBe` "\"ClassDecl\" (line 1, column 9):\n\
                                 \unexpected }\n\
-                                \expecting {"
+                                \expecting class body"
 
     context "given a class declaration with missing closing brace" $
       it "gives an error message" $
@@ -222,6 +224,13 @@ spec = do
         in show err `shouldBe` "\"ClassDecl\" (line 1, column 9):\n\
                                 \unexpected end of input\n\
                                 \expecting }"
+
+    context "given a class declaration with missing body" $
+      it "gives an error message" $
+        let Left err = parse "class C" "ClassDecl"
+        in show err `shouldBe` "\"ClassDecl\" (line 1, column 7):\n\
+                                \unexpected end of input\n\
+                                \expecting class body"
 
     context "given an interface declaration with missing name" $
       it "gives an error message" $

@@ -112,12 +112,38 @@ normalClassDeclModsFun = do
   startPos <- getParaPos
   keyword KW_Class
   className <- ident <?> "class name"
-  openCurly
-  closeCurly
+  body <- classBody <?> "class body"
   endPos <- getParaPos
   return $ \mods ->
     let startPos' = getModifiersStartPos mods startPos
-    in ClassDecl (mkSrcSpanFromPos startPos' endPos) mods className [] Nothing [] CB
+    in ClassDecl (mkSrcSpanFromPos startPos' endPos) mods className [] Nothing [] body
+
+classBody :: P (ClassBody SrcSpan)
+classBody = do
+  startPos <- getParaPos
+  openCurly
+  decls <- classBodyDecls
+  closeCurly
+  endPos <- getParaPos
+  return $ ClassBody (mkSrcSpanFromPos startPos endPos) decls
+
+classBodyDecls :: P [Decl SrcSpan]
+classBodyDecls = return []
+
+-- Modifiers
+
+-- | There are several syntax tree nodes that have a list of modifiers data field. 
+-- This type synonym is for the nodes that have this gap to be filled in (by 'withModifiers').
+type ModifiersFun a = [Modifier SrcSpan] -> a
+
+-- | Takes a parser for an entity that expects modifiers before it.
+-- Parses zero or more modifiers, runs a given parser which results in
+-- a function of type 'ModifiersFun' and applies this function to modifiers.
+withModifiers :: P (ModifiersFun a) -> P a
+withModifiers pmf = do
+  mods <- list modifier <?> "modifiers"
+  mf <- pmf
+  return $ mf mods
 
 modifier :: P (Modifier SrcSpan)
 modifier =
@@ -139,19 +165,6 @@ modifier =
   <|> Symmetric    <$> keywordWithSpan KW_P_Symmetric
   <|> Readonly     <$> keywordWithSpan KW_P_Readonly
   <|> Notnull      <$> keywordWithSpan KW_P_Notnull
-
--- | There are several syntax tree nodes that have a list of modifiers data field. 
--- This type synonym is for the nodes that have this gap to be filled in (by 'withModifiers').
-type ModifiersFun a = [Modifier SrcSpan] -> a
-
--- | Takes a parser for an entity that expects modifiers before it.
--- Parses zero or more modifiers, runs a given parser which results in
--- a function of type 'ModifiersFun' and applies this function to modifiers.
-withModifiers :: P (ModifiersFun a) -> P a
-withModifiers pmf = do
-  mods <- list modifier <?> "modifiers"
-  mf <- pmf
-  return $ mf mods
 
 -- Separators
 
