@@ -134,17 +134,20 @@ tokens :-
 
   null  { \p s -> TokWSpan NullLit         (posn p s) }
 
+  -- decimal
   0               { \p s -> TokWSpan (IntLit 0)  (posn p s) }
   0 [lL]          { \p s -> TokWSpan (LongLit 0) (posn p s) }
-
-  0 $digit+       { \p s -> TokWSpan (IntLit (pickyReadOct s))         (posn p s) }
-  0 $digit+ [lL]  { \p s -> TokWSpan (LongLit (pickyReadOct (init s))) (posn p s) }
 
   $nonzero $digit*       { \p s -> TokWSpan (IntLit (read s))         (posn p s) }
   $nonzero $digit* [lL]  { \p s -> TokWSpan (LongLit (read (init s))) (posn p s) }
 
+  -- hex
   0 [xX] $hexdig+       { \p s -> TokWSpan (IntLit (fst . head $ readHex (drop 2 s)))         (posn p s) }
   0 [xX] $hexdig+ [lL]  { \p s -> TokWSpan (LongLit (fst . head $ readHex (init (drop 2 s)))) (posn p s) }
+
+  -- octal
+  0 $digit+       { \p s -> TokWSpan (IntLit (pickyReadOct s))         (posn p s) }
+  0 $digit+ [lL]  { \p s -> TokWSpan (LongLit (pickyReadOct (init s))) (posn p s) }
 
   $digit+ \. $digit* @exponent? [dD]?  { \p s -> TokWSpan (DoubleLit (fst . head $ readFloat $ '0':s)) (posn p s) }
           \. $digit+ @exponent? [dD]?  { \p s -> TokWSpan (DoubleLit (fst . head $ readFloat $ '0':s)) (posn p s) }
