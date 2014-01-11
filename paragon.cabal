@@ -41,6 +41,7 @@ Library
                         Language.Java.Paragon.Monad.PiReader.MonadPR
                         Language.Java.Paragon.Parac
                         Language.Java.Paragon.Parser
+                        Language.Java.Paragon.Parser.Helpers
                         Language.Java.Paragon.SrcPos
                         Language.Java.Paragon.Syntax
   hs-source-dirs:       src

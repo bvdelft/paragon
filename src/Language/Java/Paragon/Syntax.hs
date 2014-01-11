@@ -9,10 +9,12 @@ module Language.Java.Paragon.Syntax
   , module Language.Java.Paragon.Annotated
   ) where
 
+import Text.PrettyPrint
+
 import Language.Java.Paragon.Annotated
 import Language.Java.Paragon.Interaction (panic, libraryBase)
 import Language.Java.Paragon.Unparse (Unparse(..))
-import Text.PrettyPrint
+import Language.Java.Paragon.SrcPos
 
 syntaxModule :: String
 syntaxModule = libraryBase ++ ".Syntax"
@@ -158,7 +160,9 @@ data ClassBody a = CB
 data InterfaceBody a = IB
   deriving (Show, Eq)
 
--- Helper functions
+$(deriveAnnotatedMany [''Modifier])
+
+-- Name type helpers.
 
 -- | Creates a qualified name from name type and list of identifiers.
 -- Takes a function to combine annotations.
@@ -169,5 +173,11 @@ mkName combine nameT ids = mkName' (reverse ids)
                          in Name (combine (nameAnn pre) (idAnn i)) i nameT (Just pre)
         mkName' [] = panic (syntaxModule ++ ".mkName") "empty list of identifiers"
 
-$(deriveAnnotatedMany [''Modifier])
+-- Create qualified names of different name types from list of identifiers.
+
+pkgName :: [Id SrcSpan] -> Name SrcSpan
+pkgName = mkName combineSrcSpan PkgName
+
+ambigName :: [Id SrcSpan] -> Name SrcSpan
+ambigName = mkName combineSrcSpan AmbigName
 
