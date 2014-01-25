@@ -40,9 +40,9 @@ name nameFun = nameFun <$> seplist1 ident period
 compilationUnit :: P (CompilationUnit SrcSpan)
 compilationUnit = do
   startPos <- getParaPos
-  pkgDecl <- opt packageDecl <?> "package declaration"
-  impDecls <- list importDecl <?> "import declarations"
-  typeDecls <- fmap catMaybes (list typeDecl) <?> "type declarations"
+  pkgDecl <- opt packageDecl
+  impDecls <- list importDecl
+  typeDecls <- fmap catMaybes (list typeDecl)
   endPos <- getParaPos
   return $ CompilationUnit (mkSrcSpanFromPos startPos endPos)
                            pkgDecl impDecls typeDecls
@@ -55,6 +55,7 @@ packageDecl = do
   semiColon
   endPos <- getParaPos
   return $ PackageDecl (mkSrcSpanFromPos startPos endPos) pName
+  <?> "package declaration"
 
 importDecl :: P (ImportDecl SrcSpan)
 importDecl = do
@@ -66,6 +67,7 @@ importDecl = do
     semiColon
     endPos <- getParaPos
     return $ mkImportDecl isStatic hasStar (mkSrcSpanFromPos startPos endPos) pkgTypeName
+    <?> "import declaration"
     -- TODO: fix name types
   where mkImportDecl False False = SingleTypeImport
         mkImportDecl False True  = TypeImportOnDemand
@@ -75,6 +77,7 @@ importDecl = do
 typeDecl :: P (Maybe (TypeDecl SrcSpan))
 typeDecl = Just <$> classOrInterfaceDecl
        <|> const Nothing <$> semiColon
+  <?> "type declaration"
 
 classOrInterfaceDecl :: P (TypeDecl SrcSpan)
 classOrInterfaceDecl = withModifiers $
@@ -100,7 +103,7 @@ normalClassDeclModsFun = do
   startPos <- getParaPos
   keyword KW_Class
   classId <- ident <?> "class name"
-  body <- classBody <?> "class body"
+  body <- classBody
   endPos <- getParaPos
   return $ \mods ->
     let startPos' = getModifiersStartPos mods startPos
@@ -126,6 +129,7 @@ classBody = do
   closeCurly
   endPos <- getParaPos
   return $ ClassBody (mkSrcSpanFromPos startPos endPos) decls
+  <?> "class body"
 
 classBodyDecls :: P [ClassBodyDecl SrcSpan]
 classBodyDecls = return []
