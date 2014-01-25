@@ -95,28 +95,28 @@ classOrInterfaceDecl = withModifiers $
 classDeclModsFun :: P (ModifiersFun (ClassDecl SrcSpan))
 classDeclModsFun = normalClassDeclModsFun
 
+normalClassDeclModsFun :: P (ModifiersFun (ClassDecl SrcSpan))
+normalClassDeclModsFun = do
+  startPos <- getParaPos
+  keyword KW_Class
+  classId <- ident <?> "class name"
+  body <- classBody <?> "class body"
+  endPos <- getParaPos
+  return $ \mods ->
+    let startPos' = getModifiersStartPos mods startPos
+    in ClassDecl (mkSrcSpanFromPos startPos' endPos) mods classId [] Nothing [] body
+
 interfaceDeclModsFun :: P (ModifiersFun (InterfaceDecl SrcSpan))
 interfaceDeclModsFun = do
   startPos <- getParaPos
   keyword KW_Interface
-  iName <- ident <?> "interface name"
+  iId <- ident <?> "interface name"
   openCurly
   closeCurly
   endPos <- getParaPos
   return $ \mods ->
     let startPos' = getModifiersStartPos mods startPos
-    in InterfaceDecl (mkSrcSpanFromPos startPos' endPos) mods iName [] [] IB
-
-normalClassDeclModsFun :: P (ModifiersFun (ClassDecl SrcSpan))
-normalClassDeclModsFun = do
-  startPos <- getParaPos
-  keyword KW_Class
-  className <- ident <?> "class name"
-  body <- classBody <?> "class body"
-  endPos <- getParaPos
-  return $ \mods ->
-    let startPos' = getModifiersStartPos mods startPos
-    in ClassDecl (mkSrcSpanFromPos startPos' endPos) mods className [] Nothing [] body
+    in InterfaceDecl (mkSrcSpanFromPos startPos' endPos) mods iId [] [] IB
 
 classBody :: P (ClassBody SrcSpan)
 classBody = do
