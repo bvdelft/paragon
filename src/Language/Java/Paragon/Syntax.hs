@@ -140,12 +140,13 @@ data Modifier a
   | Volatile  a     -- ^ volatile
   | StrictFP  a     -- ^ strictfp
   -- Paragon specific
-  | Typemethod a
-  | Reflexive  a
-  | Transitive a
-  | Symmetric  a
-  | Readonly   a
-  | Notnull    a
+  | Typemethod a  -- ^ typemethod
+  | Reflexive  a  -- ^ reflexive
+  | Transitive a  -- ^ transitive
+  | Symmetric  a  -- ^ symmetric
+  | Readonly   a  -- ^ readonly
+  | Notnull    a  -- ^ notnull
+  -- TODO: more Paragon modifiers
   deriving (Show, Eq, Functor)
 
 data TypeParam a = TP
@@ -156,17 +157,96 @@ data ClassType a = CT
 
 -- | Class body.
 data ClassBody a = ClassBody
-  { cbAnn   :: a         -- ^ Annotation.
-  , cbDecls :: [Decl a]  -- ^ Declarations.
+  { cbAnn   :: a                  -- ^ Annotation.
+  , cbDecls :: [ClassBodyDecl a]  -- ^ Declarations.
   } deriving (Show, Eq)
 
 data InterfaceBody a = IB
   deriving (Show, Eq)
 
--- | Declaration.
-data Decl a = MemberDecl
-  { declAnn :: a  -- ^ Annotation.
+-- | Declaration in class body.
+data ClassBodyDecl a =
+    -- | Member declaration.
+    MemberDecl { clBodyDeclAnn        :: a             -- ^ Annotation.
+               , clBodyDeclMemberDecl :: MemberDecl a  -- ^ Member declaration.
+               }
+  -- TODO: InitDecl
+  deriving (Show, Eq)
+
+-- | Member declaration.
+data MemberDecl a =
+    -- | Field declaration.
+    FieldDecl { membDeclAnn        :: a             -- ^ Annotation.
+              , fieldDeclModifiers :: [Modifier a]  -- ^ Modifiers.
+              , fieldDeclType      :: Type a        -- ^ Field type.
+              , fieldDeclVarDecls  :: [VarDecl a]   -- ^ Variable declarators.
+              }
+    -- | Method declaration.
+  | MethodDecl { membDeclAnn            :: a                -- ^ Annotation.
+               , methodDeclModifiers    :: [Modifier a]     -- ^ Modifiers.
+               , methodDeclTypeParams   :: [TypeParam a]    -- ^ Type parameters of generic method.
+               , methodDeclReturnType   :: ReturnType a     -- ^ Method return type.
+               , methodDeclId           :: Id a             -- ^ Method identifier.
+               , methodDeclFormalParams :: [FormalParam a]  -- ^ Formal parameters.
+               -- TODO: exceptions
+               , methodDeclBody         :: MethodBody a     -- ^ Method body.
+               }
+  deriving (Show, Eq)
+
+-- | Variable declaration with optional initializer.
+data VarDecl a = VarDecl
+  { varDeclAnn  :: a                  -- ^ Annotation.
+  , varDeclId   :: Id a               -- ^ Variable identifier.
   } deriving (Show, Eq)
+
+-- | Method formal parameter.
+data FormalParam a = FormalParam
+  { formalParamAnn       :: a             -- ^ Annotation.
+  , formalParamModifiers :: [Modifier a]  -- ^ Modifiers.
+  , formalParamType      :: Type a        -- ^ Parameter type.
+  , formalParamVarArity  :: Bool          -- ^ Is it varargs parameter (variable arity).
+  , formalParamId        :: Id a          -- ^ Parameter identifier.
+  } deriving (Show, Eq)
+
+-- | Method body or the lack of it.
+data MethodBody a = MethodBody
+  { methodBodyAnn   :: a                -- ^ Annotation.
+  , methodBodyBlock :: Maybe (Block a)  -- ^ Optional method body (code block) or semicolon.
+  } deriving (Show, Eq)
+
+-- | Code block.
+data Block a = Block
+  { blockAnn      :: a              -- ^ Annotation.
+  , blockAnnStmts :: [BlockStmt a]  -- ^ Block statements.
+  } deriving (Show, Eq)
+
+-- | Block statement.
+data BlockStmt a =
+    -- | Normal statement.
+    BlockStmt { blockStmtAnn :: a       -- ^ Annotation.
+              , blockStmt    :: Stmt a  -- ^ Statement.
+              }
+    -- | Local variable declaration.
+  | LocalVars { blockStmtAnn       :: a             -- ^ Annotation.
+              , localVarsModifiers :: [Modifier a]  -- ^ Modifiers.
+              , localVarsType      :: Type a        -- ^ Variable declaration type.
+              , localVarsDecls     :: [VarDecl a]   -- ^ Variable declarators.
+              }
+  deriving (Show, Eq)
+
+-- | Statement.
+data Stmt a = S
+  deriving (Show, Eq)
+
+-- Types
+
+-- | Top-level data type for Paragon types.
+data Type a = PrimType a | RefType a
+  deriving (Show, Eq)
+
+-- | Representation of possible return types.
+data ReturnType a = VoidType a | Type a (Type a)
+  deriving (Show, Eq)
 
 $(deriveAnnotatedMany [''Modifier])
 

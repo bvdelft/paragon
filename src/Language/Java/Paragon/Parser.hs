@@ -127,7 +127,7 @@ classBody = do
   endPos <- getParaPos
   return $ ClassBody (mkSrcSpanFromPos startPos endPos) decls
 
-classBodyDecls :: P [Decl SrcSpan]
+classBodyDecls :: P [ClassBodyDecl SrcSpan]
 classBodyDecls = return []
 
 -- Modifiers
