@@ -108,21 +108,21 @@ data TypeDecl a =
 -- | Class declaration.
 data ClassDecl a = ClassDecl
   { cdAnn        :: a                    -- ^ Annotation.
-  , cdModifiers  :: [Modifier a]         -- ^ List of modifiers.
+  , cdModifiers  :: [Modifier a]         -- ^ Modifiers.
   , cdId         :: Id a                 -- ^ Class identifier.
-  , cdTypeParams :: [TypeParam a]        -- ^ List of type parameters.
+  , cdTypeParams :: [TypeParam a]        -- ^ Type parameters.
   , cdSuperClass :: Maybe (ClassType a)  -- ^ Super class if the class has one.
-  , cdInterfaces :: [ClassType a]        -- ^ List of interfaces it implements.
+  , cdInterfaces :: [ClassType a]        -- ^ Interfaces it implements.
   , cdBody       :: ClassBody a          -- ^ Class body.
   } deriving (Show, Eq)
 
 -- | Interface declaration.
 data InterfaceDecl a = InterfaceDecl
   { intdAnn        :: a                -- ^ Annotation.
-  , intdModifiers  :: [Modifier a]     -- ^ List of modifiers.
+  , intdModifiers  :: [Modifier a]     -- ^ Modifiers.
   , intdId         :: Id a             -- ^ Interface identifier.
-  , intdTypeParams :: [TypeParam a]    -- ^ List of type parameters.
-  , intdInterfaces :: [ClassType a]    -- ^ List of interfaces it extends.
+  , intdTypeParams :: [TypeParam a]    -- ^ Type parameters.
+  , intdInterfaces :: [ClassType a]    -- ^ Interfaces it extends.
   , intdBody       :: InterfaceBody a  -- ^ Interface body.
   } deriving (Show, Eq)
 
