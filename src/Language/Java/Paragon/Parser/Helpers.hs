@@ -3,9 +3,26 @@
  #-}
 
 -- | Helper functions for Paragon parser.
-module Language.Java.Paragon.Parser.Helpers where
+module Language.Java.Paragon.Parser.Helpers
+  (
+    P
+  , tok
+  , tokWithSpan
+  , keyword
+  , keywordWithSpan
+    -- * Source positions
+  , getStartPos
+  , getEndPos
+  , getModifiersStartPos
+    -- * Parser combinators
+  , opt
+  , bopt
+  , list
+  , list1
+  , seplist1
+  ) where
 
-import Control.Monad (ap)
+import Control.Monad (ap, unless)
 import Control.Applicative (Applicative(..), (<$>), (<*>))
 import Data.Maybe (isJust)
 
@@ -16,8 +33,9 @@ import Language.Java.Paragon.Lexer
 import Language.Java.Paragon.Syntax
 import Language.Java.Paragon.SrcPos
 
--- | Type synonym for the generic parser on TokenWithSpan and ().
-type P = GenParser TokenWithSpan ()
+-- | Type synonym for the generic parser on TokenWithSpan and SrcPos (as user state).
+-- User state represents the end position of the last parsed token, used in 'getEndPos'.
+type P = GenParser TokenWithSpan SrcPos
 
 instance Applicative (GenParser s a) where
   pure  = return
@@ -27,6 +45,7 @@ instance Applicative (GenParser s a) where
 tok :: Token -> P ()
 tok t = do
     fileName <- getFileName
+    updateUserState fileName
     token (show . twsTok) (posFromTok fileName) testT
   where testT tws = if t == twsTok tws then Just () else Nothing
 
@@ -34,6 +53,7 @@ tok t = do
 tokWithSpan :: (Token -> SrcSpan -> Maybe a) -> P a
 tokWithSpan test = do
     fileName <- getFileName
+    updateUserState fileName
     token (show . twsTok) (posFromTok fileName) (testT fileName)
   where testT fileName (TokWSpan t sp) = test t (sp { srcSpanFileName = fileName })
         -- testT also fixes the file name in the source span
@@ -42,7 +62,15 @@ tokWithSpan test = do
 -- One of the main purposes: fix the file name in the token with the given name.
 posFromTok :: String -> TokenWithSpan -> SourcePos
 posFromTok fileName (TokWSpan _ sp) =
-  srcPosToParsec $ srcSpanToPos (sp { srcSpanFileName = fileName })
+  srcPosToParsec $ srcSpanToStartPos (sp { srcSpanFileName = fileName })
+
+-- | Sets user state to the end position of the token to be parsed (first in the input).
+-- Fixes the file name in the token with the given name.
+updateUserState :: String -> P ()
+updateUserState fileName = do
+  ts <- getInput
+  unless (null ts) $
+    setState (srcSpanToEndPos $ (twsSrcSpan $ head ts) { srcSpanFileName = fileName } )
 
 -- | Matches a given keyword with better error message in case of failure.
 keyword :: Token -> P ()
@@ -56,10 +84,13 @@ keywordWithSpan k =
 -- Source positions
 
 -- | Returns the current source position.
-getParaPos :: P SrcPos
-getParaPos = do
+getStartPos :: P SrcPos
+getStartPos = do
   pos <- getPosition
   return (parsecToSrcPos pos)
+
+getEndPos :: P SrcPos
+getEndPos = getState
 
 -- | Returns the source file name.
 getFileName :: P String
@@ -80,7 +111,7 @@ srcPosToParsec (SrcPos fileName l c) = newPos fileName l c
 -- position of the first modifier.
 getModifiersStartPos :: [Modifier SrcSpan] -> SrcPos -> SrcPos
 getModifiersStartPos []    defaultSrcPos = defaultSrcPos
-getModifiersStartPos (m:_) _             = srcSpanToPos (ann m)
+getModifiersStartPos (m:_) _             = srcSpanToStartPos (ann m)
 
 -- Parser combinators
 

@@ -10,7 +10,8 @@ module Language.Java.Paragon.SrcPos
     -- * The @SrcSpan@ data type
   , SrcSpan(..)
   , mkSrcSpanFromPos
-  , srcSpanToPos
+  , srcSpanToStartPos
+  , srcSpanToEndPos
   , combineSrcSpan
   ) where
 
@@ -47,8 +48,12 @@ mkSrcSpanFromPos (SrcPos fileName startLine startColumn)
   SrcSpan fileName startLine startColumn endLine endColumn
 
 -- | Convert source span to source position by taking the start position.
-srcSpanToPos :: SrcSpan -> SrcPos
-srcSpanToPos (SrcSpan fileName l c _ _) = SrcPos fileName l c
+srcSpanToStartPos :: SrcSpan -> SrcPos
+srcSpanToStartPos (SrcSpan fileName l c _ _) = SrcPos fileName l c
+
+-- | Convert source span to source position by taking the end position.
+srcSpanToEndPos :: SrcSpan -> SrcPos
+srcSpanToEndPos (SrcSpan fileName _ _ l c) = SrcPos fileName l c
 
 -- | Combines two source spans into one by taking minimum of start positions
 -- and maximum of end positions.

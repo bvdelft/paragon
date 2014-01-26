@@ -21,8 +21,9 @@ parse = runParser compilationUnit
 
 -- | Runner for different parsers. Takes a parser, a string to parse and a file name.
 runParser :: P a -> String -> String -> Either ParseError a
-runParser p input fileName =
-  Parsec.runParser (p >>= \r -> eof >> return r) () fileName $ lexer input
+runParser p input fileName = Parsec.runParser (p >>= \r -> eof >> return r) initState fileName toks
+  where initState = SrcPos fileName 1 1
+        toks = lexer input
 
 -- Parser building blocks. They almost follow the syntax tree structure.
 
@@ -39,33 +40,33 @@ name nameFun = nameFun <$> seplist1 ident period
 -- | Parser for the top-level syntax node.
 compilationUnit :: P (CompilationUnit SrcSpan)
 compilationUnit = do
-  startPos <- getParaPos
+  startPos <- getStartPos
   pkgDecl <- opt packageDecl
   impDecls <- list importDecl
   typeDecls <- fmap catMaybes (list typeDecl)
-  endPos <- getParaPos
+  endPos <- getEndPos
   return $ CompilationUnit (mkSrcSpanFromPos startPos endPos)
                            pkgDecl impDecls typeDecls
 
 packageDecl :: P (PackageDecl SrcSpan)
 packageDecl = do
-  startPos <- getParaPos
+  startPos <- getStartPos
   keyword KW_Package
   pName <- name pkgName <?> "package name"
   semiColon
-  endPos <- getParaPos
+  endPos <- getEndPos
   return $ PackageDecl (mkSrcSpanFromPos startPos endPos) pName
   <?> "package declaration"
 
 importDecl :: P (ImportDecl SrcSpan)
 importDecl = do
-    startPos <- getParaPos
+    startPos <- getStartPos
     keyword KW_Import
     isStatic <- bopt $ keyword KW_Static
     pkgTypeName <- name ambigName <?> "package/type name"
     hasStar <- bopt $ period >> (tok Op_Star <?> "* or identifier")
     semiColon
-    endPos <- getParaPos
+    endPos <- getEndPos
     return $ mkImportDecl isStatic hasStar (mkSrcSpanFromPos startPos endPos) pkgTypeName
     <?> "import declaration"
     -- TODO: fix name types
@@ -81,16 +82,16 @@ typeDecl = Just <$> classOrInterfaceDecl
 
 classOrInterfaceDecl :: P (TypeDecl SrcSpan)
 classOrInterfaceDecl = withModifiers $
-  (do startPos <- getParaPos
+  (do startPos <- getStartPos
       cdModsFun <- classDeclModsFun
-      endPos <- getParaPos
+      endPos <- getEndPos
       return $ \mods ->
         let startPos' = getModifiersStartPos mods startPos
         in ClassTypeDecl (mkSrcSpanFromPos startPos' endPos) (cdModsFun mods))
     <|>
-  (do startPos <- getParaPos
+  (do startPos <- getStartPos
       intdModsFun <- interfaceDeclModsFun
-      endPos <- getParaPos
+      endPos <- getEndPos
       return $ \mods ->
         let startPos' = getModifiersStartPos mods startPos
         in InterfaceTypeDecl (mkSrcSpanFromPos startPos' endPos) (intdModsFun mods))
@@ -100,34 +101,34 @@ classDeclModsFun = normalClassDeclModsFun
 
 normalClassDeclModsFun :: P (ModifiersFun (ClassDecl SrcSpan))
 normalClassDeclModsFun = do
-  startPos <- getParaPos
+  startPos <- getStartPos
   keyword KW_Class
   classId <- ident <?> "class name"
   body <- classBody
-  endPos <- getParaPos
+  endPos <- getEndPos
   return $ \mods ->
     let startPos' = getModifiersStartPos mods startPos
     in ClassDecl (mkSrcSpanFromPos startPos' endPos) mods classId [] Nothing [] body
 
 interfaceDeclModsFun :: P (ModifiersFun (InterfaceDecl SrcSpan))
 interfaceDeclModsFun = do
-  startPos <- getParaPos
+  startPos <- getStartPos
   keyword KW_Interface
   iId <- ident <?> "interface name"
   openCurly
   closeCurly
-  endPos <- getParaPos
+  endPos <- getEndPos
   return $ \mods ->
     let startPos' = getModifiersStartPos mods startPos
     in InterfaceDecl (mkSrcSpanFromPos startPos' endPos) mods iId [] [] IB
 
 classBody :: P (ClassBody SrcSpan)
 classBody = do
-  startPos <- getParaPos
+  startPos <- getStartPos
   openCurly
   decls <- classBodyDecls
   closeCurly
-  endPos <- getParaPos
+  endPos <- getEndPos
   return $ ClassBody (mkSrcSpanFromPos startPos endPos) decls
   <?> "class body"
 
