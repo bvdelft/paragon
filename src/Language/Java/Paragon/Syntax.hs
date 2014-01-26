@@ -241,14 +241,58 @@ data Stmt a = S
 -- Types
 
 -- | Top-level data type for Paragon types.
-data Type a = PrimType a | RefType a
+data Type a =
+    -- | Primitive type.
+    PrimType { typeAnn      :: a           -- ^ Annotation.
+             , typePrimType :: PrimType a  -- ^ Primitive type.
+             }
+    -- | Reference type.
+  | RefType { typeAnn     :: a          -- ^ Annotation.
+            , typeRefType :: RefType a  -- ^ Reference type.
+            }
   deriving (Show, Eq)
 
 -- | Representation of possible return types.
-data ReturnType a = VoidType a | Type a (Type a)
+data ReturnType a =
+    -- | void.
+    VoidType { retTypeAnn :: a }
+    -- | Lock type.
+  | LockType { retTypeAnn :: a }
+    -- | Other types.
+  | Type { retTypeAnn :: a
+         , retType    :: Type a
+         }
   deriving (Show, Eq)
 
-$(deriveAnnotatedMany [''Modifier])
+-- | Primitive types.
+data PrimType a =
+    BooleanT a
+  | ByteT    a
+  | ShortT   a
+  | IntT     a
+  | LongT    a
+  | CharT    a
+  | FloatT   a
+  | DoubleT  a
+  -- Paragon specific
+  | ActorT   a
+  | PolicyT  a
+  deriving (Show, Eq, Functor)
+
+-- | Reference type.
+data RefType a =
+    -- | Class type.
+    ClassRefType { refTypeAnn       :: a            -- ^ Annotation.
+                 , refTypeClassType :: ClassType a  -- ^ Class type.
+                 }
+    -- | Type variable.
+  | TypeVar { refTypeAnn   :: a     -- ^ Annotation.
+            , refTypeVarId :: Id a  -- ^ Type variable identifier.
+            }
+  -- TODO: ArrayType
+  deriving (Show, Eq)
+
+$(deriveAnnotatedMany [''Modifier, ''PrimType])
 
 -- Name type helpers.
 

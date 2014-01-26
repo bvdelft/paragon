@@ -133,7 +133,40 @@ classBody = do
   <?> "class body"
 
 classBodyDecls :: P [ClassBodyDecl SrcSpan]
-classBodyDecls = return []
+classBodyDecls = list classBodyDecl
+
+classBodyDecl :: P (ClassBodyDecl SrcSpan)
+classBodyDecl = do
+  startPos <- getStartPos
+  mods <- list modifier
+  membDeclModsFun <- memberDeclModsFun
+  endPos <- getEndPos
+  return $ MemberDecl (mkSrcSpanFromPos startPos endPos) (membDeclModsFun mods)
+  <?> "class body declaration"
+
+memberDeclModsFun :: P (ModifiersFun (MemberDecl SrcSpan))
+memberDeclModsFun = fieldDeclModsFun varDecl
+
+fieldDeclModsFun :: P (VarDecl SrcSpan) -> P (ModifiersFun (MemberDecl SrcSpan))
+fieldDeclModsFun varDeclFun = do
+  startPos <- getStartPos
+  t <- ttype
+  varDs <- varDecls varDeclFun
+  semiColon
+  endPos <- getEndPos
+  return $ \mods -> FieldDecl (mkSrcSpanFromPos startPos endPos) mods t varDs
+
+-- | Takes 'VarDecl' parser to handle restrictions on field declarations in interfaces
+-- (the absence of initializer).
+varDecls :: P (VarDecl SrcSpan) -> P [VarDecl SrcSpan]
+varDecls varDeclFun = seplist1 varDeclFun comma
+
+varDecl :: P (VarDecl SrcSpan)
+varDecl = do
+  startPos <- getStartPos
+  varId <- ident <?> "variable/field name"
+  endPos <- getEndPos
+  return $ VarDecl (mkSrcSpanFromPos startPos endPos) varId
 
 -- Modifiers
 
@@ -171,10 +204,26 @@ modifier =
   <|> Readonly     <$> keywordWithSpan KW_P_Readonly
   <|> Notnull      <$> keywordWithSpan KW_P_Notnull
 
+-- Types
+
+ttype :: P (Type SrcSpan)
+ttype = do
+  startPos <- getStartPos
+  t <- primType
+  endPos <- getEndPos
+  return $ PrimType (mkSrcSpanFromPos startPos endPos) t
+
+primType :: P (PrimType SrcSpan)
+primType =
+  BooleanT <$> keywordWithSpan KW_Boolean
+
 -- Separators
 
 semiColon :: P ()
 semiColon = tok SemiColon <?> show SemiColon
+
+comma :: P ()
+comma = tok Comma <?> show Comma
 
 period :: P ()
 period = tok Period <?> show Period
