@@ -238,6 +238,18 @@ spec = do
       it "given an interface declaration with misspelled modifier" $
         failureCase "InterfaceDeclModTypo"
 
+      it "given a class declaration with single field declaration with missing name" $
+        failureCase "ClassDeclSingleFieldMissName"
+
+      it "given a class declaration with single field declaration with missing type" $
+        failureCase "ClassDeclSingleFieldMissType"
+
+      it "given a class declaration with single field declaration with missing semicolon" $
+        failureCase "ClassDeclSingleFieldMissSemiColon"
+
+      it "given a class declaration with single field declaration with modifier and missing type" $
+        failureCase "ClassDeclSingleFieldModMissType"
+
 -- Infrastructure
 
 successCase :: String -> AST SrcSpan -> IO ()

@@ -181,7 +181,7 @@ type ModifiersFun a = [Modifier SrcSpan] -> a
 -- a function of type 'ModifiersFun' and applies this function to modifiers.
 withModifiers :: P (ModifiersFun a) -> P a
 withModifiers pmf = do
-  mods <- list modifier <?> "modifiers"
+  mods <- list modifier
   mf <- pmf
   return $ mf mods
 
@@ -205,6 +205,7 @@ modifier =
   <|> Symmetric    <$> keywordWithSpan KW_P_Symmetric
   <|> Readonly     <$> keywordWithSpan KW_P_Readonly
   <|> Notnull      <$> keywordWithSpan KW_P_Notnull
+  <?> "modifier"
 
 -- Types
 
@@ -214,6 +215,7 @@ ttype = do
   t <- primType
   endPos <- getEndPos
   return $ PrimType (mkSrcSpanFromPos startPos endPos) t
+  <?> "type"
 
 primType :: P (PrimType SrcSpan)
 primType =
