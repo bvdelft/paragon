@@ -200,6 +200,22 @@ spec = do
           cId = Id (srcSpanFun 1 7 1 7) "C"
       in successCase fileName (CompilationUnit cuSrcSpan Nothing [] [ClassTypeDecl ctdSrcSpan cd])
 
+    it "parses class declaration with void method without parameters and modifiers with semicolon body" $
+      let fileName = "ClassDeclVoidMethodNoParamsSemiColon.para"
+          srcSpanFun = SrcSpan fileName
+          cuSrcSpan = srcSpanFun 1 1 3 1
+          ctdSrcSpan = srcSpanFun 1 1 3 1
+          cdSrcSpan = srcSpanFun 1 1 3 1
+          cbSrcSpan = srcSpanFun 1 9 3 1
+          mdSrcSpan = srcSpanFun 2 3 2 11
+          cbDecl = MemberDecl mdSrcSpan methodDecl
+          mId = Id (srcSpanFun 2 8 2 8) "f"
+          body = MethodBody (srcSpanFun 2 11 2 11) Nothing
+          methodDecl = MethodDecl mdSrcSpan [] [] (VoidType (srcSpanFun 2 3 2 6)) mId [] body
+          cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
+          cId = Id (srcSpanFun 1 7 1 7) "C"
+      in successCase fileName (CompilationUnit cuSrcSpan Nothing [] [ClassTypeDecl ctdSrcSpan cd])
+
     -- Failure
     describe "gives an error message when" $ do
 

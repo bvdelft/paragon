@@ -146,6 +146,7 @@ classBodyDecl = do
 
 memberDeclModsFun :: P (ModifiersFun (MemberDecl SrcSpan))
 memberDeclModsFun = fieldDeclModsFun varDecl
+                <|> methodDeclModsFun
 
 fieldDeclModsFun :: P (VarDecl SrcSpan) -> P (ModifiersFun (MemberDecl SrcSpan))
 fieldDeclModsFun varDeclFun = do
@@ -158,6 +159,19 @@ fieldDeclModsFun varDeclFun = do
     let startPos' = getModifiersStartPos mods startPos
     in FieldDecl (mkSrcSpanFromPos startPos' endPos) mods t varDs
 
+methodDeclModsFun :: P (ModifiersFun (MemberDecl SrcSpan))
+methodDeclModsFun = do
+  startPos <- getStartPos
+  retT <- returnType
+  mId <- ident <?> "method name"
+  openParen
+  closeParen
+  body <- methodBody
+  endPos <- getEndPos
+  return $ \mods ->
+    let startPos' = getModifiersStartPos mods startPos
+    in MethodDecl (mkSrcSpanFromPos startPos' endPos) mods [] retT mId [] body
+
 -- | Takes 'VarDecl' parser to handle restrictions on field declarations in interfaces
 -- (the absence of initializer).
 varDecls :: P (VarDecl SrcSpan) -> P [VarDecl SrcSpan]
@@ -169,6 +183,13 @@ varDecl = do
   varId <- ident <?> "variable/field name"
   endPos <- getEndPos
   return $ VarDecl (mkSrcSpanFromPos startPos endPos) varId
+
+methodBody :: P (MethodBody SrcSpan)
+methodBody = do
+  startPos <- getStartPos
+  mBlock <- const Nothing <$> semiColon
+  endPos <- getEndPos
+  return $ MethodBody (mkSrcSpanFromPos startPos endPos) mBlock
 
 -- Modifiers
 
@@ -221,7 +242,24 @@ primType :: P (PrimType SrcSpan)
 primType =
   BooleanT <$> keywordWithSpan KW_Boolean
 
+returnType :: P (ReturnType SrcSpan)
+returnType =
+      VoidType <$> keywordWithSpan KW_Void
+  <?> "type"
+
 -- Separators
+
+openParen :: P ()
+openParen = tok OpenParen <?> show OpenParen
+
+closeParen :: P ()
+closeParen = tok CloseParen <?> show CloseParen
+
+openCurly :: P ()
+openCurly = tok OpenCurly <?> show OpenCurly
+
+closeCurly :: P ()
+closeCurly = tok CloseCurly <?> show CloseCurly
 
 semiColon :: P ()
 semiColon = tok SemiColon <?> show SemiColon
@@ -231,10 +269,4 @@ comma = tok Comma <?> show Comma
 
 period :: P ()
 period = tok Period <?> show Period
-
-openCurly :: P ()
-openCurly = tok OpenCurly <?> show OpenCurly
-
-closeCurly :: P ()
-closeCurly = tok CloseCurly <?> show CloseCurly
 
