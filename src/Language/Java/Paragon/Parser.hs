@@ -154,7 +154,9 @@ fieldDeclModsFun varDeclFun = do
   varDs <- varDecls varDeclFun
   semiColon
   endPos <- getEndPos
-  return $ \mods -> FieldDecl (mkSrcSpanFromPos startPos endPos) mods t varDs
+  return $ \mods ->
+    let startPos' = getModifiersStartPos mods startPos
+    in FieldDecl (mkSrcSpanFromPos startPos' endPos) mods t varDs
 
 -- | Takes 'VarDecl' parser to handle restrictions on field declarations in interfaces
 -- (the absence of initializer).

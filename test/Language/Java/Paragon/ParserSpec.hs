@@ -171,6 +171,25 @@ spec = do
           cId = Id (SrcSpan fileName 1 7 1 7) "C"
       in successCase fileName (CompilationUnit cuSrcSpan Nothing [] [ClassTypeDecl ctdSrcSpan cd])
 
+    it "parses class declaration with single field declaration with modifiers without initializer" $
+      let fileName = "ClassDeclSingleFieldMod.para"
+          srcSpanFun = SrcSpan fileName
+          cuSrcSpan = srcSpanFun 1 1 3 1
+          ctdSrcSpan = srcSpanFun 1 1 3 1
+          cdSrcSpan = srcSpanFun 1 1 3 1
+          cbSrcSpan = srcSpanFun 1 9 3 1
+          mdSrcSpan = srcSpanFun 2 3 2 32
+          cbDecl = MemberDecl mdSrcSpan fieldDecl
+          tSrcSpan = srcSpanFun 2 23 2 29
+          mods = [Public $ srcSpanFun 2 3 2 8, Static $ srcSpanFun 2 10 2 15, Final $ srcSpanFun 2 17 2 21]
+          fieldDecl = FieldDecl mdSrcSpan mods (PrimType tSrcSpan (BooleanT tSrcSpan)) [varDecl]
+          varId = Id varSrcSpan "B"
+          varSrcSpan = srcSpanFun 2 31 2 31
+          varDecl = VarDecl varSrcSpan varId
+          cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
+          cId = Id (SrcSpan fileName 1 7 1 7) "C"
+      in successCase fileName (CompilationUnit cuSrcSpan Nothing [] [ClassTypeDecl ctdSrcSpan cd])
+
     -- Failure
     describe "gives an error message when" $ do
 
