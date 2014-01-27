@@ -240,7 +240,14 @@ ttype = do
 
 primType :: P (PrimType SrcSpan)
 primType =
-  BooleanT <$> keywordWithSpan KW_Boolean
+      BooleanT <$> keywordWithSpan KW_Boolean
+  <|> ByteT    <$> keywordWithSpan KW_Byte
+  <|> ShortT   <$> keywordWithSpan KW_Short
+  <|> IntT     <$> keywordWithSpan KW_Int
+  <|> LongT    <$> keywordWithSpan KW_Long
+  <|> CharT    <$> keywordWithSpan KW_Char
+  <|> FloatT   <$> keywordWithSpan KW_Float
+  <|> DoubleT  <$> keywordWithSpan KW_Double
 
 returnType :: P (ReturnType SrcSpan)
 returnType =
