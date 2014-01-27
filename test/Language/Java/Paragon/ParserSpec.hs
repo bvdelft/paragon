@@ -201,7 +201,7 @@ spec = do
       in successCase fileName (CompilationUnit cuSrcSpan Nothing [] [ClassTypeDecl ctdSrcSpan cd])
 
     it "parses class declaration with void method with semicolon body" $
-      let fileName = "ClassDeclVoidMethodNoParamsSemiColon.para"
+      let fileName = "ClassDeclVoidMethodSemiColon.para"
           srcSpanFun = SrcSpan fileName
           cuSrcSpan = srcSpanFun 1 1 3 1
           ctdSrcSpan = srcSpanFun 1 1 3 1
@@ -217,7 +217,7 @@ spec = do
       in successCase fileName (CompilationUnit cuSrcSpan Nothing [] [ClassTypeDecl ctdSrcSpan cd])
 
     it "parses class declaration with int method with semicolon body" $
-      let fileName = "ClassDeclIntMethodNoParamsSemiColon.para"
+      let fileName = "ClassDeclIntMethodSemiColon.para"
           srcSpanFun = SrcSpan fileName
           cuSrcSpan = srcSpanFun 1 1 3 1
           ctdSrcSpan = srcSpanFun 1 1 3 1
