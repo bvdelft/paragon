@@ -145,8 +145,8 @@ classBodyDecl = do
   <?> "class body declaration"
 
 memberDeclModsFun :: P (ModifiersFun (MemberDecl SrcSpan))
-memberDeclModsFun = fieldDeclModsFun varDecl
-                <|> methodDeclModsFun
+memberDeclModsFun = try methodDeclModsFun
+                <|> fieldDeclModsFun varDecl
 
 fieldDeclModsFun :: P (VarDecl SrcSpan) -> P (ModifiersFun (MemberDecl SrcSpan))
 fieldDeclModsFun varDeclFun = do
@@ -252,6 +252,10 @@ primType =
 returnType :: P (ReturnType SrcSpan)
 returnType =
       VoidType <$> keywordWithSpan KW_Void
+  <|> (do startPos <- getStartPos
+          t <- ttype
+          endPos <- getEndPos
+          return $ Type (mkSrcSpanFromPos startPos endPos) t)
   <?> "type"
 
 -- Separators

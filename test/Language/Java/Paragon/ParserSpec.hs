@@ -216,6 +216,24 @@ spec = do
           cId = Id (srcSpanFun 1 7 1 7) "C"
       in successCase fileName (CompilationUnit cuSrcSpan Nothing [] [ClassTypeDecl ctdSrcSpan cd])
 
+    it "parses class declaration with int method without parameters and modifiers with semicolon body" $
+      let fileName = "ClassDeclIntMethodNoParamsSemiColon.para"
+          srcSpanFun = SrcSpan fileName
+          cuSrcSpan = srcSpanFun 1 1 3 1
+          ctdSrcSpan = srcSpanFun 1 1 3 1
+          cdSrcSpan = srcSpanFun 1 1 3 1
+          cbSrcSpan = srcSpanFun 1 9 3 1
+          mdSrcSpan = srcSpanFun 2 3 2 10
+          cbDecl = MemberDecl mdSrcSpan methodDecl
+          mId = Id (srcSpanFun 2 7 2 7) "f"
+          body = MethodBody (srcSpanFun 2 10 2 10) Nothing
+          intTSrcSpan = srcSpanFun 2 3 2 5
+          intT = PrimType intTSrcSpan (IntT intTSrcSpan)
+          methodDecl = MethodDecl mdSrcSpan [] [] (Type intTSrcSpan intT) mId [] body
+          cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
+          cId = Id (srcSpanFun 1 7 1 7) "C"
+      in successCase fileName (CompilationUnit cuSrcSpan Nothing [] [ClassTypeDecl ctdSrcSpan cd])
+
     -- Failure
     describe "gives an error message when" $ do
 
@@ -275,6 +293,24 @@ spec = do
 
       it "given a class declaration with single field declaration with modifier and missing type" $
         failureCase "ClassDeclSingleFieldModMissType"
+
+      it "given a class declaration with void method with missing name with semicolon body" $
+       failureCase "ClassDeclVoidMethodSemiColonMissName"
+
+      it "given a class declaration with int method with missing name with semicolon body" $
+       failureCase "ClassDeclIntMethodSemiColonMissName"
+
+      it "given a class declaration with method with missing return type with semicolon body" $
+       failureCase "ClassDeclMethodSemiColonMissRetType"
+
+      it "given a class declaration with int method with missing opening paren with semicolon body" $
+       failureCase "ClassDeclIntMethodSemiColonMissOpenParen"
+
+      it "given a class declaration with int method with missing closing paren with semicolon body" $
+       failureCase "ClassDeclIntMethodSemiColonMissCloseParen"
+
+      it "given a class declaration with int method with missing body" $
+       failureCase "ClassDeclIntMethodMissBody"
 
 -- Infrastructure
 
