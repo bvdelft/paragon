@@ -163,7 +163,7 @@ spec = do
           intId = Id (srcSpanFun 1 18 1 18) "I"
       in successCase fileName (CompilationUnit cuSrcSpan Nothing [] [InterfaceTypeDecl inttdSrcSpan intd])
 
-    it "parses class declaration with single field declaration without modifiers and initializer" $
+    it "parses class declaration with single field declaration" $
       let fileName = "ClassDeclSingleField.para"
           srcSpanFun = SrcSpan fileName
           cuSrcSpan = srcSpanFun 1 1 3 1
@@ -181,7 +181,7 @@ spec = do
           cId = Id (srcSpanFun 1 7 1 7) "C"
       in successCase fileName (CompilationUnit cuSrcSpan Nothing [] [ClassTypeDecl ctdSrcSpan cd])
 
-    it "parses class declaration with single field declaration with modifiers without initializer" $
+    it "parses class declaration with single field declaration with modifiers" $
       let fileName = "ClassDeclSingleFieldMod.para"
           srcSpanFun = SrcSpan fileName
           cuSrcSpan = srcSpanFun 1 1 3 1
@@ -200,7 +200,7 @@ spec = do
           cId = Id (srcSpanFun 1 7 1 7) "C"
       in successCase fileName (CompilationUnit cuSrcSpan Nothing [] [ClassTypeDecl ctdSrcSpan cd])
 
-    it "parses class declaration with void method without parameters and modifiers with semicolon body" $
+    it "parses class declaration with void method with semicolon body" $
       let fileName = "ClassDeclVoidMethodNoParamsSemiColon.para"
           srcSpanFun = SrcSpan fileName
           cuSrcSpan = srcSpanFun 1 1 3 1
@@ -216,7 +216,7 @@ spec = do
           cId = Id (srcSpanFun 1 7 1 7) "C"
       in successCase fileName (CompilationUnit cuSrcSpan Nothing [] [ClassTypeDecl ctdSrcSpan cd])
 
-    it "parses class declaration with int method without parameters and modifiers with semicolon body" $
+    it "parses class declaration with int method with semicolon body" $
       let fileName = "ClassDeclIntMethodNoParamsSemiColon.para"
           srcSpanFun = SrcSpan fileName
           cuSrcSpan = srcSpanFun 1 1 3 1
