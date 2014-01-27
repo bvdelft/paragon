@@ -49,63 +49,69 @@ spec = do
 
     it "parses package declaration with single identifier" $
       let fileName = "PkgDeclSingle.para"
-          cuSrcSpan = SrcSpan fileName 1 1 1 16
-          pdSrcSpan = SrcSpan fileName 1 1 1 16
-          qIdSrcSpan = SrcSpan fileName 1 9 1 15
-          paragonId = Id (SrcSpan fileName 1 9 1 15) "paragon"
+          srcSpanFun = SrcSpan fileName
+          cuSrcSpan = srcSpanFun 1 1 1 16
+          pdSrcSpan = srcSpanFun 1 1 1 16
+          qIdSrcSpan = srcSpanFun 1 9 1 15
+          paragonId = Id (srcSpanFun 1 9 1 15) "paragon"
       in successCase fileName (CompilationUnit cuSrcSpan (Just $ PackageDecl pdSrcSpan (Name qIdSrcSpan paragonId PkgName Nothing)) [] [])
 
     it "parses package declaration with qualified name" $
       let fileName = "PkgDeclQName.para"
-          cuSrcSpan = SrcSpan fileName 1 1 1 28
-          pdSrcSpan = SrcSpan fileName 1 1 1 28
-          qIdSrcSpan = SrcSpan fileName 1 9 1 27
-          seId = Id (SrcSpan fileName 1 9 1 10) "se"
-          seName = Name (SrcSpan fileName 1 9 1 10) seId PkgName Nothing
-          chalmersId = Id (SrcSpan fileName 1 12 1 19) "chalmers"
-          chalmersName = Name (SrcSpan fileName 1 9 1 19) chalmersId PkgName (Just seName)
-          paragonId = Id (SrcSpan fileName 1 21 1 27) "paragon"
+          srcSpanFun = SrcSpan fileName
+          cuSrcSpan = srcSpanFun 1 1 1 28
+          pdSrcSpan = srcSpanFun 1 1 1 28
+          qIdSrcSpan = srcSpanFun 1 9 1 27
+          seId = Id (srcSpanFun 1 9 1 10) "se"
+          seName = Name (srcSpanFun 1 9 1 10) seId PkgName Nothing
+          chalmersId = Id (srcSpanFun 1 12 1 19) "chalmers"
+          chalmersName = Name (srcSpanFun 1 9 1 19) chalmersId PkgName (Just seName)
+          paragonId = Id (srcSpanFun 1 21 1 27) "paragon"
       in successCase fileName (CompilationUnit cuSrcSpan (Just $ PackageDecl pdSrcSpan (Name qIdSrcSpan paragonId PkgName (Just chalmersName))) [] [])
 
     -- TODO: fix name types
     it "parses single type import declaration" $
       let fileName = "ImportDeclSingle.para"
-          cuSrcSpan = SrcSpan fileName 1 1 1 22
-          impdSrcSpan = SrcSpan fileName 1 1 1 22
-          qIdSrcSpan = SrcSpan fileName 1 8 1 21
-          policyId = Id (SrcSpan fileName 1 16 1 21) "Policy"
-          paragonName = Name (SrcSpan fileName 1 8 1 14) paragonId AmbigName Nothing
-          paragonId = Id (SrcSpan fileName 1 8 1 14) "paragon"
+          srcSpanFun = SrcSpan fileName
+          cuSrcSpan = srcSpanFun 1 1 1 22
+          impdSrcSpan = srcSpanFun 1 1 1 22
+          qIdSrcSpan = srcSpanFun 1 8 1 21
+          policyId = Id (srcSpanFun 1 16 1 21) "Policy"
+          paragonName = Name (srcSpanFun 1 8 1 14) paragonId AmbigName Nothing
+          paragonId = Id (srcSpanFun 1 8 1 14) "paragon"
       in successCase fileName (CompilationUnit cuSrcSpan Nothing [SingleTypeImport impdSrcSpan (Name qIdSrcSpan policyId AmbigName (Just paragonName))] [])
 
     it "parses import declaration for all the types in a package" $
       let fileName = "ImportDeclTypeOnDemand.para"
-          cuSrcSpan = SrcSpan fileName 1 1 1 17
-          impdSrcSpan = SrcSpan fileName 1 1 1 17
-          qIdSrcSpan = SrcSpan fileName 1 8 1 14
-          paragonId = Id (SrcSpan fileName 1 8 1 14) "paragon"
+          srcSpanFun = SrcSpan fileName
+          cuSrcSpan = srcSpanFun 1 1 1 17
+          impdSrcSpan = srcSpanFun 1 1 1 17
+          qIdSrcSpan = srcSpanFun 1 8 1 14
+          paragonId = Id (srcSpanFun 1 8 1 14) "paragon"
       in successCase fileName (CompilationUnit cuSrcSpan Nothing [TypeImportOnDemand impdSrcSpan (Name qIdSrcSpan paragonId AmbigName Nothing)] [])
 
     it "parses static import declaration of a single type" $
       let fileName = "ImportDeclSingleStatic.para"
-          cuSrcSpan = SrcSpan fileName 1 1 1 27
-          impdSrcSpan = SrcSpan fileName 1 1 1 27
-          qIdSrcSpan = SrcSpan fileName 1 15 1 26
-          piId = Id (SrcSpan fileName 1 25 1 26) "PI"
-          mathName = Name (SrcSpan fileName 1 15 1 23) mathId AmbigName (Just langName)
-          mathId = Id (SrcSpan fileName 1 20 1 23) "Math"
-          langName = Name (SrcSpan fileName 1 15 1 18) langId AmbigName Nothing
-          langId = Id (SrcSpan fileName 1 15 1 18) "lang"
+          srcSpanFun = SrcSpan fileName
+          cuSrcSpan = srcSpanFun 1 1 1 27
+          impdSrcSpan = srcSpanFun 1 1 1 27
+          qIdSrcSpan = srcSpanFun 1 15 1 26
+          piId = Id (srcSpanFun 1 25 1 26) "PI"
+          mathName = Name (srcSpanFun 1 15 1 23) mathId AmbigName (Just langName)
+          mathId = Id (srcSpanFun 1 20 1 23) "Math"
+          langName = Name (srcSpanFun 1 15 1 18) langId AmbigName Nothing
+          langId = Id (srcSpanFun 1 15 1 18) "lang"
       in successCase fileName (CompilationUnit cuSrcSpan Nothing [SingleStaticImport impdSrcSpan (Name qIdSrcSpan piId AmbigName (Just mathName))] [])
 
     it "parses static import declaration for all members" $
       let fileName = "ImportDeclStaticOnDemand.para"
-          cuSrcSpan = SrcSpan fileName 1 1 1 26
-          impdSrcSpan = SrcSpan fileName 1 1 1 26
-          qIdSrcSpan = SrcSpan fileName 1 15 1 23
-          mathId = Id (SrcSpan fileName 1 20 1 23) "Math"
-          langName = Name (SrcSpan fileName 1 15 1 18) langId AmbigName Nothing
-          langId = Id (SrcSpan fileName 1 15 1 18) "lang"
+          srcSpanFun = SrcSpan fileName
+          cuSrcSpan = srcSpanFun 1 1 1 26
+          impdSrcSpan = srcSpanFun 1 1 1 26
+          qIdSrcSpan = srcSpanFun 1 15 1 23
+          mathId = Id (srcSpanFun 1 20 1 23) "Math"
+          langName = Name (srcSpanFun 1 15 1 18) langId AmbigName Nothing
+          langId = Id (srcSpanFun 1 15 1 18) "lang"
       in successCase fileName (CompilationUnit cuSrcSpan Nothing [StaticImportOnDemand impdSrcSpan (Name qIdSrcSpan mathId AmbigName (Just langName))] [])
 
     it "parses semicolon type declaration" $
@@ -115,42 +121,46 @@ spec = do
 
     it "parses empty class declaration" $
       let fileName = "ClassDeclEmpty.para"
-          cuSrcSpan = SrcSpan fileName 1 1 1 10
-          ctdSrcSpan = SrcSpan fileName 1 1 1 10
-          cdSrcSpan = SrcSpan fileName 1 1 1 10
-          cbSrcSpan = SrcSpan fileName 1 9 1 10
+          srcSpanFun = SrcSpan fileName
+          cuSrcSpan = srcSpanFun 1 1 1 10
+          ctdSrcSpan = srcSpanFun 1 1 1 10
+          cdSrcSpan = srcSpanFun 1 1 1 10
+          cbSrcSpan = srcSpanFun 1 9 1 10
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [])
-          cId = Id (SrcSpan fileName 1 7 1 7) "C"
+          cId = Id (srcSpanFun 1 7 1 7) "C"
       in successCase fileName (CompilationUnit cuSrcSpan Nothing [] [ClassTypeDecl ctdSrcSpan cd])
 
     it "parses empty interface declaration" $
       let fileName = "InterfaceDeclEmpty.para"
-          cuSrcSpan = SrcSpan fileName 1 1 1 14
-          inttdSrcSpan = SrcSpan fileName 1 1 1 14
-          intdSrcSpan = SrcSpan fileName 1 1 1 14
+          srcSpanFun = SrcSpan fileName
+          cuSrcSpan = srcSpanFun 1 1 1 14
+          inttdSrcSpan = srcSpanFun 1 1 1 14
+          intdSrcSpan = srcSpanFun 1 1 1 14
           intd = InterfaceDecl intdSrcSpan [] intId [] [] IB
-          intId = Id (SrcSpan fileName 1 11 1 11) "I"
+          intId = Id (srcSpanFun 1 11 1 11) "I"
       in successCase fileName (CompilationUnit cuSrcSpan Nothing [] [InterfaceTypeDecl inttdSrcSpan intd])
 
     it "parses empty class declaration with modifiers" $
       let fileName = "ClassDeclMod.para"
-          cuSrcSpan = SrcSpan fileName 1 1 1 17
-          ctdSrcSpan = SrcSpan fileName 1 1 1 17
-          cdSrcSpan = SrcSpan fileName 1 1 1 17
-          pblSrcSpan = SrcSpan fileName 1 1 1 6
-          cbSrcSpan = SrcSpan fileName 1 16 1 17
+          srcSpanFun = SrcSpan fileName
+          cuSrcSpan = srcSpanFun 1 1 1 17
+          ctdSrcSpan = srcSpanFun 1 1 1 17
+          cdSrcSpan = srcSpanFun 1 1 1 17
+          pblSrcSpan = srcSpanFun 1 1 1 6
+          cbSrcSpan = srcSpanFun 1 16 1 17
           cd = ClassDecl cdSrcSpan [Public pblSrcSpan] cId [] Nothing [] (ClassBody cbSrcSpan [])
-          cId = Id (SrcSpan fileName 1 14 1 14) "C"
+          cId = Id (srcSpanFun 1 14 1 14) "C"
       in successCase fileName (CompilationUnit cuSrcSpan Nothing [] [ClassTypeDecl ctdSrcSpan cd])
 
     it "parses empty interface declaration with modifiers" $
       let fileName = "InterfaceDeclMod.para"
-          cuSrcSpan = SrcSpan fileName 1 1 1 21
-          inttdSrcSpan = SrcSpan fileName 1 1 1 21
-          intdSrcSpan = SrcSpan fileName 1 1 1 21
-          pblSrcSpan = SrcSpan fileName 1 1 1 6
+          srcSpanFun = SrcSpan fileName
+          cuSrcSpan = srcSpanFun 1 1 1 21
+          inttdSrcSpan = srcSpanFun 1 1 1 21
+          intdSrcSpan = srcSpanFun 1 1 1 21
+          pblSrcSpan = srcSpanFun 1 1 1 6
           intd = InterfaceDecl intdSrcSpan [Public pblSrcSpan] intId [] [] IB
-          intId = Id (SrcSpan fileName 1 18 1 18) "I"
+          intId = Id (srcSpanFun 1 18 1 18) "I"
       in successCase fileName (CompilationUnit cuSrcSpan Nothing [] [InterfaceTypeDecl inttdSrcSpan intd])
 
     it "parses class declaration with single field declaration without modifiers and initializer" $
@@ -168,7 +178,7 @@ spec = do
           varSrcSpan = srcSpanFun 2 11 2 11
           varDecl = VarDecl varSrcSpan varId
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
-          cId = Id (SrcSpan fileName 1 7 1 7) "C"
+          cId = Id (srcSpanFun 1 7 1 7) "C"
       in successCase fileName (CompilationUnit cuSrcSpan Nothing [] [ClassTypeDecl ctdSrcSpan cd])
 
     it "parses class declaration with single field declaration with modifiers without initializer" $
@@ -187,7 +197,7 @@ spec = do
           varSrcSpan = srcSpanFun 2 31 2 31
           varDecl = VarDecl varSrcSpan varId
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
-          cId = Id (SrcSpan fileName 1 7 1 7) "C"
+          cId = Id (srcSpanFun 1 7 1 7) "C"
       in successCase fileName (CompilationUnit cuSrcSpan Nothing [] [ClassTypeDecl ctdSrcSpan cd])
 
     -- Failure
