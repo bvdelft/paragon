@@ -200,6 +200,33 @@ spec = do
           cId = Id (srcSpanFun 1 7 1 7) "C"
       in successCase fileName (CompilationUnit cuSrcSpan Nothing [] [ClassTypeDecl ctdSrcSpan cd])
 
+    it "parses class declaration with multiple field declarations with modifiers" $
+      let fileName = "ClassDeclMultFields.para"
+          srcSpanFun = SrcSpan fileName
+          cuSrcSpan = srcSpanFun 1 1 4 1
+          ctdSrcSpan = srcSpanFun 1 1 4 1
+          cdSrcSpan = srcSpanFun 1 1 4 1
+          cbSrcSpan = srcSpanFun 1 9 4 1
+          cbDs = [MemberDecl mdSrcSpan1 fieldDecl1, MemberDecl mdSrcSpan2 fieldDecl2]
+          mdSrcSpan1 = srcSpanFun 2 3 2 19
+          mdSrcSpan2 = srcSpanFun 3 3 3 15
+          tSrcSpan1 = srcSpanFun 2 10 2 16
+          tSrcSpan2 = srcSpanFun 3 3 3 9
+          fieldDecl1 = FieldDecl mdSrcSpan1 [Public $ srcSpanFun 2 3 2 8] (PrimType tSrcSpan1 (BooleanT tSrcSpan1)) [varDecl1]
+          fieldDecl2 = FieldDecl mdSrcSpan2 [] (PrimType tSrcSpan2 (BooleanT tSrcSpan2)) [varDecl2, varDecl3]
+          varId1 = Id varSrcSpan1 "x"
+          varSrcSpan1 = srcSpanFun 2 18 2 18
+          varId2 = Id varSrcSpan2 "y"
+          varSrcSpan2 = srcSpanFun 3 11 3 11
+          varId3 = Id varSrcSpan3 "z"
+          varSrcSpan3 = srcSpanFun 3 14 3 14
+          varDecl1 = VarDecl varSrcSpan1 varId1
+          varDecl2 = VarDecl varSrcSpan2 varId2
+          varDecl3 = VarDecl varSrcSpan3 varId3
+          cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan cbDs)
+          cId = Id (srcSpanFun 1 7 1 7) "C"
+      in successCase fileName (CompilationUnit cuSrcSpan Nothing [] [ClassTypeDecl ctdSrcSpan cd])
+
     it "parses class declaration with void method with semicolon body" $
       let fileName = "ClassDeclVoidMethodSemiColon.para"
           srcSpanFun = SrcSpan fileName
@@ -330,6 +357,9 @@ spec = do
 
       it "given a class declaration with single field declaration with modifier and missing type" $
         failureCase "ClassDeclSingleFieldModMissType"
+
+      it "given a class declaration with single field and comma" $
+        failureCase "ClassDeclSingleFieldComma"
 
       it "given a class declaration with void method with missing name with semicolon body" $
        failureCase "ClassDeclVoidMethodSemiColonMissName"

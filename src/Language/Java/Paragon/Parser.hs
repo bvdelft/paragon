@@ -173,7 +173,7 @@ methodDeclModsFun = do
 -- | Takes 'VarDecl' parser to handle restrictions on field declarations in interfaces
 -- (the absence of initializer).
 varDecls :: P (VarDecl SrcSpan) -> P [VarDecl SrcSpan]
-varDecls varDeclFun = seplist1 varDeclFun comma
+varDecls varDeclFun = varDeclFun `sepBy1` comma
 
 varDecl :: P (VarDecl SrcSpan)
 varDecl = do
