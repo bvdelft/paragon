@@ -125,9 +125,7 @@ interfaceDeclModsFun = do
 classBody :: P (ClassBody SrcSpan)
 classBody = do
   startPos <- getStartPos
-  openCurly
-  decls <- classBodyDecls
-  closeCurly
+  decls <- braces classBodyDecls
   endPos <- getEndPos
   return $ ClassBody (mkSrcSpanFromPos startPos endPos) decls
   <?> "class body"
