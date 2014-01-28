@@ -1,0 +1,3 @@
+"ClassDeclVoidMethodSingleLocalVarDeclVoid.para" (line 3, column 5):
+unexpected void
+expecting local variable declaration, statement or }

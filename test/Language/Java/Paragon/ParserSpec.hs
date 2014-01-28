@@ -290,6 +290,58 @@ spec = do
           cId = Id (srcSpanFun 1 7 1 7) "C"
       in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cdSrcSpan cd])
 
+    it "parses class declaration with void method with single local variable declaration" $
+      let fileName = "ClassDeclVoidMethodSingleLocalVarDecl.para"
+          srcSpanFun = SrcSpan fileName
+          cdSrcSpan = srcSpanFun 1 1 5 1
+          cbSrcSpan = srcSpanFun 1 9 5 1
+          mdSrcSpan = srcSpanFun 2 3 4 3
+          cbDecl = MemberDecl mdSrcSpan methodDecl
+          mId = Id (srcSpanFun 2 8 2 8) "f"
+          bodySrcSpan = srcSpanFun 2 12 4 3
+          stmtSrcSpan = srcSpanFun 3 5 3 12
+          floatTSrcSpan = srcSpanFun 3 5 3 9
+          floatT = PrimType floatTSrcSpan (FloatT floatTSrcSpan)
+          varId = Id varSrcSpan "x"
+          varSrcSpan = srcSpanFun 3 11 3 11
+          varDecl = VarDecl varSrcSpan varId
+          body = MethodBody bodySrcSpan (Just (Block bodySrcSpan [LocalVars stmtSrcSpan [] floatT [varDecl]]))
+          methodDecl = MethodDecl mdSrcSpan [] [] (VoidType (srcSpanFun 2 3 2 6)) mId [] body
+          cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
+          cId = Id (srcSpanFun 1 7 1 7) "C"
+      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cdSrcSpan cd])
+
+    it "parses class declaration with void method with multiple local variable declarations" $
+      let fileName = "ClassDeclVoidMethodMultLocalVarDecls.para"
+          srcSpanFun = SrcSpan fileName
+          cdSrcSpan = srcSpanFun 1 1 6 1
+          cbSrcSpan = srcSpanFun 1 9 6 1
+          mdSrcSpan = srcSpanFun 2 3 5 3
+          cbDecl = MemberDecl mdSrcSpan methodDecl
+          mId = Id (srcSpanFun 2 8 2 8) "f"
+          bodySrcSpan = srcSpanFun 2 12 5 3
+          stmtSrcSpan1 = srcSpanFun 3 5 3 11
+          stmtSrcSpan2 = srcSpanFun 4 5 4 16
+          byteTSrcSpan = srcSpanFun 3 5 3 8
+          byteT = PrimType byteTSrcSpan (ByteT byteTSrcSpan)
+          doubleTSrcSpan = srcSpanFun 4 5 4 10
+          doubleT = PrimType doubleTSrcSpan (DoubleT doubleTSrcSpan)
+          varId1 = Id varSrcSpan1 "x"
+          varSrcSpan1 = srcSpanFun 3 10 3 10
+          varDecl1 = VarDecl varSrcSpan1 varId1
+          varId2 = Id varSrcSpan2 "y"
+          varSrcSpan2 = srcSpanFun 4 12 4 12
+          varDecl2 = VarDecl varSrcSpan2 varId2
+          varId3 = Id varSrcSpan3 "z"
+          varSrcSpan3 = srcSpanFun 4 15 4 15
+          varDecl3 = VarDecl varSrcSpan3 varId3
+          body = MethodBody bodySrcSpan (Just (Block bodySrcSpan [ LocalVars stmtSrcSpan1 [] byteT [varDecl1]
+                                                                 , LocalVars stmtSrcSpan2 [] doubleT [varDecl2, varDecl3]]))
+          methodDecl = MethodDecl mdSrcSpan [] [] (VoidType (srcSpanFun 2 3 2 6)) mId [] body
+          cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
+          cId = Id (srcSpanFun 1 7 1 7) "C"
+      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cdSrcSpan cd])
+
     -- Failure
     describe "gives an error message when" $ do
 
@@ -338,18 +390,21 @@ spec = do
       it "given an interface declaration with misspelled modifier" $
         failureCase "InterfaceDeclModTypo"
 
+      -- Error message should be improved
       it "given a class declaration with single field declaration with missing name" $
         failureCase "ClassDeclSingleFieldMissName"
 
       it "given a class declaration with single field declaration with missing type" $
         failureCase "ClassDeclSingleFieldMissType"
 
+      -- Error message should be improved
       it "given a class declaration with single field declaration with missing semicolon" $
         failureCase "ClassDeclSingleFieldMissSemiColon"
 
       it "given a class declaration with single field declaration with modifier and missing type" $
         failureCase "ClassDeclSingleFieldModMissType"
 
+      -- Error message should be improved
       it "given a class declaration with single field and comma" $
         failureCase "ClassDeclSingleFieldComma"
 
@@ -376,6 +431,18 @@ spec = do
 
       it "given a class declaration with int method with missing closing curly" $
        failureCase "ClassDeclIntMethodMissCloseCurly"
+
+      it "given a class declaration with void method with local variable declaration with missing semicolon" $
+        failureCase "ClassDeclVoidMethodSingleLocalVarDeclMissSemiColon"
+
+      it "given a class declaration with void method with local variable declaration with missing name" $
+        failureCase "ClassDeclVoidMethodSingleLocalVarDeclMissName"
+
+      it "given a class declaration with void method with local variable declaration and extra comma" $
+        failureCase "ClassDeclVoidMethodSingleLocalVarDeclComma"
+
+      it "given a class declaration with void method with void local variable declaration" $
+        failureCase "ClassDeclVoidMethodSingleLocalVarDeclVoid"
 
 -- Infrastructure
 

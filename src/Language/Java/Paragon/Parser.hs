@@ -151,8 +151,8 @@ classBodyDecl = withModifiers (do
   <?> "class body declaration"
 
 memberDeclModsFun :: P (ModifiersFun (MemberDecl SrcSpan))
-memberDeclModsFun = try methodDeclModsFun
-                <|> fieldDeclModsFun varDecl
+memberDeclModsFun = try (fieldDeclModsFun varDecl)
+                <|> methodDeclModsFun
 
 fieldDeclModsFun :: P (VarDecl SrcSpan) -> P (ModifiersFun (MemberDecl SrcSpan))
 fieldDeclModsFun varDeclFun = do
@@ -206,11 +206,28 @@ block = do
   return $ Block (mkSrcSpanFromPos startPos endPos) blStmts
 
 blockStmt :: P (BlockStmt SrcSpan)
-blockStmt = do
-  startPos <- getStartPos
-  s <- stmt
-  endPos <- getEndPos
-  return $ BlockStmt (mkSrcSpanFromPos startPos endPos) s
+blockStmt =
+  (withModifiers
+    (do startPos <- getStartPos
+        (t, varDs) <- localVarDecl
+        semiColon
+        endPos <- getEndPos
+        return $ \mods ->
+          let startPos' = getModifiersStartPos mods startPos
+          in LocalVars (mkSrcSpanFromPos startPos' endPos) mods t varDs)
+    <?> "local variable declaration")
+    <|>
+  (do startPos <- getStartPos
+      s <- stmt
+      endPos <- getEndPos
+      return $ BlockStmt (mkSrcSpanFromPos startPos endPos) s
+      <?> "statement")
+
+localVarDecl :: P (Type SrcSpan, [VarDecl SrcSpan])
+localVarDecl = do
+  t <- ttype
+  varDs <- varDecls varDecl
+  return (t, varDs)
 
 stmt :: P (Stmt SrcSpan)
 stmt = do

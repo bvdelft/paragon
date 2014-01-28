@@ -1,0 +1,3 @@
+"ClassDeclVoidMethodSingleLocalVarDeclMissName.para" (line 3, column 9):
+unexpected ;
+expecting variable/field name
