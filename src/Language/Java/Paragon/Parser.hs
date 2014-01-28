@@ -188,8 +188,16 @@ methodBody :: P (MethodBody SrcSpan)
 methodBody = do
   startPos <- getStartPos
   mBlock <- const Nothing <$> semiColon
+        <|> Just <$> block
   endPos <- getEndPos
   return $ MethodBody (mkSrcSpanFromPos startPos endPos) mBlock
+
+block :: P (Block SrcSpan)
+block = do
+  startPos <- getStartPos
+  blStmts <- braces $ return []
+  endPos <- getEndPos
+  return $ Block (mkSrcSpanFromPos startPos endPos) blStmts
 
 -- Modifiers
 
@@ -265,6 +273,9 @@ openParen = tok OpenParen <?> show OpenParen
 
 closeParen :: P ()
 closeParen = tok CloseParen <?> show CloseParen
+
+braces :: P a -> P a
+braces = between openCurly closeCurly
 
 openCurly :: P ()
 openCurly = tok OpenCurly <?> show OpenCurly

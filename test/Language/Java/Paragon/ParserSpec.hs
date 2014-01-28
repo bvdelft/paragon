@@ -234,6 +234,43 @@ spec = do
           cId = Id (srcSpanFun 1 7 1 7) "C"
       in successCase fileName (CompilationUnit cuSrcSpan Nothing [] [ClassTypeDecl ctdSrcSpan cd])
 
+    it "parses class declaration with void method with empty body" $
+      let fileName = "ClassDeclVoidMethodEmptyBody.para"
+          srcSpanFun = SrcSpan fileName
+          cuSrcSpan = srcSpanFun 1 1 3 1
+          ctdSrcSpan = srcSpanFun 1 1 3 1
+          cdSrcSpan = srcSpanFun 1 1 3 1
+          cbSrcSpan = srcSpanFun 1 9 3 1
+          mdSrcSpan = srcSpanFun 2 3 2 13
+          cbDecl = MemberDecl mdSrcSpan methodDecl
+          mId = Id (srcSpanFun 2 8 2 8) "f"
+          bodySrcSpan = srcSpanFun 2 12 2 13
+          body = MethodBody bodySrcSpan (Just (Block bodySrcSpan []))
+          methodDecl = MethodDecl mdSrcSpan [] [] (VoidType (srcSpanFun 2 3 2 6)) mId [] body
+          cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
+          cId = Id (srcSpanFun 1 7 1 7) "C"
+      in successCase fileName (CompilationUnit cuSrcSpan Nothing [] [ClassTypeDecl ctdSrcSpan cd])
+
+    it "parses class declaration with int method with empty body with modifiers" $
+      let fileName = "ClassDeclIntMethodModEmptyBody.para"
+          srcSpanFun = SrcSpan fileName
+          cuSrcSpan = srcSpanFun 1 1 3 1
+          ctdSrcSpan = srcSpanFun 1 1 3 1
+          cdSrcSpan = srcSpanFun 1 1 3 1
+          cbSrcSpan = srcSpanFun 1 9 3 1
+          mdSrcSpan = srcSpanFun 2 3 2 26
+          cbDecl = MemberDecl mdSrcSpan methodDecl
+          mId = Id (srcSpanFun 2 21 2 21) "f"
+          bodySrcSpan = srcSpanFun 2 25 2 26
+          body = MethodBody bodySrcSpan (Just (Block bodySrcSpan []))
+          intTSrcSpan = srcSpanFun 2 17 2 19
+          intT = PrimType intTSrcSpan (IntT intTSrcSpan)
+          mods = [Public $ srcSpanFun 2 3 2 8, Static $ srcSpanFun 2 10 2 15]
+          methodDecl = MethodDecl mdSrcSpan mods [] (Type intTSrcSpan intT) mId [] body
+          cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
+          cId = Id (srcSpanFun 1 7 1 7) "C"
+      in successCase fileName (CompilationUnit cuSrcSpan Nothing [] [ClassTypeDecl ctdSrcSpan cd])
+
     -- Failure
     describe "gives an error message when" $ do
 
@@ -311,6 +348,12 @@ spec = do
 
       it "given a class declaration with int method with missing body" $
        failureCase "ClassDeclIntMethodMissBody"
+
+      it "given a class declaration with void method with missing opening curly" $
+       failureCase "ClassDeclIntMethodMissOpenCurly"
+
+      it "given a class declaration with int method with missing closing curly" $
+       failureCase "ClassDeclIntMethodMissCloseCurly"
 
 -- Infrastructure
 
