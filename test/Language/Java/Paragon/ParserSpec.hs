@@ -68,7 +68,7 @@ spec = do
           paragonId = Id (srcSpanFun 1 21 1 27) "paragon"
       in successCase fileName (CompilationUnit pdSrcSpan (Just $ PackageDecl pdSrcSpan (Name qIdSrcSpan paragonId PkgName (Just chalmersName))) [] [])
 
-    -- TODO: fix name types
+    -- TODO: check correctness of name types
     it "parses single type import declaration" $
       let fileName = "ImportDeclSingle.para"
           srcSpanFun = SrcSpan fileName
@@ -77,8 +77,8 @@ spec = do
           policyId = Id (srcSpanFun 1 16 1 21) "Policy"
           paragonSrcSpan = srcSpanFun 1 8 1 14
           paragonId = Id paragonSrcSpan "paragon"
-          paragonName = Name paragonSrcSpan paragonId AmbigName Nothing
-      in successCase fileName (CompilationUnit impdSrcSpan Nothing [SingleTypeImport impdSrcSpan (Name qIdSrcSpan policyId AmbigName (Just paragonName))] [])
+          paragonName = Name paragonSrcSpan paragonId TypeName Nothing
+      in successCase fileName (CompilationUnit impdSrcSpan Nothing [SingleTypeImport impdSrcSpan (Name qIdSrcSpan policyId TypeName (Just paragonName))] [])
 
     it "parses import declaration for all the types in a package" $
       let fileName = "ImportDeclTypeOnDemand.para"
@@ -86,7 +86,7 @@ spec = do
           impdSrcSpan = srcSpanFun 1 1 1 17
           paragonSrcSpan = srcSpanFun 1 8 1 14
           paragonId = Id paragonSrcSpan "paragon"
-      in successCase fileName (CompilationUnit impdSrcSpan Nothing [TypeImportOnDemand impdSrcSpan (Name paragonSrcSpan paragonId AmbigName Nothing)] [])
+      in successCase fileName (CompilationUnit impdSrcSpan Nothing [TypeImportOnDemand impdSrcSpan (Name paragonSrcSpan paragonId PkgOrTypeName Nothing)] [])
 
     it "parses static import declaration of a single type" $
       let fileName = "ImportDeclSingleStatic.para"
@@ -94,10 +94,10 @@ spec = do
           impdSrcSpan = srcSpanFun 1 1 1 27
           qIdSrcSpan = srcSpanFun 1 15 1 26
           piId = Id (srcSpanFun 1 25 1 26) "PI"
-          mathName = Name (srcSpanFun 1 15 1 23) mathId AmbigName (Just langName)
+          mathName = Name (srcSpanFun 1 15 1 23) mathId TypeName (Just langName)
           mathId = Id (srcSpanFun 1 20 1 23) "Math"
           langSrcSpan = srcSpanFun 1 15 1 18
-          langName = Name langSrcSpan langId AmbigName Nothing
+          langName = Name langSrcSpan langId TypeName Nothing
           langId = Id langSrcSpan "lang"
       in successCase fileName (CompilationUnit impdSrcSpan Nothing [SingleStaticImport impdSrcSpan (Name qIdSrcSpan piId AmbigName (Just mathName))] [])
 
@@ -108,9 +108,9 @@ spec = do
           qIdSrcSpan = srcSpanFun 1 15 1 23
           mathId = Id (srcSpanFun 1 20 1 23) "Math"
           langSrcSpan = srcSpanFun 1 15 1 18
-          langName = Name langSrcSpan langId AmbigName Nothing
+          langName = Name langSrcSpan langId TypeName Nothing
           langId = Id langSrcSpan "lang"
-      in successCase fileName (CompilationUnit impdSrcSpan Nothing [StaticImportOnDemand impdSrcSpan (Name qIdSrcSpan mathId AmbigName (Just langName))] [])
+      in successCase fileName (CompilationUnit impdSrcSpan Nothing [StaticImportOnDemand impdSrcSpan (Name qIdSrcSpan mathId TypeName (Just langName))] [])
 
     it "parses semicolon type declaration" $
       let fileName = "SemiColonDecl.para"

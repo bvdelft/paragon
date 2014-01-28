@@ -307,11 +307,25 @@ mkName combine nameT ids = mkName' (reverse ids)
                          in Name (combine (nameAnn pre) (idAnn i)) i nameT (Just pre)
         mkName' [] = panic (syntaxModule ++ ".mkName") "empty list of identifiers"
 
+-- | Transforms a qualified name to list of identifiers.
+flattenName :: Name a -> [Id a]
+flattenName name = reverse (flattenName' name)
+  where flattenName' (Name _ i _ mPre) = i : maybe [] flattenName' mPre
+
 -- Create qualified names of different name types from list of identifiers.
 
+mkNameSrcSpan :: NameType -> [Id SrcSpan] -> Name SrcSpan
+mkNameSrcSpan = mkName combineSrcSpan
+
+typeName :: [Id SrcSpan] -> Name SrcSpan
+typeName = mkNameSrcSpan TypeName
+
 pkgName :: [Id SrcSpan] -> Name SrcSpan
-pkgName = mkName combineSrcSpan PkgName
+pkgName = mkNameSrcSpan PkgName
+
+pkgOrTypeName :: [Id SrcSpan] -> Name SrcSpan
+pkgOrTypeName = mkNameSrcSpan PkgOrTypeName
 
 ambigName :: [Id SrcSpan] -> Name SrcSpan
-ambigName = mkName combineSrcSpan AmbigName
+ambigName = mkNameSrcSpan AmbigName
 

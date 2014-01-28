@@ -69,11 +69,18 @@ importDecl = do
     endPos <- getEndPos
     return $ mkImportDecl isStatic hasStar (mkSrcSpanFromPos startPos endPos) pkgTypeName
     <?> "import declaration"
-    -- TODO: fix name types
-  where mkImportDecl False False = SingleTypeImport
-        mkImportDecl False True  = TypeImportOnDemand
-        mkImportDecl True  False = SingleStaticImport
-        mkImportDecl True  True  = StaticImportOnDemand
+    -- TODO: check correctness of name types
+  where mkImportDecl False False sp n = SingleTypeImport     sp (typeName $ flattenName n)
+        mkImportDecl False True  sp n = TypeImportOnDemand   sp (pkgOrTypeName $ flattenName n)
+        mkImportDecl True  False sp n = SingleStaticImport   sp (mkSingleStaticImport n)
+        mkImportDecl True  True  sp n = StaticImportOnDemand sp (typeName $ flattenName n)
+
+        mkSingleStaticImport n =
+          let flName = flattenName n
+              (lastI, initN) = (last flName, init flName)
+          in Name (nameAnn n) lastI (nameType n) (if null initN
+                                                    then Nothing
+                                                    else (Just $ typeName initN))
 
 typeDecl :: P (Maybe (TypeDecl SrcSpan))
 typeDecl = Just <$> classOrInterfaceDecl
