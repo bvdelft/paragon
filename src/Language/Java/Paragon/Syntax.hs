@@ -223,8 +223,8 @@ data Block a = Block
 -- | Block statement.
 data BlockStmt a =
     -- | Normal statement.
-    BlockStmt { blockStmtAnn :: a       -- ^ Annotation.
-              , blockStmt    :: Stmt a  -- ^ Statement.
+    BlockStmt { blockStmtAnn  :: a       -- ^ Annotation.
+              , blockStmtStmt :: Stmt a  -- ^ Statement.
               }
     -- | Local variable declaration.
   | LocalVars { blockStmtAnn       :: a             -- ^ Annotation.
@@ -235,8 +235,10 @@ data BlockStmt a =
   deriving (Show, Eq)
 
 -- | Statement.
-data Stmt a = S
-  deriving (Show, Eq)
+data Stmt a =
+  -- | Empty statement - semicolon.
+  Empty a
+  deriving (Show, Eq, Functor)
 
 -- Types
 

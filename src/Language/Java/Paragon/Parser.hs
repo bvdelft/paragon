@@ -193,9 +193,23 @@ methodBody = do
 block :: P (Block SrcSpan)
 block = do
   startPos <- getStartPos
-  blStmts <- braces $ return []
+  blStmts <- braces $ list blockStmt
   endPos <- getEndPos
   return $ Block (mkSrcSpanFromPos startPos endPos) blStmts
+
+blockStmt :: P (BlockStmt SrcSpan)
+blockStmt = do
+  startPos <- getStartPos
+  s <- stmt
+  endPos <- getEndPos
+  return $ BlockStmt (mkSrcSpanFromPos startPos endPos) s
+
+stmt :: P (Stmt SrcSpan)
+stmt = do
+  startPos <- getStartPos
+  semiColon
+  endPos <- getEndPos
+  return $ Empty (mkSrcSpanFromPos startPos endPos)
 
 -- Modifiers
 
