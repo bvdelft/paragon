@@ -141,12 +141,13 @@ classBodyDecls :: P [ClassBodyDecl SrcSpan]
 classBodyDecls = list classBodyDecl
 
 classBodyDecl :: P (ClassBodyDecl SrcSpan)
-classBodyDecl = do
+classBodyDecl = withModifiers (do
   startPos <- getStartPos
-  mods <- list modifier
   membDeclModsFun <- memberDeclModsFun
   endPos <- getEndPos
-  return $ MemberDecl (mkSrcSpanFromPos startPos endPos) (membDeclModsFun mods)
+  return $ \mods ->
+    let startPos' = getModifiersStartPos mods startPos
+    in MemberDecl (mkSrcSpanFromPos startPos' endPos) (membDeclModsFun mods))
   <?> "class body declaration"
 
 memberDeclModsFun :: P (ModifiersFun (MemberDecl SrcSpan))
