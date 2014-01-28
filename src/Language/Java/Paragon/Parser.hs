@@ -15,7 +15,7 @@ import Language.Java.Paragon.Syntax
 import Language.Java.Paragon.SrcPos
 import Language.Java.Paragon.Parser.Helpers
 
--- | Top-level parsing function.
+-- | Top-level parsing function. Takes a string to parse and a file name.
 parse :: String -> String -> Either ParseError (AST SrcSpan)
 parse = runParser compilationUnit
 
