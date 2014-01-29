@@ -338,7 +338,6 @@ data PrimType a =
   | FloatT   a
   | DoubleT  a
   -- Paragon specific
-  | ActorT   a
   | PolicyT  a
   deriving (Show, Eq, Functor)
 
