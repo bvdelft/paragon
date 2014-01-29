@@ -8,6 +8,8 @@ module Language.Java.Paragon.Parser.Helpers
     P
   , tok
   , tokWithSpan
+  , tokWithSpanDesc
+  , tokWithSpanTest
   , keyword
   , keywordWithSpan
   , operator
@@ -51,9 +53,18 @@ tok t = do
     token (show . twsTok) (posFromTok fileName) testT
   where testT tws = if t == twsTok tws then Just () else Nothing
 
+-- | Matches a given token and returns a source span.
+tokWithSpan :: Token -> P SrcSpan
+tokWithSpan t = tokWithSpanTest (\t' sp -> if t == t' then Just sp else Nothing)
+
+-- | Matches a given token and returns a source span.
+-- Uses passed description string when reporting errors.
+tokWithSpanDesc :: String -> Token -> P SrcSpan
+tokWithSpanDesc desc t = tokWithSpanTest (\t' sp -> if t == t' then Just sp else Nothing) <?> desc ++ " " ++ show t
+
 -- | Parses a token which is accepted by a given function.
-tokWithSpan :: (Token -> SrcSpan -> Maybe a) -> P a
-tokWithSpan test = do
+tokWithSpanTest :: (Token -> SrcSpan -> Maybe a) -> P a
+tokWithSpanTest test = do
     fileName <- getFileName
     updateUserState fileName
     token (show . twsTok) (posFromTok fileName) (testT fileName)
@@ -80,8 +91,7 @@ keyword t = tok t <?> "keyword " ++ show t
 
 -- | Matches a given keyword and returns a source span for this keyword.
 keywordWithSpan :: Token -> P SrcSpan
-keywordWithSpan k =
-  tokWithSpan (\t sp -> if t == k then Just sp else Nothing) <?> "keyword " ++ show k
+keywordWithSpan = tokWithSpanDesc "keyword"
 
 -- | Matches a given operator with better error message in case of failure.
 operator :: Token -> P ()
@@ -89,8 +99,7 @@ operator t = tok t <?> "operator " ++ show t
 
 -- | Matches a given operator and returns a source span for this operator.
 operatorWithSpan :: Token -> P SrcSpan
-operatorWithSpan op =
-  tokWithSpan (\t sp -> if t == op then Just sp else Nothing) <?> "operator " ++ show op
+operatorWithSpan = tokWithSpanDesc "operator"
 
 -- Source positions
 

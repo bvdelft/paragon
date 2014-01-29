@@ -29,7 +29,7 @@ runParser p input fileName = Parsec.runParser (p >>= \r -> eof >> return r) init
 
 ident :: P (Id SrcSpan)
 ident =
-  tokWithSpan $ \t sp ->
+  tokWithSpanTest $ \t sp ->
     case t of
       IdTok s -> Just $ Id sp s
       _       -> Nothing
@@ -275,7 +275,7 @@ assignmentExp = do
 
 literal :: P (Literal SrcSpan)
 literal =
-  tokWithSpan $ \t sp ->
+  tokWithSpanTest $ \t sp ->
     case t of
       IntLit    i -> Just $ Int     sp i
       LongLit   l -> Just $ Long    sp l
