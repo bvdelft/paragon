@@ -73,25 +73,25 @@ data ImportDecl a =
     -- | Import a single type.
     -- Example: import java.util.LinkedList;
     SingleTypeImport { impdAnn  :: a       -- ^ Annotation.
-                     , impdName :: Name a  -- ^ Type name.
+                     , impdName :: Name a  -- ^ Type\/package\/member name.
                      }
 
     -- | Import all the types contained in a package.
     -- Example: import java.util.*;
-  | TypeImportOnDemand { impdAnn  :: a       -- ^ Annotation.
-                       , impdName :: Name a  -- ^ Package name.
+  | TypeImportOnDemand { impdAnn  :: a
+                       , impdName :: Name a
                        }
 
     -- | Static import of a single type.
     -- Example: import static java.lang.Math.PI;
-  | SingleStaticImport { impdAnn  :: a       -- ^ Annotation.
-                       , impdName :: Name a  -- ^ Member name.
+  | SingleStaticImport { impdAnn  :: a
+                       , impdName :: Name a
                        }
 
     -- | Static import of all members.
     -- Example: import static java.lang.Math.*;
-  | StaticImportOnDemand { impdAnn  :: a       -- ^ Annotation.
-                         , impdName :: Name a  -- ^ Package name.
+  | StaticImportOnDemand { impdAnn  :: a
+                         , impdName :: Name a
                          }
   deriving (Show, Eq)
 
@@ -100,7 +100,7 @@ data TypeDecl a =
     ClassTypeDecl     { tdAnn       :: a            -- ^ Annotation.
                       , tdClassDecl :: ClassDecl a  -- ^ Class declaration.
                       }
-  | InterfaceTypeDecl { tdAnn     :: a                -- ^ Annotation.
+  | InterfaceTypeDecl { tdAnn     :: a
                       , tdIntDecl :: InterfaceDecl a  -- ^ Interface declaration.
                       }
   deriving (Show, Eq)
@@ -139,6 +139,7 @@ data Modifier a
   | Transient a     -- ^ transient
   | Volatile  a     -- ^ volatile
   | StrictFP  a     -- ^ strictfp
+
   -- Paragon specific
   | Typemethod a  -- ^ typemethod
   | Reflexive  a  -- ^ reflexive
@@ -146,6 +147,7 @@ data Modifier a
   | Symmetric  a  -- ^ symmetric
   | Readonly   a  -- ^ readonly
   | Notnull    a  -- ^ notnull
+
   -- TODO: more Paragon modifiers
   deriving (Show, Eq, Functor)
 
@@ -182,7 +184,7 @@ data MemberDecl a =
               , fieldDeclVarDecls  :: [VarDecl a]   -- ^ Variable declarators.
               }
     -- | Method declaration.
-  | MethodDecl { membDeclAnn            :: a                -- ^ Annotation.
+  | MethodDecl { membDeclAnn            :: a
                , methodDeclModifiers    :: [Modifier a]     -- ^ Modifiers.
                , methodDeclTypeParams   :: [TypeParam a]    -- ^ Type parameters of generic method.
                , methodDeclReturnType   :: ReturnType a     -- ^ Method return type.
@@ -227,7 +229,7 @@ data BlockStmt a =
               , blockStmtStmt :: Stmt a  -- ^ Statement.
               }
     -- | Local variable declaration.
-  | LocalVars { blockStmtAnn       :: a             -- ^ Annotation.
+  | LocalVars { blockStmtAnn       :: a
               , localVarsModifiers :: [Modifier a]  -- ^ Modifiers.
               , localVarsType      :: Type a        -- ^ Variable declaration type.
               , localVarsDecls     :: [VarDecl a]   -- ^ Variable declarators.
@@ -249,7 +251,7 @@ data Type a =
              , typePrimType :: PrimType a  -- ^ Primitive type.
              }
     -- | Reference type.
-  | RefType { typeAnn     :: a          -- ^ Annotation.
+  | RefType { typeAnn     :: a
             , typeRefType :: RefType a  -- ^ Reference type.
             }
   deriving (Show, Eq)
@@ -288,7 +290,7 @@ data RefType a =
                  , refTypeClassType :: ClassType a  -- ^ Class type.
                  }
     -- | Type variable.
-  | TypeVar { refTypeAnn   :: a     -- ^ Annotation.
+  | TypeVar { refTypeAnn   :: a
             , refTypeVarId :: Id a  -- ^ Type variable identifier.
             }
   -- TODO: ArrayType
