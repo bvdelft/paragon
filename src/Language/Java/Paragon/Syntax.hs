@@ -236,11 +236,51 @@ data BlockStmt a =
               }
   deriving (Show, Eq)
 
--- | Statement.
+-- | Statements.
 data Stmt a =
-  -- | Empty statement - semicolon.
-  Empty a
-  deriving (Show, Eq, Functor)
+    -- | Empty statement - semicolon.
+    Empty { stmtAnn :: a -- ^ Annotation.
+          }
+    -- | Expression statement (e.g. assignment, incrementation, decrementation,
+    -- method invocation etc.).
+  | ExpStmt { stmtAnn :: a
+            , stmtExp :: Exp a  -- ^ Expression.
+            }
+  deriving (Show, Eq)
+
+-- | Expressions.
+data Exp a =
+    -- | Literal.
+    Lit { expAnn :: a          -- ^ Annotation.
+        , expLit :: Literal a  -- ^ Literal.
+        }
+    -- | Assignment.
+  | Assign { expAnn    :: a
+           , assignLhs :: Lhs a       -- ^ Left-hand side of the assignment.
+           , assignOp  :: AssignOp a  -- ^ Assignment operator (=, +=, *=, ...).
+           , assignExp :: Exp a       -- ^ Expression on the right-hand side.
+           }
+  deriving (Show, Eq)
+
+-- | Types of literals.
+data Literal a =
+  Int { litAnn    :: a        -- ^ Annotation.
+      , intLitVal :: Integer  -- ^ Value of integer literal.
+      }
+  deriving (Show, Eq)
+
+-- | Left-hand side of an assignment expression.
+data Lhs a =
+  -- | Variable.
+  NameLhs { lhsAnn  :: a       -- ^ Annotation.
+          , lhsName :: Name a  -- ^ Variable name.
+          }
+  deriving (Show, Eq)
+
+-- | Different assignment operators.
+data AssignOp a =
+  EqualA a  -- ^ =
+  deriving (Show, Eq)
 
 -- Types
 
@@ -318,6 +358,9 @@ flattenName name = reverse (flattenName' name)
 
 mkNameSrcSpan :: NameType -> [Id SrcSpan] -> Name SrcSpan
 mkNameSrcSpan = mkName combineSrcSpan
+
+expName :: [Id SrcSpan] -> Name SrcSpan
+expName = mkNameSrcSpan ExpName
 
 typeName :: [Id SrcSpan] -> Name SrcSpan
 typeName = mkNameSrcSpan TypeName

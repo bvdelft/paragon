@@ -1,0 +1,3 @@
+"ClassDeclVoidMethodAssignMissLhs.para" (line 3, column 5):
+unexpected =
+expecting local variable declaration, statement or }

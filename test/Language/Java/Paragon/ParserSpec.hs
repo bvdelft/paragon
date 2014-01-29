@@ -342,6 +342,27 @@ spec = do
           cId = Id (srcSpanFun 1 7 1 7) "C"
       in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cdSrcSpan cd])
 
+    it "parses class declaration with void method with single assignment expression statement with literal" $
+      let fileName = "ClassDeclVoidMethodSingleAssignLit.para"
+          srcSpanFun = SrcSpan fileName
+          cdSrcSpan = srcSpanFun 1 1 5 1
+          cbSrcSpan = srcSpanFun 1 9 5 1
+          mdSrcSpan = srcSpanFun 2 3 4 3
+          cbDecl = MemberDecl mdSrcSpan methodDecl
+          mId = Id (srcSpanFun 2 8 2 8) "f"
+          bodySrcSpan = srcSpanFun 2 12 4 3
+          stmtSrcSpan = srcSpanFun 3 5 3 10
+          assignSrcSpan = srcSpanFun 3 5 3 9
+          varId = Id varSrcSpan "x"
+          varSrcSpan = srcSpanFun 3 5 3 5
+          litSrcSpan = srcSpanFun 3 9 3 9
+          assign = Assign assignSrcSpan (NameLhs varSrcSpan (Name varSrcSpan varId ExpName Nothing)) (EqualA $ srcSpanFun 3 7 3 7) (Lit litSrcSpan (Int litSrcSpan 1))
+          body = MethodBody bodySrcSpan (Just (Block bodySrcSpan [BlockStmt stmtSrcSpan (ExpStmt stmtSrcSpan assign)]))
+          methodDecl = MethodDecl mdSrcSpan [] [] (VoidType (srcSpanFun 2 3 2 6)) mId [] body
+          cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
+          cId = Id (srcSpanFun 1 7 1 7) "C"
+      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cdSrcSpan cd])
+
     -- Failure
     describe "gives an error message when" $ do
 
@@ -443,6 +464,15 @@ spec = do
 
       it "given a class declaration with void method with void local variable declaration" $
         failureCase "ClassDeclVoidMethodSingleLocalVarDeclVoid"
+
+      it "given a class declaration with void method with assignment with missing left-hand side" $
+        failureCase "ClassDeclVoidMethodAssignMissLhs"
+
+      it "given a class declaration with void method with assignment with missing right-hand side" $
+        failureCase "ClassDeclVoidMethodAssignMissRhs"
+
+      it "given a class declaration with void method with assignment with missing semicolon" $
+        failureCase "ClassDeclVoidMethodAssignMissSemiColon"
 
 -- Infrastructure
 

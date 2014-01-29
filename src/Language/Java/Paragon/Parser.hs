@@ -11,7 +11,7 @@ import Text.ParserCombinators.Parsec hiding (parse, runParser)
 import qualified Text.ParserCombinators.Parsec as Parsec (runParser)
 
 import Language.Java.Paragon.Lexer
-import Language.Java.Paragon.Syntax
+import Language.Java.Paragon.Syntax hiding (stmtExp)
 import Language.Java.Paragon.SrcPos
 import Language.Java.Paragon.Parser.Helpers
 
@@ -230,11 +230,55 @@ localVarDecl = do
   return (t, varDs)
 
 stmt :: P (Stmt SrcSpan)
-stmt = do
+stmt =
+  (do startPos <- getStartPos
+      semiColon
+      endPos <- getEndPos
+      return $ Empty (mkSrcSpanFromPos startPos endPos))
+    <|>
+  (do startPos <- getStartPos
+      e <- stmtExp
+      semiColon
+      endPos <- getEndPos
+      return $ ExpStmt (mkSrcSpanFromPos startPos endPos) e)
+
+stmtExp :: P (Exp SrcSpan)
+stmtExp = assignment
+
+assignment :: P (Exp SrcSpan)
+assignment = do
   startPos <- getStartPos
-  semiColon
+  lhs <- assignmentLhs
+  op <- assignmentOp
+  e <- assignmentExp
   endPos <- getEndPos
-  return $ Empty (mkSrcSpanFromPos startPos endPos)
+  return $ Assign (mkSrcSpanFromPos startPos endPos) lhs op e
+
+assignmentLhs :: P (Lhs SrcSpan)
+assignmentLhs = do
+  startPos <- getStartPos
+  n <- name expName
+  endPos <- getEndPos
+  return $ NameLhs (mkSrcSpanFromPos startPos endPos) n
+
+assignmentOp :: P (AssignOp SrcSpan)
+assignmentOp =
+  EqualA <$> operatorWithSpan Op_Assign
+
+assignmentExp :: P (Exp SrcSpan)
+assignmentExp = do
+  startPos <- getStartPos
+  lit <- literal
+  endPos <- getEndPos
+  return $ Lit (mkSrcSpanFromPos startPos endPos) lit
+  <?> "expression"
+
+literal :: P (Literal SrcSpan)
+literal =
+  tokWithSpan $ \t sp ->
+    case t of
+      IntLit i -> Just $ Int sp i
+      _        -> Nothing
 
 -- Modifiers
 

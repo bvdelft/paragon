@@ -10,6 +10,8 @@ module Language.Java.Paragon.Parser.Helpers
   , tokWithSpan
   , keyword
   , keywordWithSpan
+  , operator
+  , operatorWithSpan
     -- * Source positions
   , getStartPos
   , getEndPos
@@ -80,6 +82,15 @@ keyword t = tok t <?> "keyword " ++ show t
 keywordWithSpan :: Token -> P SrcSpan
 keywordWithSpan k =
   tokWithSpan (\t sp -> if t == k then Just sp else Nothing) <?> "keyword " ++ show k
+
+-- | Matches a given operator with better error message in case of failure.
+operator :: Token -> P ()
+operator t = tok t <?> "operator " ++ show t
+
+-- | Matches a given operator and returns a source span for this operator.
+operatorWithSpan :: Token -> P SrcSpan
+operatorWithSpan op =
+  tokWithSpan (\t sp -> if t == op then Just sp else Nothing) <?> "operator " ++ show op
 
 -- Source positions
 
