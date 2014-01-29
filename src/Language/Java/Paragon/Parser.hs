@@ -277,14 +277,14 @@ literal :: P (Literal SrcSpan)
 literal =
   tokWithSpan $ \t sp ->
     case t of
-      IntLit i    -> Just $ Int sp i
-      LongLit l   -> Just $ Long sp l
-      DoubleLit d -> Just $ Double sp d
-      FloatLit f  -> Just $ Float sp f
-      CharLit c   -> Just $ Char sp c
-      StringLit s -> Just $ String sp s
-      BoolLit b   -> Just $ Boolean sp b
-      NullLit     -> Just $ Null sp
+      IntLit    i -> Just $ Int     sp i
+      LongLit   l -> Just $ Long    sp l
+      DoubleLit d -> Just $ Double  sp d
+      FloatLit  f -> Just $ Float   sp f
+      CharLit   c -> Just $ Char    sp c
+      StringLit s -> Just $ String  sp s
+      BoolLit   b -> Just $ Boolean sp b
+      NullLit     -> Just $ Null    sp
       _           -> Nothing
 
 -- Modifiers
