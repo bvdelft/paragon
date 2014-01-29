@@ -264,9 +264,28 @@ data Exp a =
 
 -- | Types of literals.
 data Literal a =
-  Int { litAnn    :: a        -- ^ Annotation.
-      , intLitVal :: Integer  -- ^ Value of integer literal.
-      }
+    Int { litAnn    :: a        -- ^ Annotation.
+        , intLitVal :: Integer  -- ^ Value of integer literal.
+        }
+  | Long { litAnn     :: a
+         , longLitVal :: Integer  -- ^ Value of long literal.
+         }
+  | Double { litAnn       :: a
+           , doubleLitVal :: Double  -- ^ Value of double literal.
+           }
+  | Float { litAnn      :: a
+          , floatLitVal :: Double  -- ^ Value of float literal.
+          }
+  | Char { litAnn     :: a
+         , charLitVal :: Char  -- ^ Value of char literal.
+         }
+  | String { litAnn       :: a
+           , stringLitVal :: String  -- ^ Value of string literal.
+           }
+  | Boolean { litAnn     :: a
+            , boolLitVal :: Bool  -- ^ Value of boolean literal.
+            }
+  | Null { litAnn :: a }
   deriving (Show, Eq)
 
 -- | Left-hand side of an assignment expression.
