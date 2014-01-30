@@ -192,10 +192,11 @@ data MemberDecl a =
                }
   deriving (Show, Eq, Functor)
 
--- | Variable declaration with optional initializer.
+-- | Variable/field declaration with optional initializer.
 data VarDecl a = VarDecl
   { varDeclAnn  :: a                  -- ^ Annotation.
   , varDeclId   :: Id a               -- ^ Variable identifier.
+  , varDeclInit :: Maybe (VarInit a)  -- ^ Optional variable initializer.
   } deriving (Show, Eq, Functor)
 
 -- | Method formal parameter.
@@ -211,6 +212,12 @@ data FormalParam a = FormalParam
 data MethodBody a = MethodBody
   { methodBodyAnn   :: a                -- ^ Annotation.
   , methodBodyBlock :: Maybe (Block a)  -- ^ Optional method body (code block) or semicolon.
+  } deriving (Show, Eq, Functor)
+
+-- | Explicit initializer for field/variable declaration.
+data VarInit a = InitExp
+  { varInitAnn :: a      -- ^ Annotation.
+  , varInitExp :: Exp a  -- ^ Initializer expression.
   } deriving (Show, Eq, Functor)
 
 -- | Code block.

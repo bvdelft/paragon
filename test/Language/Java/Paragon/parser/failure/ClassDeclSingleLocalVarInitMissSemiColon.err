@@ -1,0 +1,3 @@
+"ClassDeclSingleLocalVarInitMissSemiColon.para" (line 4, column 5):
+unexpected int
+expecting local variable declaration, statement or }

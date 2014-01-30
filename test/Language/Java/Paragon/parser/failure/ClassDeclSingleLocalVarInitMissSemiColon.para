@@ -1,0 +1,6 @@
+// Error message should be improved
+class C {
+  void f() {
+    int x = 1
+  }
+}

@@ -5,6 +5,7 @@ module Language.Java.Paragon.Parser
   ) where
 
 import Control.Applicative ((<$>))
+import Prelude hiding (exp)
 import Data.Maybe (catMaybes)
 
 import Text.ParserCombinators.Parsec hiding (parse, runParser)
@@ -187,8 +188,9 @@ varDecl :: P (VarDecl SrcSpan)
 varDecl = do
   startPos <- getStartPos
   varId <- ident <?> "variable/field name"
+  vInit <- opt $ tok Op_Assign >> varInit
   endPos <- getEndPos
-  return $ VarDecl (mkSrcSpanFromPos startPos endPos) varId
+  return $ VarDecl (mkSrcSpanFromPos startPos endPos) varId vInit
 
 methodBody :: P (MethodBody SrcSpan)
 methodBody = do
@@ -197,6 +199,13 @@ methodBody = do
         <|> Just <$> block
   endPos <- getEndPos
   return $ MethodBody (mkSrcSpanFromPos startPos endPos) mBlock
+
+varInit :: P (VarInit SrcSpan)
+varInit = do
+  startPos <- getStartPos
+  e <- exp
+  endPos <- getEndPos
+  return $ InitExp (mkSrcSpanFromPos startPos endPos) e
 
 block :: P (Block SrcSpan)
 block = do
@@ -264,6 +273,9 @@ assignmentLhs = do
 assignmentOp :: P (AssignOp SrcSpan)
 assignmentOp =
   EqualA <$> operatorWithSpan Op_Assign
+
+exp :: P (Exp SrcSpan)
+exp = assignmentExp
 
 assignmentExp :: P (Exp SrcSpan)
 assignmentExp =

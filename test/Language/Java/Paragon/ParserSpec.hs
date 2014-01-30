@@ -164,7 +164,7 @@ spec = do
           fieldDecl = FieldDecl mdSrcSpan [] (PrimType tSrcSpan (BooleanT tSrcSpan)) [varDecl]
           varId = Id varSrcSpan "x"
           varSrcSpan = srcSpanFun 2 11 2 11
-          varDecl = VarDecl varSrcSpan varId
+          varDecl = VarDecl varSrcSpan varId Nothing
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
           cId = Id (srcSpanFun 1 7 1 7) "C"
       in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cdSrcSpan cd])
@@ -181,7 +181,7 @@ spec = do
           fieldDecl = FieldDecl mdSrcSpan mods (PrimType tSrcSpan (BooleanT tSrcSpan)) [varDecl]
           varId = Id varSrcSpan "B"
           varSrcSpan = srcSpanFun 2 31 2 31
-          varDecl = VarDecl varSrcSpan varId
+          varDecl = VarDecl varSrcSpan varId Nothing
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
           cId = Id (srcSpanFun 1 7 1 7) "C"
       in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cdSrcSpan cd])
@@ -204,9 +204,9 @@ spec = do
           varSrcSpan2 = srcSpanFun 3 11 3 11
           varId3 = Id varSrcSpan3 "z"
           varSrcSpan3 = srcSpanFun 3 14 3 14
-          varDecl1 = VarDecl varSrcSpan1 varId1
-          varDecl2 = VarDecl varSrcSpan2 varId2
-          varDecl3 = VarDecl varSrcSpan3 varId3
+          varDecl1 = VarDecl varSrcSpan1 varId1 Nothing
+          varDecl2 = VarDecl varSrcSpan2 varId2 Nothing
+          varDecl3 = VarDecl varSrcSpan3 varId3 Nothing
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan cbDs)
           cId = Id (srcSpanFun 1 7 1 7) "C"
       in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cdSrcSpan cd])
@@ -304,7 +304,7 @@ spec = do
           floatT = PrimType floatTSrcSpan (FloatT floatTSrcSpan)
           varId = Id varSrcSpan "x"
           varSrcSpan = srcSpanFun 3 11 3 11
-          varDecl = VarDecl varSrcSpan varId
+          varDecl = VarDecl varSrcSpan varId Nothing
           body = MethodBody bodySrcSpan (Just (Block bodySrcSpan [LocalVars stmtSrcSpan [] floatT [varDecl]]))
           methodDecl = MethodDecl mdSrcSpan [] [] (VoidType (srcSpanFun 2 3 2 6)) mId [] body
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
@@ -325,7 +325,7 @@ spec = do
           intT = PrimType intTSrcSpan (IntT intTSrcSpan)
           varId = Id varSrcSpan "x"
           varSrcSpan = srcSpanFun 3 15 3 15
-          varDecl = VarDecl varSrcSpan varId
+          varDecl = VarDecl varSrcSpan varId Nothing
           mods = [Final $ srcSpanFun 3 5 3 9]
           body = MethodBody bodySrcSpan (Just (Block bodySrcSpan [LocalVars stmtSrcSpan mods intT [varDecl]]))
           methodDecl = MethodDecl mdSrcSpan [] [] (VoidType (srcSpanFun 2 3 2 6)) mId [] body
@@ -350,13 +350,13 @@ spec = do
           doubleT = PrimType doubleTSrcSpan (DoubleT doubleTSrcSpan)
           varId1 = Id varSrcSpan1 "x"
           varSrcSpan1 = srcSpanFun 3 10 3 10
-          varDecl1 = VarDecl varSrcSpan1 varId1
+          varDecl1 = VarDecl varSrcSpan1 varId1 Nothing
           varId2 = Id varSrcSpan2 "y"
           varSrcSpan2 = srcSpanFun 4 12 4 12
-          varDecl2 = VarDecl varSrcSpan2 varId2
+          varDecl2 = VarDecl varSrcSpan2 varId2 Nothing
           varId3 = Id varSrcSpan3 "z"
           varSrcSpan3 = srcSpanFun 4 15 4 15
-          varDecl3 = VarDecl varSrcSpan3 varId3
+          varDecl3 = VarDecl varSrcSpan3 varId3 Nothing
           body = MethodBody bodySrcSpan (Just (Block bodySrcSpan [ LocalVars stmtSrcSpan1 [] byteT [varDecl1]
                                                                  , LocalVars stmtSrcSpan2 [] doubleT [varDecl2, varDecl3]]))
           methodDecl = MethodDecl mdSrcSpan [] [] (VoidType (srcSpanFun 2 3 2 6)) mId [] body
@@ -419,9 +419,88 @@ spec = do
           tSrcSpan = srcSpanFun 2 3 2 8
           varId = Id varSrcSpan "x"
           varSrcSpan = srcSpanFun 2 10 2 10
-          varDecl = VarDecl varSrcSpan varId
+          varDecl = VarDecl varSrcSpan varId Nothing
           tName = Name tSrcSpan (Id tSrcSpan "Object") TypeName Nothing
           fieldDecl = FieldDecl mdSrcSpan [] (RefType tSrcSpan (ClassRefType tSrcSpan (ClassType tSrcSpan tName []))) [varDecl]
+          cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
+          cId = Id (srcSpanFun 1 7 1 7) "C"
+      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cdSrcSpan cd])
+
+    it "parses class declaration with single field declaration of primitive type with literal initializer" $
+      let fileName = "ClassDeclSinglePrimFieldInit.para"
+          srcSpanFun = SrcSpan fileName
+          cdSrcSpan = srcSpanFun 1 1 3 1
+          cbSrcSpan = srcSpanFun 1 9 3 1
+          mdSrcSpan = srcSpanFun 2 3 2 19
+          cbDecl = MemberDecl mdSrcSpan fieldDecl
+          tSrcSpan = srcSpanFun 2 3 2 9
+          fieldDecl = FieldDecl mdSrcSpan [] (PrimType tSrcSpan (BooleanT tSrcSpan)) [varDecl]
+          varId = Id varSrcSpan "b"
+          varSrcSpan = srcSpanFun 2 11 2 11
+          eSrcSpan = srcSpanFun 2 15 2 18
+          varDecl = VarDecl (srcSpanFun 2 11 2 18) varId (Just $ InitExp eSrcSpan (Lit eSrcSpan (Boolean eSrcSpan True)))
+          cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
+          cId = Id (srcSpanFun 1 7 1 7) "C"
+      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cdSrcSpan cd])
+
+    it "parses class declaration with single field declaration of reference type with null initializer" $
+      let fileName = "ClassDeclSingleRefFieldInit.para"
+          srcSpanFun = SrcSpan fileName
+          cdSrcSpan = srcSpanFun 1 1 3 1
+          cbSrcSpan = srcSpanFun 1 9 3 1
+          mdSrcSpan = srcSpanFun 2 3 2 18
+          cbDecl = MemberDecl mdSrcSpan fieldDecl
+          tSrcSpan = srcSpanFun 2 3 2 8
+          tName = Name tSrcSpan (Id tSrcSpan "Object") TypeName Nothing
+          fieldDecl = FieldDecl mdSrcSpan [] (RefType tSrcSpan (ClassRefType tSrcSpan (ClassType tSrcSpan tName []))) [varDecl]
+          varId = Id varSrcSpan "x"
+          varSrcSpan = srcSpanFun 2 10 2 10
+          eSrcSpan = srcSpanFun 2 14 2 17
+          varDecl = VarDecl (srcSpanFun 2 10 2 17) varId (Just $ InitExp eSrcSpan (Lit eSrcSpan (Null eSrcSpan)))
+          cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
+          cId = Id (srcSpanFun 1 7 1 7) "C"
+      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cdSrcSpan cd])
+
+    it "parses class declaration with multiple field declarations of primitive types with literal initializers" $
+      let fileName = "ClassDeclMultPrimFieldsInit.para"
+          srcSpanFun = SrcSpan fileName
+          cdSrcSpan = srcSpanFun 1 1 3 1
+          cbSrcSpan = srcSpanFun 1 9 3 1
+          mdSrcSpan = srcSpanFun 2 3 2 19
+          cbDecl = MemberDecl mdSrcSpan fieldDecl
+          tSrcSpan = srcSpanFun 2 3 2 5
+          fieldDecl = FieldDecl mdSrcSpan [] (PrimType tSrcSpan (IntT tSrcSpan)) [varDecl1, varDecl2]
+          varId1 = Id varSrcSpan1 "x"
+          varSrcSpan1 = srcSpanFun 2 7 2 7
+          eSrcSpan1 = srcSpanFun 2 11 2 11
+          varDecl1 = VarDecl (srcSpanFun 2 7 2 11) varId1 (Just $ InitExp eSrcSpan1 (Lit eSrcSpan1 (Int eSrcSpan1 1)))
+          varId2 = Id varSrcSpan2 "y"
+          varSrcSpan2 = srcSpanFun 2 14 2 14
+          eSrcSpan2 = srcSpanFun 2 18 2 18
+          varDecl2 = VarDecl (srcSpanFun 2 14 2 18) varId2 (Just $ InitExp eSrcSpan2 (Lit eSrcSpan2 (Int eSrcSpan2 2)))
+          cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
+          cId = Id (srcSpanFun 1 7 1 7) "C"
+      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cdSrcSpan cd])
+
+    it "parses class declaration with void method with single local variable declaration of reference type with null initializer" $
+      let fileName = "ClassDeclVoidMethodSingleRefLocalVarInit.para"
+          srcSpanFun = SrcSpan fileName
+          cdSrcSpan = srcSpanFun 1 1 5 1
+          cbSrcSpan = srcSpanFun 1 9 5 1
+          mdSrcSpan = srcSpanFun 2 3 4 3
+          cbDecl = MemberDecl mdSrcSpan methodDecl
+          mId = Id (srcSpanFun 2 8 2 8) "f"
+          bodySrcSpan = srcSpanFun 2 12 4 3
+          stmtSrcSpan = srcSpanFun 3 5 3 20
+          tSrcSpan = srcSpanFun 3 5 3 10
+          tName = Name tSrcSpan (Id tSrcSpan "Object") TypeName Nothing
+          objectT = RefType tSrcSpan (ClassRefType tSrcSpan (ClassType tSrcSpan tName []))
+          varId = Id varSrcSpan "x"
+          varSrcSpan = srcSpanFun 3 12 3 12
+          eSrcSpan = srcSpanFun 3 16 3 19
+          varDecl = VarDecl (srcSpanFun 3 12 3 19) varId (Just $ InitExp eSrcSpan (Lit eSrcSpan (Null eSrcSpan)))
+          body = MethodBody bodySrcSpan (Just (Block bodySrcSpan [LocalVars stmtSrcSpan [] objectT [varDecl]]))
+          methodDecl = MethodDecl mdSrcSpan [] [] (VoidType (srcSpanFun 2 3 2 6)) mId [] body
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
           cId = Id (srcSpanFun 1 7 1 7) "C"
       in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cdSrcSpan cd])
@@ -542,6 +621,18 @@ spec = do
 
       it "given a class declaration with void method with assignment with missing semicolon" $
         failureCase "ClassDeclVoidMethodAssignMissSemiColon"
+
+      -- Error message should be improved
+      it "given a class declaration with single field declaration with initializer with missing expression" $
+        failureCase "ClassDeclSingleFieldInitMissExp"
+
+      -- Error message should be improved
+      it "given a class declaration with single field declaration with initializer with missing semicolon" $
+        failureCase "ClassDeclSingleFieldInitMissSemiColon"
+
+      -- Error message should be improved
+      it "given a class declaration with void method with single local variable declaration with initializer with missing semicolon" $
+        failureCase "ClassDeclSingleLocalVarInitMissSemiColon"
 
 -- Infrastructure
 
