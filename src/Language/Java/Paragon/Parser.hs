@@ -266,11 +266,16 @@ assignmentOp =
   EqualA <$> operatorWithSpan Op_Assign
 
 assignmentExp :: P (Exp SrcSpan)
-assignmentExp = do
-  startPos <- getStartPos
-  lit <- literal
-  endPos <- getEndPos
-  return $ Lit (mkSrcSpanFromPos startPos endPos) lit
+assignmentExp =
+  (do startPos <- getStartPos
+      lit <- literal
+      endPos <- getEndPos
+      return $ Lit (mkSrcSpanFromPos startPos endPos) lit)
+    <|>
+  (do startPos <- getStartPos
+      n <- name expOrLockName
+      endPos <- getEndPos
+      return $ NameExp (mkSrcSpanFromPos startPos endPos) n)
   <?> "expression"
 
 literal :: P (Literal SrcSpan)

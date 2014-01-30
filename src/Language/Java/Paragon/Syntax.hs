@@ -50,7 +50,7 @@ data NameType = ExpName           -- ^ Expression name.
               | LockName          -- ^ Lock name.
               | PkgOrTypeName     -- ^ Package or type name.
               | MethodOrLockName  -- ^ Method or lock name.
-              | ExprOrLockName    -- ^ Expression or lock name.
+              | ExpOrLockName     -- ^ Expression or lock name.
               | AmbigName         -- ^ Ambiguous name.
   deriving (Show, Eq)
 
@@ -254,6 +254,10 @@ data Exp a =
     Lit { expAnn :: a          -- ^ Annotation.
         , expLit :: Literal a  -- ^ Literal.
         }
+    -- | Referencing some name, e.g. variable.
+  | NameExp { expAnn      :: a
+            , nameExpName :: Name a  -- ^ Name of a variable, for example.
+            }
     -- | Assignment.
   | Assign { expAnn    :: a
            , assignLhs :: Lhs a       -- ^ Left-hand side of the assignment.
@@ -388,6 +392,9 @@ pkgName = mkNameSrcSpan PkgName
 
 pkgOrTypeName :: [Id SrcSpan] -> Name SrcSpan
 pkgOrTypeName = mkNameSrcSpan PkgOrTypeName
+
+expOrLockName :: [Id SrcSpan] -> Name SrcSpan
+expOrLockName = mkNameSrcSpan ExpOrLockName
 
 ambigName :: [Id SrcSpan] -> Name SrcSpan
 ambigName = mkNameSrcSpan AmbigName
