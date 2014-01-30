@@ -26,7 +26,7 @@ type AST = CompilationUnit
 data Id a = Id
   { idAnn   :: a       -- ^ Annotation.
   , idIdent :: String  -- ^ Identifier's string.
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Functor)
 
 -- | Qualified name. A period-separated list of identifiers.
 data Name a = Name
@@ -34,7 +34,7 @@ data Name a = Name
   , nameId     :: Id a            -- ^ Identifier.
   , nameType   :: NameType        -- ^ Type of the name.
   , namePrefix :: Maybe (Name a)  -- ^ Possibly, name part before the period.
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Functor)
 
 instance Unparse (Name a) where
   unparse name =
@@ -60,13 +60,13 @@ data CompilationUnit a = CompilationUnit
   , cuPkgDecl     :: Maybe (PackageDecl a)  -- ^ Package declaration.
   , cuImportDecls :: [ImportDecl a]         -- ^ Import declarations.
   , cuTypeDecls   :: [TypeDecl a]           -- ^ Type declarations.
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Functor)
 
 -- | Package declaration.
 data PackageDecl a = PackageDecl
   { pdAnn  :: a       -- ^ Annotation.
   , pdName :: Name a  -- ^ Package name.
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Functor)
 
 -- | Import declaration.
 data ImportDecl a =
@@ -93,7 +93,7 @@ data ImportDecl a =
   | StaticImportOnDemand { impdAnn  :: a
                          , impdName :: Name a
                          }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Functor)
 
 -- | Class or interface declaration.
 data TypeDecl a =
@@ -103,7 +103,7 @@ data TypeDecl a =
   | InterfaceTypeDecl { tdAnn     :: a
                       , tdIntDecl :: InterfaceDecl a  -- ^ Interface declaration.
                       }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Functor)
 
 -- | Class declaration.
 data ClassDecl a = ClassDecl
@@ -114,7 +114,7 @@ data ClassDecl a = ClassDecl
   , cdSuperClass :: Maybe (ClassType a)  -- ^ Super class if the class has one.
   , cdInterfaces :: [ClassType a]        -- ^ Interfaces it implements.
   , cdBody       :: ClassBody a          -- ^ Class body.
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Functor)
 
 -- | Interface declaration.
 data InterfaceDecl a = InterfaceDecl
@@ -124,7 +124,7 @@ data InterfaceDecl a = InterfaceDecl
   , intdTypeParams :: [TypeParam a]    -- ^ Type parameters.
   , intdInterfaces :: [ClassType a]    -- ^ Interfaces it extends.
   , intdBody       :: InterfaceBody a  -- ^ Interface body.
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Functor)
 
 -- | Modifiers for declarations.
 data Modifier a
@@ -152,19 +152,19 @@ data Modifier a
   deriving (Show, Eq, Functor)
 
 data TypeParam a = TP
-  deriving (Show, Eq)
+  deriving (Show, Eq, Functor)
 
 data ClassType a = CT
-  deriving (Show, Eq)
+  deriving (Show, Eq, Functor)
 
 -- | Class body.
 data ClassBody a = ClassBody
   { cbAnn   :: a                  -- ^ Annotation.
   , cbDecls :: [ClassBodyDecl a]  -- ^ Declarations.
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Functor)
 
 data InterfaceBody a = IB
-  deriving (Show, Eq)
+  deriving (Show, Eq, Functor)
 
 -- | Declaration in class body.
 data ClassBodyDecl a =
@@ -173,7 +173,7 @@ data ClassBodyDecl a =
                , clBodyDeclMemberDecl :: MemberDecl a  -- ^ Member declaration.
                }
   -- TODO: InitDecl
-  deriving (Show, Eq)
+  deriving (Show, Eq, Functor)
 
 -- | Member declaration.
 data MemberDecl a =
@@ -193,13 +193,13 @@ data MemberDecl a =
                -- TODO: exceptions
                , methodDeclBody         :: MethodBody a     -- ^ Method body.
                }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Functor)
 
 -- | Variable declaration with optional initializer.
 data VarDecl a = VarDecl
   { varDeclAnn  :: a                  -- ^ Annotation.
   , varDeclId   :: Id a               -- ^ Variable identifier.
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Functor)
 
 -- | Method formal parameter.
 data FormalParam a = FormalParam
@@ -208,19 +208,19 @@ data FormalParam a = FormalParam
   , formalParamType      :: Type a        -- ^ Parameter type.
   , formalParamVarArity  :: Bool          -- ^ Is it varargs parameter (variable arity).
   , formalParamId        :: Id a          -- ^ Parameter identifier.
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Functor)
 
 -- | Method body or the lack of it.
 data MethodBody a = MethodBody
   { methodBodyAnn   :: a                -- ^ Annotation.
   , methodBodyBlock :: Maybe (Block a)  -- ^ Optional method body (code block) or semicolon.
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Functor)
 
 -- | Code block.
 data Block a = Block
   { blockAnn      :: a              -- ^ Annotation.
   , blockAnnStmts :: [BlockStmt a]  -- ^ Block statements.
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Functor)
 
 -- | Block statement.
 data BlockStmt a =
@@ -234,7 +234,7 @@ data BlockStmt a =
               , localVarsType      :: Type a        -- ^ Variable declaration type.
               , localVarsDecls     :: [VarDecl a]   -- ^ Variable declarators.
               }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Functor)
 
 -- | Statements.
 data Stmt a =
@@ -246,7 +246,7 @@ data Stmt a =
   | ExpStmt { stmtAnn :: a
             , stmtExp :: Exp a  -- ^ Expression.
             }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Functor)
 
 -- | Expressions.
 data Exp a =
@@ -260,7 +260,7 @@ data Exp a =
            , assignOp  :: AssignOp a  -- ^ Assignment operator (=, +=, *=, ...).
            , assignExp :: Exp a       -- ^ Expression on the right-hand side.
            }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Functor)
 
 -- | Types of literals.
 data Literal a =
@@ -286,7 +286,7 @@ data Literal a =
             , boolLitVal :: Bool  -- ^ Value of boolean literal.
             }
   | Null { litAnn :: a }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Functor)
 
 -- | Left-hand side of an assignment expression.
 data Lhs a =
@@ -294,12 +294,12 @@ data Lhs a =
   NameLhs { lhsAnn  :: a       -- ^ Annotation.
           , lhsName :: Name a  -- ^ Variable name.
           }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Functor)
 
 -- | Different assignment operators.
 data AssignOp a =
   EqualA a  -- ^ =
-  deriving (Show, Eq)
+  deriving (Show, Eq, Functor)
 
 -- Types
 
@@ -313,7 +313,7 @@ data Type a =
   | RefType { typeAnn     :: a
             , typeRefType :: RefType a  -- ^ Reference type.
             }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Functor)
 
 -- | Representation of possible return types.
 data ReturnType a =
@@ -325,7 +325,7 @@ data ReturnType a =
   | Type { retTypeAnn :: a
          , retType    :: Type a
          }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Functor)
 
 -- | Primitive types.
 data PrimType a =
@@ -352,7 +352,7 @@ data RefType a =
             , refTypeVarId :: Id a  -- ^ Type variable identifier.
             }
   -- TODO: ArrayType
-  deriving (Show, Eq)
+  deriving (Show, Eq, Functor)
 
 $(deriveAnnotatedMany [''Modifier, ''PrimType])
 
