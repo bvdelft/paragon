@@ -154,9 +154,6 @@ data Modifier a
 data TypeParam a = TP
   deriving (Show, Eq, Functor)
 
-data ClassType a = CT
-  deriving (Show, Eq, Functor)
-
 -- | Class body.
 data ClassBody a = ClassBody
   { cbAnn   :: a                  -- ^ Annotation.
@@ -319,18 +316,6 @@ data Type a =
             }
   deriving (Show, Eq, Functor)
 
--- | Representation of possible return types.
-data ReturnType a =
-    -- | void.
-    VoidType { retTypeAnn :: a }
-    -- | Lock type.
-  | LockType { retTypeAnn :: a }
-    -- | Other types.
-  | Type { retTypeAnn :: a
-         , retType    :: Type a
-         }
-  deriving (Show, Eq, Functor)
-
 -- | Primitive types.
 data PrimType a =
     BooleanT a
@@ -351,11 +336,27 @@ data RefType a =
     ClassRefType { refTypeAnn       :: a            -- ^ Annotation.
                  , refTypeClassType :: ClassType a  -- ^ Class type.
                  }
-    -- | Type variable.
-  | TypeVar { refTypeAnn   :: a
-            , refTypeVarId :: Id a  -- ^ Type variable identifier.
-            }
   -- TODO: ArrayType
+  deriving (Show, Eq, Functor)
+
+-- | Class or interface type.
+data ClassType a = ClassType a (Name a) [TypeArgument a]
+  deriving (Show, Eq, Functor)
+
+-- | Representation of type arguments of generic types.
+data TypeArgument a = TA
+  deriving (Show, Eq, Functor)
+
+-- | Representation of possible return types.
+data ReturnType a =
+    -- | void.
+    VoidType { retTypeAnn :: a }
+    -- | Lock type.
+  | LockType { retTypeAnn :: a }
+    -- | Other types.
+  | Type { retTypeAnn :: a
+         , retType    :: Type a
+         }
   deriving (Show, Eq, Functor)
 
 $(deriveAnnotatedMany [''Modifier, ''PrimType])

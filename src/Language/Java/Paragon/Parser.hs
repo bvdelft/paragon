@@ -207,14 +207,14 @@ block = do
 
 blockStmt :: P (BlockStmt SrcSpan)
 blockStmt =
-  (withModifiers
-    (do startPos <- getStartPos
-        (t, varDs) <- localVarDecl
-        semiColon
-        endPos <- getEndPos
-        return $ \mods ->
-          let startPos' = getModifiersStartPos mods startPos
-          in LocalVars (mkSrcSpanFromPos startPos' endPos) mods t varDs)
+  (withModifiers (try $ do
+      startPos <- getStartPos
+      (t, varDs) <- localVarDecl
+      semiColon
+      endPos <- getEndPos
+      return $ \mods ->
+        let startPos' = getModifiersStartPos mods startPos
+        in LocalVars (mkSrcSpanFromPos startPos' endPos) mods t varDs)
     <?> "local variable declaration")
     <|>
   (do startPos <- getStartPos
@@ -332,11 +332,16 @@ modifier =
 -- Types
 
 ttype :: P (Type SrcSpan)
-ttype = do
-  startPos <- getStartPos
-  t <- primType
-  endPos <- getEndPos
-  return $ PrimType (mkSrcSpanFromPos startPos endPos) t
+ttype =
+  (do startPos <- getStartPos
+      t <- primType
+      endPos <- getEndPos
+      return $ PrimType (mkSrcSpanFromPos startPos endPos) t)
+    <|>
+  (do startPos <- getStartPos
+      t <- refType
+      endPos <- getEndPos
+      return $ RefType (mkSrcSpanFromPos startPos endPos) t)
   <?> "type"
 
 primType :: P (PrimType SrcSpan)
@@ -349,6 +354,20 @@ primType =
   <|> CharT    <$> keywordWithSpan KW_Char
   <|> FloatT   <$> keywordWithSpan KW_Float
   <|> DoubleT  <$> keywordWithSpan KW_Double
+
+refType :: P (RefType SrcSpan)
+refType = do
+  startPos <- getStartPos
+  ct <- classType
+  endPos <- getEndPos
+  return $ ClassRefType (mkSrcSpanFromPos startPos endPos) ct
+
+classType :: P (ClassType SrcSpan)
+classType = do
+  startPos <- getStartPos
+  n <- name typeName
+  endPos <- getEndPos
+  return $ ClassType (mkSrcSpanFromPos startPos endPos) n []
 
 returnType :: P (ReturnType SrcSpan)
 returnType =

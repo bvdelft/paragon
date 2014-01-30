@@ -409,6 +409,23 @@ spec = do
           cId = Id (srcSpanFun 1 7 1 7) "C"
       in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cdSrcSpan cd])
 
+    it "parses class declaration with single field declaration with reference type" $
+      let fileName = "ClassDeclSingleFieldRefType.para"
+          srcSpanFun = SrcSpan fileName
+          cdSrcSpan = srcSpanFun 1 1 3 1
+          cbSrcSpan = srcSpanFun 1 9 3 1
+          mdSrcSpan = srcSpanFun 2 3 2 11
+          cbDecl = MemberDecl mdSrcSpan fieldDecl
+          tSrcSpan = srcSpanFun 2 3 2 8
+          varId = Id varSrcSpan "x"
+          varSrcSpan = srcSpanFun 2 10 2 10
+          varDecl = VarDecl varSrcSpan varId
+          tName = Name tSrcSpan (Id tSrcSpan "Object") TypeName Nothing
+          fieldDecl = FieldDecl mdSrcSpan [] (RefType tSrcSpan (ClassRefType tSrcSpan (ClassType tSrcSpan tName []))) [varDecl]
+          cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
+          cId = Id (srcSpanFun 1 7 1 7) "C"
+      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cdSrcSpan cd])
+
     -- Failure
     describe "gives an error message when" $ do
 
@@ -499,12 +516,15 @@ spec = do
       it "given a class declaration with int method with missing closing curly" $
        failureCase "ClassDeclIntMethodMissCloseCurly"
 
+      -- Error message should be improved
       it "given a class declaration with void method with local variable declaration with missing semicolon" $
         failureCase "ClassDeclVoidMethodSingleLocalVarDeclMissSemiColon"
 
+      -- Error message should be improved
       it "given a class declaration with void method with local variable declaration with missing name" $
         failureCase "ClassDeclVoidMethodSingleLocalVarDeclMissName"
 
+      -- Error message should be improved
       it "given a class declaration with void method with local variable declaration and extra comma" $
         failureCase "ClassDeclVoidMethodSingleLocalVarDeclComma"
 
