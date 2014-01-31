@@ -12,7 +12,7 @@ import Text.ParserCombinators.Parsec hiding (parse, runParser)
 import qualified Text.ParserCombinators.Parsec as Parsec (runParser)
 
 import Language.Java.Paragon.Lexer
-import Language.Java.Paragon.Syntax hiding (stmtExp)
+import Language.Java.Paragon.Syntax hiding (stmtExp, policyExp, clauseHead, actorName)
 import Language.Java.Paragon.SrcPos
 import Language.Java.Paragon.Parser.Helpers
 
@@ -288,6 +288,11 @@ assignmentExp =
       n <- name expOrLockName
       endPos <- getEndPos
       return $ NameExp (mkSrcSpanFromPos startPos endPos) n)
+    <|>
+  (do startPos <- getStartPos
+      pExp <- policyExp
+      endPos <- getEndPos
+      return $ PolicyExp (mkSrcSpanFromPos startPos endPos) pExp)
   <?> "expression"
 
 literal :: P (Literal SrcSpan)
@@ -341,6 +346,68 @@ modifier =
   <|> Notnull      <$> keywordWithSpan KW_P_Notnull
   <?> "modifier"
 
+policyExp :: P (PolicyExp SrcSpan)
+policyExp = do
+  startPos <- getStartPos
+  cls <- (try $ braces $ seplist clause semiColon) -- TODO: This parses {}. Should it?
+     <|> (braces colon >> return [])
+  endPos <- getEndPos
+  return $ PolicyLit (mkSrcSpanFromPos startPos endPos) cls
+
+clause :: P (Clause SrcSpan)
+clause = do
+  startPos <- getStartPos
+  clVarDs <- lopt $ parens $ seplist clauseVarDecl comma
+  clHead <- clauseHead
+  clAtoms <- colon >> lopt (seplist atom comma) -- TODO: Is colon required?
+  endPos <- getEndPos
+  -- TODO: genActorVars
+  return $ Clause (mkSrcSpanFromPos startPos endPos) clVarDs clHead clAtoms
+
+clauseVarDecl :: P (ClauseVarDecl SrcSpan)
+clauseVarDecl = do
+  startPos <- getStartPos
+  t <- refType
+  varId <- ident
+  endPos <- getEndPos
+  return $ ClauseVarDecl (mkSrcSpanFromPos startPos endPos) t varId
+
+clauseHead :: P (ClauseHead SrcSpan)
+clauseHead =
+  (try $ do
+    startPos <- getStartPos
+    clVarDecl <- clauseVarDecl
+    endPos <- getEndPos
+    return $ ClauseDeclHead (mkSrcSpanFromPos startPos endPos) clVarDecl)
+    <|>
+  (do startPos <- getStartPos
+      a <- actor
+      endPos <- getEndPos
+      return $ ClauseVarHead (mkSrcSpanFromPos startPos endPos) a)
+
+atom :: P (Atom SrcSpan)
+atom = do
+  startPos <- getStartPos
+  lName <- name lockName
+  actors <- lopt $ parens $ seplist actor comma
+  endPos <- getEndPos
+  return $ Atom (mkSrcSpanFromPos startPos endPos) lName actors
+
+-- Parse everything as actorName and post-process them into Vars.
+actor :: P (Actor SrcSpan)
+actor = do
+  startPos <- getStartPos
+  aName <- actorName
+  endPos <- getEndPos
+  return $ Actor (mkSrcSpanFromPos startPos endPos) aName
+
+actorName :: P (ActorName SrcSpan)
+actorName = do
+  startPos <- getStartPos
+  eName <- name expName
+  endPos <- getEndPos
+  return $ ActorName (mkSrcSpanFromPos startPos endPos) eName
+
 -- Types
 
 ttype :: P (Type SrcSpan)
@@ -366,6 +433,8 @@ primType =
   <|> CharT    <$> keywordWithSpan KW_Char
   <|> FloatT   <$> keywordWithSpan KW_Float
   <|> DoubleT  <$> keywordWithSpan KW_Double
+  -- Paragon specific
+  <|> PolicyT  <$> keywordWithSpan KW_P_Policy
 
 refType :: P (RefType SrcSpan)
 refType = do
@@ -392,6 +461,9 @@ returnType =
 
 -- Separators
 
+parens :: P a -> P a
+parens = between openParen closeParen
+
 openParen :: P ()
 openParen = tok OpenParen <?> show OpenParen
 
@@ -415,4 +487,7 @@ comma = tok Comma <?> show Comma
 
 period :: P ()
 period = tok Period <?> show Period
+
+colon :: P ()
+colon = tok Colon <?> show Colon
 

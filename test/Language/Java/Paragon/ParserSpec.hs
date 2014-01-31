@@ -505,6 +505,51 @@ spec = do
           cId = Id (srcSpanFun 1 7 1 7) "C"
       in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cdSrcSpan cd])
 
+    it "parses class declaration with single low policy field" $
+      let fileName = "ClassDeclSingleLowPolicyField.para"
+          srcSpanFun = SrcSpan fileName
+          cdSrcSpan = srcSpanFun 1 1 3 1
+          cbSrcSpan = srcSpanFun 1 9 3 1
+          mdSrcSpan = srcSpanFun 2 3 2 43
+          cbDecl = MemberDecl mdSrcSpan fieldDecl
+          tSrcSpan = srcSpanFun 2 16 2 21
+          mods = [Public $ srcSpanFun 2 3 2 8, Final $ srcSpanFun 2 10 2 14]
+          fieldDecl = FieldDecl mdSrcSpan mods (PrimType tSrcSpan (PolicyT tSrcSpan)) [varDecl]
+          varId = Id varSrcSpan "low"
+          varSrcSpan = srcSpanFun 2 23 2 25
+          eSrcSpan = srcSpanFun 2 29 2 42
+          cl = Clause (srcSpanFun 2 31 2 40) [] clHead []
+          clHead = ClauseDeclHead clVarDeclSrcSpan clVarDecl
+          clVarTSrcSpan = srcSpanFun 2 31 2 36
+          clVarTName = Name clVarTSrcSpan (Id clVarTSrcSpan "Object") TypeName Nothing
+          clVarType = ClassRefType clVarTSrcSpan (ClassType clVarTSrcSpan clVarTName [])
+          clVarDeclSrcSpan = srcSpanFun 2 31 2 38
+          clVarDecl = ClauseVarDecl clVarDeclSrcSpan clVarType (Id (srcSpanFun 2 38 2 38) "x")
+          policyE = PolicyExp eSrcSpan (PolicyLit eSrcSpan [cl])
+          varDecl = VarDecl (srcSpanFun 2 23 2 42) varId (Just $ InitExp eSrcSpan policyE)
+          cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
+          cId = Id (srcSpanFun 1 7 1 7) "C"
+      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cdSrcSpan cd])
+
+    it "parses class declaration with single high policy field" $
+      let fileName = "ClassDeclSingleHighPolicyField.para"
+          srcSpanFun = SrcSpan fileName
+          cdSrcSpan = srcSpanFun 1 1 3 1
+          cbSrcSpan = srcSpanFun 1 9 3 1
+          mdSrcSpan = srcSpanFun 2 3 2 33
+          cbDecl = MemberDecl mdSrcSpan fieldDecl
+          tSrcSpan = srcSpanFun 2 16 2 21
+          mods = [Public $ srcSpanFun 2 3 2 8, Final $ srcSpanFun 2 10 2 14]
+          fieldDecl = FieldDecl mdSrcSpan mods (PrimType tSrcSpan (PolicyT tSrcSpan)) [varDecl]
+          varId = Id varSrcSpan "high"
+          varSrcSpan = srcSpanFun 2 23 2 26
+          eSrcSpan = srcSpanFun 2 30 2 32
+          policyE = PolicyExp eSrcSpan (PolicyLit eSrcSpan [])
+          varDecl = VarDecl (srcSpanFun 2 23 2 32) varId (Just $ InitExp eSrcSpan policyE)
+          cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
+          cId = Id (srcSpanFun 1 7 1 7) "C"
+      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cdSrcSpan cd])
+
     -- Failure
     describe "gives an error message when" $ do
 
@@ -633,6 +678,19 @@ spec = do
       -- Error message should be improved
       it "given a class declaration with void method with single local variable declaration with initializer with missing semicolon" $
         failureCase "ClassDeclSingleLocalVarInitMissSemiColon"
+
+      -- Error message should be improved
+      it "given a class declaration with single policy field with missing opening brace in initializer" $
+        failureCase "ClassDeclSinglePolicyFieldMissOpenBrace"
+
+      -- Error message should be improved
+      it "given a class declaration with single policy field with missing closing brace in initializer" $
+        failureCase "ClassDeclSinglePolicyFieldMissCloseBrace"
+
+      -- TODO: Is it correct?
+      -- Error message should be improved
+      it "given a class declaration with single policy field with missing colon after clause head in initializer" $
+        failureCase "ClassDeclSinglePolicyFieldClauseHeadMissColon"
 
 -- Infrastructure
 

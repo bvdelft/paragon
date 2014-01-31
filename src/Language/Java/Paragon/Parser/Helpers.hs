@@ -21,8 +21,10 @@ module Language.Java.Paragon.Parser.Helpers
     -- * Parser combinators
   , opt
   , bopt
+  , lopt
   , list
   , list1
+  , seplist
   , seplist1
   ) where
 
@@ -145,6 +147,14 @@ opt = optionMaybe
 bopt :: P a -> P Bool
 bopt p = isJust <$> opt p
 
+-- | Optional list parser which indicates its failure as an empty list.
+lopt :: P [a] -> P [a]
+lopt p = do
+  mas <- opt p
+  case mas of
+    Nothing -> return []
+    Just as -> return as
+
 -- | Parses zero or more occurences with a given parser.
 list :: P a -> P [a]
 list = option [] . list1
@@ -152,6 +162,11 @@ list = option [] . list1
 -- | Parses one or more occurences with a given parser.
 list1 :: P a -> P [a]
 list1 = many1
+
+-- | Parses zero or more occurences with a parser given as the first argument,
+-- separated by a separator given as the second argument.
+seplist :: P a -> P sep -> P [a]
+seplist p sep = option [] $ seplist1 p sep
 
 -- | Parses one or more occurences with a parser given as the first argument,
 -- separated by a separator given as the second argument.
