@@ -180,7 +180,7 @@ methodDeclModsFun = do
     in MethodDecl (mkSrcSpanFromPos startPos' endPos) mods [] retT mId [] body
 
 -- | Takes 'VarDecl' parser to handle restrictions on field declarations in interfaces
--- (the absence of initializer).
+-- (required presence of initializer).
 varDecls :: P (VarDecl SrcSpan) -> P [VarDecl SrcSpan]
 varDecls varDeclFun = varDeclFun `sepBy1` comma
 
