@@ -39,6 +39,7 @@ import Language.Java.Paragon.SrcPos
 
 -- | Type synonym for the generic parser on TokenWithSpan and SrcPos (as user state).
 -- User state represents the end position of the last parsed token, used in 'getEndPos'.
+-- This is done for building correct source spans, because otherwise Parsec jumps to the start position of the next token.
 type P = GenParser TokenWithSpan SrcPos
 
 instance Applicative (GenParser s a) where
@@ -109,6 +110,7 @@ getStartPos = do
   pos <- getPosition
   return (parsecToSrcPos pos)
 
+-- | Returns the source position from the user state which points to the end of last parsed token.
 getEndPos :: P SrcPos
 getEndPos = getState
 
