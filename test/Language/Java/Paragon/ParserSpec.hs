@@ -730,6 +730,9 @@ spec = do
       it "given a class declaration with single policy field with missing colon after clause head in initializer" $
         failureCase "ClassDeclSinglePolicyFieldClauseHeadMissColon"
 
+      it "given a class declaration with single field with policy modifier with missing specifier symbol" $
+        failureCase "ClassDeclSingleFieldPolicyModMissSymbol"
+
 -- Infrastructure
 
 successCase :: String -> AST SrcSpan -> IO ()
