@@ -313,6 +313,8 @@ literal =
 
 -- | There are several syntax tree nodes that have a list of modifiers data field. 
 -- This type synonym is for the nodes that have this gap to be filled in (by 'withModifiers').
+-- When 'ModifiersFun' and 'withModifiers' are used, be careful to deal correctly with the
+-- source span. Look at the example of how to fix it in existing parsing functions.
 type ModifiersFun a = [Modifier SrcSpan] -> a
 
 -- | Takes a parser for an entity that expects modifiers before it.
