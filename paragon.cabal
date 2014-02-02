@@ -23,6 +23,7 @@ Library
                         template-haskell
     cpp-options:        -DBASE4
     exposed-modules:    Language.Java.Paragon.Annotated
+                        Language.Java.Paragon.CodeGenJava
                         Language.Java.Paragon.Error
                         Language.Java.Paragon.Error.Contexts
                         Language.Java.Paragon.Error.ErrorLabel

@@ -11,17 +11,19 @@ import Language.Java.Paragon.Error
 import Language.Java.Paragon.Interaction hiding (pretty)
 import Language.Java.Paragon.Monad.Base
 import Language.Java.Paragon.Parser
+import Language.Java.Paragon.CodeGenJava
 import Language.Java.Paragon.SrcPos
 
 -- | Given the flags and a file to the compiler, run the compilation. 
 parac :: [Flag] -> String -> IO [Error]
-parac flags file = do
+parac flags fileName = do
   erOrA <- runBaseM flags $ do
     let sourcepath = fromMaybe "." (getSourcePath flags)
-    content <- liftIO $ readFile $ sourcepath </> file
-    let ast = parse content
+    content <- liftIO $ readFile $ sourcepath </> fileName
     failEC () (mkError defaultError defaultPos)
-    return (Right ast)
+    case parse content fileName of
+      Left e    -> return $ Left e
+      Right ast -> return $ Right (generateJavaCode ast)
   case erOrA of
     Left  e  -> return e
     Right _  -> return []
