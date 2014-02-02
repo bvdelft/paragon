@@ -12,8 +12,14 @@ import Text.ParserCombinators.Parsec hiding (parse, runParser)
 import qualified Text.ParserCombinators.Parsec as Parsec (runParser)
 
 import Language.Java.Paragon.Lexer
-import Language.Java.Paragon.Syntax hiding (stmtExp, policyExp, clauseHead, actorName)
+import Language.Java.Paragon.Syntax
 import Language.Java.Paragon.SrcPos
+
+import Language.Java.Paragon.Parser.Names
+import Language.Java.Paragon.Parser.Types
+import Language.Java.Paragon.Parser.Statements
+import Language.Java.Paragon.Parser.Expressions
+import Language.Java.Paragon.Parser.Separators
 import Language.Java.Paragon.Parser.Helpers
 
 -- | Top-level parsing function. Takes a string to parse and a file name.
@@ -27,16 +33,6 @@ runParser p input fileName = Parsec.runParser (p >>= \r -> eof >> return r) init
         toks = lexer input
 
 -- Parser building blocks. They almost follow the syntax tree structure.
-
-ident :: P (Id SrcSpan)
-ident =
-  tokWithSpanTest $ \t sp ->
-    case t of
-      IdTok s -> Just $ Id sp s
-      _       -> Nothing
-
-name :: ([Id SrcSpan] -> Name SrcSpan) -> P (Name SrcSpan)
-name nameFun = nameFun <$> seplist1 ident period
 
 -- | Parser for the top-level syntax node.
 compilationUnit :: P (CompilationUnit SrcSpan)
@@ -238,77 +234,6 @@ localVarDecl = do
   varDs <- varDecls varDecl
   return (t, varDs)
 
-stmt :: P (Stmt SrcSpan)
-stmt =
-  (do startPos <- getStartPos
-      semiColon
-      endPos <- getEndPos
-      return $ Empty (mkSrcSpanFromPos startPos endPos))
-    <|>
-  (do startPos <- getStartPos
-      e <- stmtExp
-      semiColon
-      endPos <- getEndPos
-      return $ ExpStmt (mkSrcSpanFromPos startPos endPos) e)
-
-stmtExp :: P (Exp SrcSpan)
-stmtExp = assignment
-
-assignment :: P (Exp SrcSpan)
-assignment = do
-  startPos <- getStartPos
-  lhs <- assignmentLhs
-  op <- assignmentOp
-  e <- assignmentExp
-  endPos <- getEndPos
-  return $ Assign (mkSrcSpanFromPos startPos endPos) lhs op e
-
-assignmentLhs :: P (Lhs SrcSpan)
-assignmentLhs = do
-  startPos <- getStartPos
-  n <- name expName
-  endPos <- getEndPos
-  return $ NameLhs (mkSrcSpanFromPos startPos endPos) n
-
-assignmentOp :: P (AssignOp SrcSpan)
-assignmentOp =
-  EqualA <$> operatorWithSpan Op_Assign
-
-exp :: P (Exp SrcSpan)
-exp = assignmentExp
-
-assignmentExp :: P (Exp SrcSpan)
-assignmentExp =
-  (do startPos <- getStartPos
-      lit <- literal
-      endPos <- getEndPos
-      return $ Lit (mkSrcSpanFromPos startPos endPos) lit)
-    <|>
-  (do startPos <- getStartPos
-      n <- name expOrLockName
-      endPos <- getEndPos
-      return $ NameExp (mkSrcSpanFromPos startPos endPos) n)
-    <|>
-  (do startPos <- getStartPos
-      pExp <- policyExp
-      endPos <- getEndPos
-      return $ PolicyExp (mkSrcSpanFromPos startPos endPos) pExp)
-  <?> "expression"
-
-literal :: P (Literal SrcSpan)
-literal =
-  tokWithSpanTest $ \t sp ->
-    case t of
-      IntLit    i -> Just $ Int     sp i
-      LongLit   l -> Just $ Long    sp l
-      DoubleLit d -> Just $ Double  sp d
-      FloatLit  f -> Just $ Float   sp f
-      CharLit   c -> Just $ Char    sp c
-      StringLit s -> Just $ String  sp s
-      BoolLit   b -> Just $ Boolean sp b
-      NullLit     -> Just $ Null    sp
-      _           -> Nothing
-
 -- Modifiers
 
 -- | There are several syntax tree nodes that have a list of modifiers data field. 
@@ -357,152 +282,4 @@ modifier =
           endPos <- getEndPos
           return $ Writes (mkSrcSpanFromPos startPos endPos) p)
   <?> "modifier"
-
-policy :: P (Policy SrcSpan)
-policy = exp
-
-policyExp :: P (PolicyExp SrcSpan)
-policyExp = do
-  startPos <- getStartPos
-  cls <- (try $ braces $ seplist clause semiColon) -- TODO: This parses {}. Should it?
-     <|> (braces colon >> return [])
-  endPos <- getEndPos
-  return $ PolicyLit (mkSrcSpanFromPos startPos endPos) cls
-
-clause :: P (Clause SrcSpan)
-clause = do
-  startPos <- getStartPos
-  clVarDs <- lopt $ parens $ seplist clauseVarDecl comma
-  clHead <- clauseHead
-  clAtoms <- colon >> lopt (seplist atom comma) -- TODO: Is colon required?
-  endPos <- getEndPos
-  -- TODO: genActorVars
-  return $ Clause (mkSrcSpanFromPos startPos endPos) clVarDs clHead clAtoms
-
-clauseVarDecl :: P (ClauseVarDecl SrcSpan)
-clauseVarDecl = do
-  startPos <- getStartPos
-  t <- refType
-  varId <- ident
-  endPos <- getEndPos
-  return $ ClauseVarDecl (mkSrcSpanFromPos startPos endPos) t varId
-
-clauseHead :: P (ClauseHead SrcSpan)
-clauseHead =
-  (try $ do
-    startPos <- getStartPos
-    clVarDecl <- clauseVarDecl
-    endPos <- getEndPos
-    return $ ClauseDeclHead (mkSrcSpanFromPos startPos endPos) clVarDecl)
-    <|>
-  (do startPos <- getStartPos
-      a <- actor
-      endPos <- getEndPos
-      return $ ClauseVarHead (mkSrcSpanFromPos startPos endPos) a)
-
-atom :: P (Atom SrcSpan)
-atom = do
-  startPos <- getStartPos
-  lName <- name lockName
-  actors <- lopt $ parens $ seplist actor comma
-  endPos <- getEndPos
-  return $ Atom (mkSrcSpanFromPos startPos endPos) lName actors
-
--- Parse everything as actorName and post-process them into Vars.
-actor :: P (Actor SrcSpan)
-actor = do
-  startPos <- getStartPos
-  aName <- actorName
-  endPos <- getEndPos
-  return $ Actor (mkSrcSpanFromPos startPos endPos) aName
-
-actorName :: P (ActorName SrcSpan)
-actorName = do
-  startPos <- getStartPos
-  eName <- name expName
-  endPos <- getEndPos
-  return $ ActorName (mkSrcSpanFromPos startPos endPos) eName
-
--- Types
-
-ttype :: P (Type SrcSpan)
-ttype =
-  (do startPos <- getStartPos
-      t <- primType
-      endPos <- getEndPos
-      return $ PrimType (mkSrcSpanFromPos startPos endPos) t)
-    <|>
-  (do startPos <- getStartPos
-      t <- refType
-      endPos <- getEndPos
-      return $ RefType (mkSrcSpanFromPos startPos endPos) t)
-  <?> "type"
-
-primType :: P (PrimType SrcSpan)
-primType =
-      BooleanT <$> keywordWithSpan KW_Boolean
-  <|> ByteT    <$> keywordWithSpan KW_Byte
-  <|> ShortT   <$> keywordWithSpan KW_Short
-  <|> IntT     <$> keywordWithSpan KW_Int
-  <|> LongT    <$> keywordWithSpan KW_Long
-  <|> CharT    <$> keywordWithSpan KW_Char
-  <|> FloatT   <$> keywordWithSpan KW_Float
-  <|> DoubleT  <$> keywordWithSpan KW_Double
-  -- Paragon specific
-  <|> PolicyT  <$> keywordWithSpan KW_P_Policy
-
-refType :: P (RefType SrcSpan)
-refType = do
-  startPos <- getStartPos
-  ct <- classType
-  endPos <- getEndPos
-  return $ ClassRefType (mkSrcSpanFromPos startPos endPos) ct
-
-classType :: P (ClassType SrcSpan)
-classType = do
-  startPos <- getStartPos
-  n <- name typeName
-  endPos <- getEndPos
-  return $ ClassType (mkSrcSpanFromPos startPos endPos) n []
-
-returnType :: P (ReturnType SrcSpan)
-returnType =
-      VoidType <$> keywordWithSpan KW_Void
-  <|> (do startPos <- getStartPos
-          t <- ttype
-          endPos <- getEndPos
-          return $ Type (mkSrcSpanFromPos startPos endPos) t)
-  <?> "type"
-
--- Separators
-
-parens :: P a -> P a
-parens = between openParen closeParen
-
-openParen :: P ()
-openParen = tok OpenParen <?> show OpenParen
-
-closeParen :: P ()
-closeParen = tok CloseParen <?> show CloseParen
-
-braces :: P a -> P a
-braces = between openCurly closeCurly
-
-openCurly :: P ()
-openCurly = tok OpenCurly <?> show OpenCurly
-
-closeCurly :: P ()
-closeCurly = tok CloseCurly <?> show CloseCurly
-
-semiColon :: P ()
-semiColon = tok SemiColon <?> show SemiColon
-
-comma :: P ()
-comma = tok Comma <?> show Comma
-
-period :: P ()
-period = tok Period <?> show Period
-
-colon :: P ()
-colon = tok Colon <?> show Colon
 

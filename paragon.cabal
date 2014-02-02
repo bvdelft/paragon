@@ -42,6 +42,11 @@ Library
                         Language.Java.Paragon.Monad.PiReader.MonadPR
                         Language.Java.Paragon.Parac
                         Language.Java.Paragon.Parser
+                        Language.Java.Paragon.Parser.Names
+                        Language.Java.Paragon.Parser.Types
+                        Language.Java.Paragon.Parser.Statements
+                        Language.Java.Paragon.Parser.Expressions
+                        Language.Java.Paragon.Parser.Separators
                         Language.Java.Paragon.Parser.Helpers
                         Language.Java.Paragon.SrcPos
                         Language.Java.Paragon.Syntax
