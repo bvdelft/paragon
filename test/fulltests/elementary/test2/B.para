@@ -12,11 +12,11 @@ public class B {
         ?A.low int lowInt;
         lowInt  = 4;
         // This integer's policy has no clauses, so no one can read it.
-        ?{}    int highInt;
+        ?{:}    int highInt;
         highInt = 5;
 
         lowInt = highInt; // This is an illegal flow and should be detected.
-        highInt = lowInt: // Should be allowed.
+        highInt = lowInt; // Should be allowed.
         lowInt = highInt; // Should be detected.
     }
 }

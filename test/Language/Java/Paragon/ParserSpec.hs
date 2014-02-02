@@ -550,6 +550,44 @@ spec = do
           cId = Id (srcSpanFun 1 7 1 7) "C"
       in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cdSrcSpan cd])
 
+    it "parses class declaration with single field with reads policy modifier" $
+      let fileName = "ClassDeclSingleFieldReadsMod.para"
+          srcSpanFun = SrcSpan fileName
+          cdSrcSpan = srcSpanFun 1 1 3 1
+          cbSrcSpan = srcSpanFun 1 9 3 1
+          mdSrcSpan = srcSpanFun 2 3 2 13
+          cbDecl = MemberDecl mdSrcSpan fieldDecl
+          tSrcSpan = srcSpanFun 2 8 2 10
+          mods = [Reads (srcSpanFun 2 3 2 6) p]
+          pSrcSpan = srcSpanFun 2 4 2 6
+          p = PolicyExp pSrcSpan (PolicyLit pSrcSpan [])
+          fieldDecl = FieldDecl mdSrcSpan mods (PrimType tSrcSpan (IntT tSrcSpan)) [varDecl]
+          varId = Id varSrcSpan "x"
+          varSrcSpan = srcSpanFun 2 12 2 12
+          varDecl = VarDecl varSrcSpan varId Nothing
+          cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
+          cId = Id (srcSpanFun 1 7 1 7) "C"
+      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cdSrcSpan cd])
+
+    it "parses class declaration with single field with writes policy modifier" $
+      let fileName = "ClassDeclSingleFieldWritesMod.para"
+          srcSpanFun = SrcSpan fileName
+          cdSrcSpan = srcSpanFun 1 1 3 1
+          cbSrcSpan = srcSpanFun 1 9 3 1
+          mdSrcSpan = srcSpanFun 2 3 2 13
+          cbDecl = MemberDecl mdSrcSpan fieldDecl
+          tSrcSpan = srcSpanFun 2 8 2 10
+          mods = [Writes (srcSpanFun 2 3 2 6) p]
+          pSrcSpan = srcSpanFun 2 4 2 6
+          p = PolicyExp pSrcSpan (PolicyLit pSrcSpan [])
+          fieldDecl = FieldDecl mdSrcSpan mods (PrimType tSrcSpan (IntT tSrcSpan)) [varDecl]
+          varId = Id varSrcSpan "x"
+          varSrcSpan = srcSpanFun 2 12 2 12
+          varDecl = VarDecl varSrcSpan varId Nothing
+          cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
+          cId = Id (srcSpanFun 1 7 1 7) "C"
+      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cdSrcSpan cd])
+
     -- Failure
     describe "gives an error message when" $ do
 

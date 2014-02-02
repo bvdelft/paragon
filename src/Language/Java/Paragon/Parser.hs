@@ -4,8 +4,8 @@ module Language.Java.Paragon.Parser
     parse
   ) where
 
-import Control.Applicative ((<$>))
 import Prelude hiding (exp)
+import Control.Applicative ((<$>))
 import Data.Maybe (catMaybes)
 
 import Text.ParserCombinators.Parsec hiding (parse, runParser)
@@ -344,7 +344,20 @@ modifier =
   <|> Symmetric    <$> keywordWithSpan KW_P_Symmetric
   <|> Readonly     <$> keywordWithSpan KW_P_Readonly
   <|> Notnull      <$> keywordWithSpan KW_P_Notnull
+  <|> (do startPos <- getStartPos
+          tok Question
+          p <- policy
+          endPos <- getEndPos
+          return $ Reads (mkSrcSpanFromPos startPos endPos) p)
+  <|> (do startPos <- getStartPos
+          tok Op_Bang
+          p <- policy
+          endPos <- getEndPos
+          return $ Writes (mkSrcSpanFromPos startPos endPos) p)
   <?> "modifier"
+
+policy :: P (Policy SrcSpan)
+policy = exp
 
 policyExp :: P (PolicyExp SrcSpan)
 policyExp = do

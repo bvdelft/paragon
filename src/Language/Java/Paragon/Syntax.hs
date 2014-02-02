@@ -148,6 +148,9 @@ data Modifier a
   | Readonly   a  -- ^ readonly
   | Notnull    a  -- ^ notnull
 
+  | Reads      a (Policy a)  -- ^ ?
+  | Writes     a (Policy a)  -- ^ !
+
   -- TODO: more Paragon modifiers
   deriving (Show, Eq, Functor)
 
