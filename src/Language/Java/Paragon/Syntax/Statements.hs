@@ -1,7 +1,11 @@
 {-# LANGUAGE DeriveFunctor #-}
 
 -- | Paragon Abstract Syntax Tree. Statements.
-module Language.Java.Paragon.Syntax.Statements where
+module Language.Java.Paragon.Syntax.Statements
+  (
+    module Language.Java.Paragon.Syntax.Statements
+  , module Language.Java.Paragon.Syntax.Expressions
+  ) where
 
 import Language.Java.Paragon.Syntax.Expressions
 

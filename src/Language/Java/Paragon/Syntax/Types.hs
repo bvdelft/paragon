@@ -1,7 +1,11 @@
 {-# LANGUAGE DeriveFunctor #-}
 
 -- | Paragon Abstract Syntax Tree. Types.
-module Language.Java.Paragon.Syntax.Types where
+module Language.Java.Paragon.Syntax.Types
+  (
+    module Language.Java.Paragon.Syntax.Types
+  , module Language.Java.Paragon.Syntax.Names
+  ) where
 
 import Language.Java.Paragon.Syntax.Names
 

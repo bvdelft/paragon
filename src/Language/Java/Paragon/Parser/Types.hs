@@ -6,7 +6,6 @@ import Control.Applicative ((<$>))
 import Text.ParserCombinators.Parsec
 
 import Language.Java.Paragon.Lexer
-import Language.Java.Paragon.Syntax.Names
 import Language.Java.Paragon.Syntax.Types
 import Language.Java.Paragon.SrcPos
 

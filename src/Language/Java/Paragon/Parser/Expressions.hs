@@ -8,7 +8,6 @@ import Text.ParserCombinators.Parsec
 
 import Language.Java.Paragon.Lexer
 import Language.Java.Paragon.Syntax.Expressions hiding (policyExp, clauseHead, actorName)
-import Language.Java.Paragon.Syntax.Names
 import Language.Java.Paragon.SrcPos
 
 import Language.Java.Paragon.Parser.Names
