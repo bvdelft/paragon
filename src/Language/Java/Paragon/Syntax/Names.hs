@@ -42,7 +42,7 @@ data NameType = ExpName           -- ^ Expression name.
               | MethodOrLockName  -- ^ Method or lock name.
               | ExpOrLockName     -- ^ Expression or lock name.
               | AmbigName         -- ^ Ambiguous name.
-  deriving (Show, Eq)
+  deriving (Show, Eq, Ord)
 
 -- Name type helpers.
 

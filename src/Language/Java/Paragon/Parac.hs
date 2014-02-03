@@ -20,7 +20,7 @@ parac flags fileName = do
   erOrA <- runBaseM flags $ do
     let sourcepath = fromMaybe "." (getSourcePath flags)
     content <- liftIO $ readFile $ sourcepath </> fileName
-    failEC () (mkError defaultError defaultPos)
+    failEC () (mkError defaultError defaultSpan)
     case parse content fileName of
       Left e    -> return $ Left e
       Right ast -> return $ Right (generateJavaCode ast)

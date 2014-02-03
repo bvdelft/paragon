@@ -2,7 +2,7 @@
 module Language.Java.Paragon.Monad.PiReader
   ( -- * Exported functionality
     PiPath
-  , PiReader
+  , PiReader(..)
   , liftToBaseM
   , MonadPR(..)
   , getPiPath

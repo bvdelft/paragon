@@ -3,17 +3,10 @@ module Language.Java.Paragon.Monad.PiReader.MonadPR
   ( 
     module Language.Java.Paragon.Monad.Base
   , PiPath
-  , PiReader
+  , PiReader(..)
   , liftToBaseM
   , MonadPR(..)
   , getPiPath
-  {-
-  , doesPkgExist
-  , doesTypeExist
-  , getPkgContents
-  , getTypeContents
-  , getPiPathContents
-  -}
   ) where
 
 import Control.Monad (liftM)

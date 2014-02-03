@@ -27,8 +27,8 @@ data Error = Error
     -- This message contains more detailed information explaining the 
     -- information-flow related causes of the error.
   , explained  :: String
-    -- | The source code position where this error originated.
-  , location   :: SrcPos
+    -- | The source code span where this error originated.
+  , location   :: SrcSpan
     -- | Context in which the error occurred.
   , errContext :: [ErrorContext]
     -- | The various labels an error might have. This /must/ always be a
@@ -47,17 +47,17 @@ defaultError :: Error
 defaultError = Error
   { pretty     = "This error has no pretty printing"
   , explained  = "This error has no explained printing"
-  , location   = defaultPos
+  , location   = defaultSpan
   , errContext = [defaultContext]
   , labels     = [LBLError]
   }
 
 -- | Adds the source code location and error context to the error.
-mkError :: Error -> SrcPos -> [ErrorContext] -> Error
+mkError :: Error -> SrcSpan -> [ErrorContext] -> Error
 mkError err sp ctx = err { location = sp, errContext = ctx }
 
 -- | Type abbreviation to simplify error-defining source code
-type MkError = SrcPos -> ContextualError
+type MkError = SrcSpan -> ContextualError
 
 -- | For lazy or for handling errors via 'fail'
 undefinedError :: String -> [ErrorContext] -> Error

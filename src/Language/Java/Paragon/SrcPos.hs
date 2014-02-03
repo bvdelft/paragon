@@ -7,6 +7,7 @@ module Language.Java.Paragon.SrcPos
     -- * The @SrcPos@ data type
     SrcPos(..)
   , defaultPos
+  , defaultSpan
     -- * The @SrcSpan@ data type
   , SrcSpan(..)
   , mkSrcSpanFromPos
@@ -46,6 +47,10 @@ mkSrcSpanFromPos :: SrcPos -> SrcPos -> SrcSpan
 mkSrcSpanFromPos (SrcPos fileName startLine startColumn)
                  (SrcPos _        endLine   endColumn) =
   SrcSpan fileName startLine startColumn endLine endColumn
+
+-- | Construct a default source span from @defaultPos@ to @defaultPos@.
+defaultSpan :: SrcSpan
+defaultSpan = mkSrcSpanFromPos defaultPos defaultPos
 
 -- | Convert source span to source position by taking the start position.
 srcSpanToStartPos :: SrcSpan -> SrcPos
