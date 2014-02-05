@@ -22,6 +22,7 @@ module Language.Java.Paragon.Monad.Base
   , getErrCtxt
   , check
   , checkM
+  , liftEither
   ) where
 
 import Control.Applicative
@@ -202,3 +203,8 @@ check b err = unless b $ failEC () err
 checkM :: MonadBase m => m Bool -> ContextualError -> m ()
 checkM mb err = mb >>= flip check err
 
+-- | Lift Either value into monad by mapping Left to fail and Right to return
+liftEither :: MonadBase m => Either ContextualError a -> m a
+liftEither esa = case esa of
+                   Left err -> failE err
+                   Right x  -> return x

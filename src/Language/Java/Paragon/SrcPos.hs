@@ -39,7 +39,7 @@ data SrcSpan = SrcSpan
   , srcSpanStartColumn :: Int     -- ^ Column number of the beginning of the span.
   , srcSpanEndLine     :: Int     -- ^ Line number of the end of the span.
   , srcSpanEndColumn   :: Int     -- ^ Column number of the end of the span.
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Ord)
 
 -- | Construct source span from two source positions (start, end).
 -- File name is taken from the start position.

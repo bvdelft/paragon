@@ -1,4 +1,4 @@
--- | Defines the pretty printing type class, plus some genearl instances for
+-- | Defines the pretty printing type class, plus some general instances for
 -- this type class. To avoid circular dependencies, all other instances should
 -- be defined in the module defining the data type to be pretty printed.
 module Language.Java.Paragon.Interaction.Pretty
@@ -6,7 +6,6 @@ module Language.Java.Paragon.Interaction.Pretty
     -- * The @Pretty@ type class.
     Pretty(..)
   , prettyPrint
-  , module Text.PrettyPrint
   ) where
 
 import Text.PrettyPrint

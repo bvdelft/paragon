@@ -5,8 +5,7 @@ module Language.Java.Paragon.Syntax.Names where
 
 import Text.PrettyPrint
 
-import Language.Java.Paragon.Interaction (panic, libraryBase)
-import Language.Java.Paragon.Unparse (Unparse(..))
+import Language.Java.Paragon.Interaction (panic, libraryBase, Unparse(..))
 import Language.Java.Paragon.SrcPos
 
 namesModule :: String
@@ -16,7 +15,7 @@ namesModule = libraryBase ++ ".Syntax.Names"
 data Id a = Id
   { idAnn   :: a       -- ^ Annotation.
   , idIdent :: String  -- ^ Identifier's string.
-  } deriving (Show, Eq, Functor)
+  } deriving (Show, Eq, Functor, Ord)
 
 -- | Qualified name. A period-separated list of identifiers.
 data Name a = Name

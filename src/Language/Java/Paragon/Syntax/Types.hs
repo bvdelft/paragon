@@ -45,7 +45,12 @@ data RefType a =
   deriving (Show, Eq, Functor)
 
 -- | Class or interface type.
-data ClassType a = ClassType a (Name a) [TypeArgument a]
+data ClassType a =
+    -- | Class type.
+    ClassType { ctAnn      :: a 
+              , ctName     :: Name a
+              , ctTypeArgs :: [TypeArgument a]
+              }
   deriving (Show, Eq, Functor)
 
 -- | Representation of type arguments of generic types.

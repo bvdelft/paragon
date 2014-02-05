@@ -20,7 +20,6 @@ import Language.Java.Paragon.Monad.PiReader.MonadPR
 import Language.Java.Paragon.Parser (parse)
 import Language.Java.Paragon.SrcPos
 import Language.Java.Paragon.Syntax (Name(..), CompilationUnit)
-import Language.Java.Paragon.Unparse (unparsePrint)
 
 piReaderModule :: String
 piReaderModule = libraryBase ++ ".Monad.PiReader.PiFunc"
@@ -52,7 +51,7 @@ doesTypeExist typeName = liftPR $ do
                else go pis path
 
 -- | Returns the list of all .pi files in the package, on the top-level.
--- Note: If more than 1 corresponding directory in path, the first is selected
+-- Note: If more than 1 corresponding directory in path, the first is selected.
 getPkgContents :: MonadPR m => Name a -> m [String]
 getPkgContents pkgName = liftPR $ do
   let path = pkgNameToDir pkgName
@@ -74,8 +73,8 @@ getPkgContents pkgName = liftPR $ do
               files <- liftIO $ getDirectoryContents path
               return $ filterPiIdents files
 
--- |Returns all the packages and types found at the top level of the pi-path
--- The result is of the form (list of types, list of packages)
+-- | Returns all the packages and types found at the top level of the pi-path.
+-- The result is of the form (list of types, list of packages).
 getPiPathContents :: MonadPR m => m ([String], [String])
 getPiPathContents = do
   pp <- getPiPath

@@ -1,12 +1,11 @@
 -- | Defines the 'unparsing' type class, plus some general instances for
 -- this type class. To avoid circular dependencies, all other instances should
 -- be defined in the module defining the data type to be pretty printed.
-module Language.Java.Paragon.Unparse
+module Language.Java.Paragon.Interaction.Unparse
   (
     -- * The @Unparse@ type class.
     Unparse(..)
   , unparsePrint
-  , module Text.PrettyPrint
   ) where
 
 import Text.PrettyPrint

@@ -35,15 +35,23 @@ Library
                         Language.Java.Paragon.Interaction.Headers
                         Language.Java.Paragon.Interaction.Panic
                         Language.Java.Paragon.Interaction.Pretty
+                        Language.Java.Paragon.Interaction.Unparse
                         Language.Java.Paragon.Lexer
                         Language.Java.Paragon.Monad.Base
                         Language.Java.Paragon.Monad.Helpers
+                        Language.Java.Paragon.Monad.NameRes
                         Language.Java.Paragon.Monad.PiReader
                         Language.Java.Paragon.Monad.PiReader.Helpers
                         Language.Java.Paragon.Monad.PiReader.MonadPR
+                        Language.Java.Paragon.Monad.PiReader.PiFunc
                         Language.Java.Paragon.NameResolution
+                        Language.Java.Paragon.NameResolution.Errors
                         Language.Java.Paragon.NameResolution.Expansion
                         Language.Java.Paragon.NameResolution.ExpansionBuilders
+                        Language.Java.Paragon.NameResolution.ExpansionRecord
+                        Language.Java.Paragon.NameResolution.Helpers
+                        Language.Java.Paragon.NameResolution.Resolvers.Names
+                        Language.Java.Paragon.NameResolution.Resolvers.Types
                         Language.Java.Paragon.Parac
                         Language.Java.Paragon.Parser
                         Language.Java.Paragon.Parser.Names

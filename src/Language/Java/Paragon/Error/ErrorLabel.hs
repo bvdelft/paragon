@@ -7,5 +7,6 @@ module Language.Java.Paragon.Error.ErrorLabel
 -- | The various labels an error can have.
 data ErrorLabel
   = LBLError     -- ^ Error (default label for errors).
+  | LBLWarning   -- ^ Warnings
   | LBLExplicit  -- ^ Information leak via an explicit flow.
   | LBLImplicit  -- ^ Information leak via an implicit flow.

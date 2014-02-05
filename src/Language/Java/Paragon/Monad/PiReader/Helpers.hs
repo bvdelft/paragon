@@ -16,10 +16,9 @@ import Data.Char (toLower)
 import System.FilePath ((</>),(<.>),splitExtension)
 import System.Directory (doesDirectoryExist)
 
-import Language.Java.Paragon.Interaction (panic, libraryBase)
+import Language.Java.Paragon.Interaction (panic, libraryBase, unparsePrint)
 import Language.Java.Paragon.Monad.Base (MonadIO(..))
 import Language.Java.Paragon.Syntax (Name(..), NameType(..), Id(..))
-import Language.Java.Paragon.Unparse (unparsePrint)
 
 prHelperModule :: String
 prHelperModule = libraryBase ++ ".Monad.PiReader.Helpers"

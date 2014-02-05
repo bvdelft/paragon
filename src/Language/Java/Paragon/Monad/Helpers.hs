@@ -2,8 +2,7 @@
 module Language.Java.Paragon.Monad.Helpers 
   (
     -- * Helpers
-    liftEither
-  , ignore
+    ignore
   , orElse
   , orM
   , anyM
@@ -11,12 +10,6 @@ module Language.Java.Paragon.Monad.Helpers
   , withFold
   , withFoldMap
   ) where
-
--- | Lift Either value into monad by mapping Left to fail and Right to return
-liftEither :: Monad m => Either String a -> m a
-liftEither esa = case esa of
-                   Left err -> fail err
-                   Right x  -> return x
 
 -- | Explicitly ignore the result of the computation
 ignore :: Monad m => m a -> m ()
