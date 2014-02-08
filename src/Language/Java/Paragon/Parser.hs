@@ -2,6 +2,7 @@
 module Language.Java.Paragon.Parser
   (
     parse
+  , runParser
   ) where
 
 import Prelude hiding (exp)
