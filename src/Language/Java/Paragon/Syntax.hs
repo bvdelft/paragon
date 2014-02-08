@@ -148,7 +148,7 @@ data ClassBodyDecl a =
   -- TODO: InitDecl
   deriving (Show, Eq, Functor)
 
--- | Member declaration.
+-- | Member declaration. Unsafe records.
 data MemberDecl a =
     -- | Field declaration.
     FieldDecl { membDeclAnn        :: a             -- ^ Annotation.
@@ -200,7 +200,7 @@ data Block a = Block
   , blockAnnStmts :: [BlockStmt a]  -- ^ Block statements.
   } deriving (Show, Eq, Functor)
 
--- | Block statement.
+-- | Block statement. Unsafe records.
 data BlockStmt a =
     -- | Normal statement.
     BlockStmt { blockStmtAnn  :: a       -- ^ Annotation.

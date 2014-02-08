@@ -9,7 +9,7 @@ module Language.Java.Paragon.Syntax.Statements
 
 import Language.Java.Paragon.Syntax.Expressions
 
--- | Statements.
+-- | Statements. Unsafe records.
 data Stmt a =
     -- | Empty statement - semicolon.
     Empty { stmtAnn :: a -- ^ Annotation.

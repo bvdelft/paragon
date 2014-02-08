@@ -11,7 +11,7 @@ module Language.Java.Paragon.Syntax.Expressions
 import Language.Java.Paragon.Syntax.Names
 import Language.Java.Paragon.Syntax.Types
 
--- | Expressions.
+-- | Expressions. Unsafe records.
 data Exp a =
     -- | Literal.
     Lit { expLit :: Literal a }
@@ -27,7 +27,7 @@ data Exp a =
   | PolicyExp { policyExp :: PolicyExp a }
   deriving (Show, Eq, Functor)
 
--- | Types of literals.
+-- | Types of literals. Unsafe records.
 data Literal a =
     Int { litAnn    :: a        -- ^ Annotation.
         , intLitVal :: Integer  -- ^ Value of integer literal.
@@ -90,22 +90,22 @@ data ClauseVarDecl a = ClauseVarDecl
 
 -- | Head of the clause.
 data ClauseHead a =
-    ClauseDeclHead { clauseHeadVarDecl :: ClauseVarDecl a }
-  | ClauseVarHead { clauseHeadActor :: Actor a }
+    ClauseDeclHead (ClauseVarDecl a)
+  | ClauseVarHead (Actor a)
   deriving (Show, Eq, Functor)
 
 -- | Actor variable.
 data Actor a =
     -- | Free actor variable (and thus concrete w.r.t. the policy under scrutiny).
-    Actor { actorName :: ActorName a }
+    Actor (ActorName a)
     -- | Forall quantified actor variable within the current clause.
-  | Var { actorVarId :: Id a }
+  | Var (Id a)
   deriving (Show, Eq, Functor)
 
--- | Representation of actor names.
+-- | Representation of actor names. Unsafe records.
 data ActorName a =
     -- | Free actor variable.
-    ActorName { actorNameName :: Name a }
+    ActorName (Name a)
     -- | Free actor type parameter.
   | ActorTypeVar { actorNameAnn     :: a          -- ^ Annotation.
                  , actorTypeVarType :: RefType a  -- ^ Type of actor type variable.
