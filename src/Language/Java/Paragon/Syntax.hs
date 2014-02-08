@@ -205,7 +205,7 @@ data BlockStmt a =
     -- | Normal statement.
     BlockStmt (Stmt a)
     -- | Local variable declaration.
-  | LocalVars { blockStmtAnn       :: a
+  | LocalVars { localVarsAnn       :: a             -- ^ Annotation.
               , localVarsModifiers :: [Modifier a]  -- ^ Modifiers.
               , localVarsType      :: Type a        -- ^ Variable declaration type.
               , localVarsDecls     :: [VarDecl a]   -- ^ Variable declarators.

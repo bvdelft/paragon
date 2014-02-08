@@ -14,17 +14,17 @@ import Language.Java.Paragon.Syntax.Types
 -- | Expressions. Unsafe records.
 data Exp a =
     -- | Literal.
-    Lit { expLit :: Literal a }
+    Lit (Literal a)
     -- | Referencing some name, e.g. variable.
-  | NameExp { nameExpName :: Name a }
+  | NameExp (Name a)
     -- | Assignment.
-  | Assign { expAnn    :: a
+  | Assign { assignAnn :: a           -- ^ Annotation.
            , assignLhs :: Lhs a       -- ^ Left-hand side of the assignment.
            , assignOp  :: AssignOp a  -- ^ Assignment operator (=, +=, *=, ...).
            , assignExp :: Exp a       -- ^ Expression on the right-hand side.
            }
     -- | Policy expression.
-  | PolicyExp { policyExp :: PolicyExp a }
+  | PolicyExp (PolicyExp a)
   deriving (Show, Eq, Functor)
 
 -- | Types of literals. Unsafe records.
@@ -107,7 +107,7 @@ data ActorName a =
     -- | Free actor variable.
     ActorName (Name a)
     -- | Free actor type parameter.
-  | ActorTypeVar { actorNameAnn     :: a          -- ^ Annotation.
+  | ActorTypeVar { actorTypeVarAnn  :: a          -- ^ Annotation.
                  , actorTypeVarType :: RefType a  -- ^ Type of actor type variable.
                  , actorTypeVarId   :: Id a       -- ^ Actor type variable identifier.
                  }
