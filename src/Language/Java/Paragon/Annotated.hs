@@ -54,7 +54,15 @@ annInstance dctx name typeVarNames constrs =
 -- | Produces a function clause for a given constructor.
 annFunClause :: Con -> Q Clause
 annFunClause (NormalC c ((_,VarT n):sts)) =
+  -- constructors with annotations
   clause [conP c (varP n : map (const wildP) sts)] (normalB (varE n)) []
-annFunClause (RecC c sts) = annFunClause $ NormalC c [(s, t) | (_, s, t) <- sts]
+annFunClause (NormalC c [(_,AppT{})]) = do
+  -- internal node with one field of the form (T a)
+  n <- newName "child"
+  -- make recursive call of ann on the child node
+  clause [conP c [varP n]] (normalB (appE (varE 'ann) (varE n))) []
+annFunClause (RecC c sts) =
+  -- constructors with records, express as normal
+  annFunClause $ NormalC c [(s, t) | (_, s, t) <- sts]
 annFunClause _ = error "annFunClause"
 

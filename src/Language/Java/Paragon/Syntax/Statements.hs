@@ -1,4 +1,6 @@
-{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE TemplateHaskell
+           , DeriveFunctor
+ #-}
 
 -- | Paragon Abstract Syntax Tree. Statements.
 module Language.Java.Paragon.Syntax.Statements
@@ -8,6 +10,8 @@ module Language.Java.Paragon.Syntax.Statements
   ) where
 
 import Language.Java.Paragon.Syntax.Expressions
+
+import Language.Java.Paragon.Annotated
 
 -- | Statements. Unsafe records.
 data Stmt a =
@@ -19,4 +23,8 @@ data Stmt a =
             , stmtExp :: Exp a  -- ^ Expression.
             }
   deriving (Show, Eq, Functor)
+
+$(deriveAnnotatedMany
+  [ ''Stmt
+  ])
 

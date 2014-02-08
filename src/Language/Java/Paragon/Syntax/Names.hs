@@ -1,4 +1,6 @@
-{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE TemplateHaskell
+           , DeriveFunctor
+ #-}
 
 -- | Paragon Abstract Syntax Tree. Names.
 module Language.Java.Paragon.Syntax.Names where
@@ -7,6 +9,8 @@ import Text.PrettyPrint
 
 import Language.Java.Paragon.Interaction (panic, libraryBase, Unparse(..))
 import Language.Java.Paragon.SrcPos
+
+import Language.Java.Paragon.Annotated
 
 namesModule :: String
 namesModule = libraryBase ++ ".Syntax.Names"
@@ -42,6 +46,11 @@ data NameType = ExpName           -- ^ Expression name.
               | ExpOrLockName     -- ^ Expression or lock name.
               | AmbigName         -- ^ Ambiguous name.
   deriving (Show, Eq, Ord)
+
+$(deriveAnnotatedMany
+  [ ''Id
+  , ''Name
+  ])
 
 -- Name type helpers.
 

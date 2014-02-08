@@ -13,13 +13,14 @@ module Language.Java.Paragon.Syntax
   , module Language.Java.Paragon.Annotated
   ) where
 
-import Language.Java.Paragon.Annotated
 import Language.Java.Paragon.Interaction (libraryBase)
 
 import Language.Java.Paragon.Syntax.Names
 import Language.Java.Paragon.Syntax.Types
 import Language.Java.Paragon.Syntax.Statements
 import Language.Java.Paragon.Syntax.Expressions
+
+import Language.Java.Paragon.Annotated
 
 syntaxModule :: String
 syntaxModule = libraryBase ++ ".Syntax"
@@ -75,10 +76,6 @@ data TypeDecl a =
     -- | Interface declaration.
   | InterfaceTypeDecl (InterfaceDecl a)
   deriving (Show, Eq, Functor)
-
-instance Annotated TypeDecl where
-  ann (ClassTypeDecl classDecl) = ann classDecl
-  ann (InterfaceTypeDecl intDecl) = ann intDecl
 
 -- | Class declaration.
 data ClassDecl a = ClassDecl
@@ -212,5 +209,22 @@ data BlockStmt a =
               }
   deriving (Show, Eq, Functor)
 
-$(deriveAnnotatedMany [''ClassDecl, ''InterfaceDecl, ''Modifier])
+$(deriveAnnotatedMany
+  [ ''CompilationUnit
+  , ''PackageDecl
+  , ''ImportDecl
+  , ''TypeDecl
+  , ''ClassDecl
+  , ''InterfaceDecl
+  , ''Modifier
+  , ''ClassBody
+  , ''ClassBodyDecl
+  , ''MemberDecl
+  , ''VarDecl
+  , ''FormalParam
+  , ''MethodBody
+  , ''VarInit
+  , ''Block
+  , ''BlockStmt
+  ])
 

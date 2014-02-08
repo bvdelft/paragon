@@ -1,4 +1,6 @@
-{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE TemplateHaskell
+           , DeriveFunctor
+ #-}
 
 -- | Paragon Abstract Syntax Tree. Expressions.
 module Language.Java.Paragon.Syntax.Expressions
@@ -10,6 +12,8 @@ module Language.Java.Paragon.Syntax.Expressions
 
 import Language.Java.Paragon.Syntax.Names
 import Language.Java.Paragon.Syntax.Types
+
+import Language.Java.Paragon.Annotated
 
 -- | Expressions. Unsafe records.
 data Exp a =
@@ -121,4 +125,18 @@ data Atom a = Atom
 
 -- | Policy representation.
 type Policy a = Exp a
+
+$(deriveAnnotatedMany
+  [ ''Exp
+  , ''Literal
+  , ''Lhs
+  , ''AssignOp
+  , ''PolicyExp
+  , ''Clause
+  , ''ClauseVarDecl
+  , ''ClauseHead
+  , ''Actor
+  , ''ActorName
+  , ''Atom
+  ])
 

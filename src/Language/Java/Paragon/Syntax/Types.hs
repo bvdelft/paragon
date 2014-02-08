@@ -1,4 +1,6 @@
-{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE TemplateHaskell
+           , DeriveFunctor
+ #-}
 
 -- | Paragon Abstract Syntax Tree. Types.
 module Language.Java.Paragon.Syntax.Types
@@ -8,6 +10,8 @@ module Language.Java.Paragon.Syntax.Types
   ) where
 
 import Language.Java.Paragon.Syntax.Names
+
+import Language.Java.Paragon.Annotated
 
 -- | Top-level data type for Paragon types.
 data Type a =
@@ -60,4 +64,12 @@ data ReturnType a =
     -- | Other types.
   | Type (Type a)
   deriving (Show, Eq, Functor)
+
+$(deriveAnnotatedMany
+  [ ''Type
+  , ''PrimType
+  , ''RefType
+  , ''ClassType
+  , ''ReturnType
+  ])
 
