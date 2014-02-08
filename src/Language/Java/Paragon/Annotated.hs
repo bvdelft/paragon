@@ -13,8 +13,7 @@ module Language.Java.Paragon.Annotated
 import Language.Haskell.TH
 
 -- | Annotated type class.
--- Functor context is required to be able to easily transform annotations.
-class Functor ast => Annotated ast where
+class Annotated ast where
   -- | Extracts the annotation field which should be the first one.
   ann :: ast l -> l
 
