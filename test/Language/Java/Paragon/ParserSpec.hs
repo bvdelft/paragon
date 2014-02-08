@@ -725,7 +725,9 @@ spec = do
       it "given a class declaration with single policy field with missing closing brace in initializer" $
         failureCase "ClassDeclSinglePolicyFieldMissCloseBrace"
 
-      -- TODO: Is it correct?
+      it "given a class declaration with single policy field with missing colon in empty initializer" $
+        failureCase "ClassDeclSinglePolicyFieldEmptyMissColon"
+
       -- Error message should be improved
       it "given a class declaration with single policy field with missing colon after clause head in initializer" $
         failureCase "ClassDeclSinglePolicyFieldClauseHeadMissColon"

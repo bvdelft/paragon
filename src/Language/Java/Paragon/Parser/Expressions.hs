@@ -79,7 +79,7 @@ policy = exp
 policyExp :: P (PolicyExp SrcSpan)
 policyExp = do
   startPos <- getStartPos
-  cls <- (try $ braces $ seplist clause semiColon) -- TODO: This parses {}. Should it?
+  cls <- (try $ braces $ seplist1 clause semiColon)
      <|> (braces colon >> return [])
   endPos <- getEndPos
   return $ PolicyLit (mkSrcSpanFromPos startPos endPos) cls
