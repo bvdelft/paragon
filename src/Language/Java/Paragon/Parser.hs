@@ -87,19 +87,11 @@ typeDecl = Just <$> classOrInterfaceDecl
 
 classOrInterfaceDecl :: P (TypeDecl SrcSpan)
 classOrInterfaceDecl = withModifiers $
-  (do startPos <- getStartPos
-      cdModsFun <- classDeclModsFun
-      endPos <- getEndPos
-      return $ \mods ->
-        let startPos' = getModifiersStartPos mods startPos
-        in ClassTypeDecl (mkSrcSpanFromPos startPos' endPos) (cdModsFun mods))
+  (do cdModsFun <- classDeclModsFun
+      return $ \mods -> ClassTypeDecl (cdModsFun mods))
     <|>
-  (do startPos <- getStartPos
-      intdModsFun <- interfaceDeclModsFun
-      endPos <- getEndPos
-      return $ \mods ->
-        let startPos' = getModifiersStartPos mods startPos
-        in InterfaceTypeDecl (mkSrcSpanFromPos startPos' endPos) (intdModsFun mods))
+  (do intdModsFun <- interfaceDeclModsFun
+      return $ \mods -> InterfaceTypeDecl (intdModsFun mods))
 
 classDeclModsFun :: P (ModifiersFun (ClassDecl SrcSpan))
 classDeclModsFun = normalClassDeclModsFun
@@ -140,12 +132,8 @@ classBodyDecls = list classBodyDecl
 
 classBodyDecl :: P (ClassBodyDecl SrcSpan)
 classBodyDecl = withModifiers (do
-  startPos <- getStartPos
   membDeclModsFun <- memberDeclModsFun
-  endPos <- getEndPos
-  return $ \mods ->
-    let startPos' = getModifiersStartPos mods startPos
-    in MemberDecl (mkSrcSpanFromPos startPos' endPos) (membDeclModsFun mods))
+  return $ \mods -> MemberDecl (membDeclModsFun mods))
   <?> "class body declaration"
 
 memberDeclModsFun :: P (ModifiersFun (MemberDecl SrcSpan))
@@ -198,11 +186,7 @@ methodBody = do
   return $ MethodBody (mkSrcSpanFromPos startPos endPos) mBlock
 
 varInit :: P (VarInit SrcSpan)
-varInit = do
-  startPos <- getStartPos
-  e <- exp
-  endPos <- getEndPos
-  return $ InitExp (mkSrcSpanFromPos startPos endPos) e
+varInit = InitExp <$> exp
 
 block :: P (Block SrcSpan)
 block = do

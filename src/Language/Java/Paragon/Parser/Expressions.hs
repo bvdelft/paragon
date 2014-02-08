@@ -28,11 +28,7 @@ assignment = do
   return $ Assign (mkSrcSpanFromPos startPos endPos) lhs op e
 
 assignmentLhs :: P (Lhs SrcSpan)
-assignmentLhs = do
-  startPos <- getStartPos
-  n <- name expName
-  endPos <- getEndPos
-  return $ NameLhs (mkSrcSpanFromPos startPos endPos) n
+assignmentLhs = NameLhs <$> name expName
 
 assignmentOp :: P (AssignOp SrcSpan)
 assignmentOp =
@@ -43,20 +39,9 @@ exp = assignmentExp
 
 assignmentExp :: P (Exp SrcSpan)
 assignmentExp =
-  (do startPos <- getStartPos
-      lit <- literal
-      endPos <- getEndPos
-      return $ Lit (mkSrcSpanFromPos startPos endPos) lit)
-    <|>
-  (do startPos <- getStartPos
-      n <- name expOrLockName
-      endPos <- getEndPos
-      return $ NameExp (mkSrcSpanFromPos startPos endPos) n)
-    <|>
-  (do startPos <- getStartPos
-      pExp <- policyExp
-      endPos <- getEndPos
-      return $ PolicyExp (mkSrcSpanFromPos startPos endPos) pExp)
+      Lit <$> literal
+  <|> NameExp <$> name expOrLockName
+  <|> PolicyExp <$> policyExp
   <?> "expression"
 
 literal :: P (Literal SrcSpan)
@@ -104,16 +89,8 @@ clauseVarDecl = do
 
 clauseHead :: P (ClauseHead SrcSpan)
 clauseHead =
-  (try $ do
-    startPos <- getStartPos
-    clVarDecl <- clauseVarDecl
-    endPos <- getEndPos
-    return $ ClauseDeclHead (mkSrcSpanFromPos startPos endPos) clVarDecl)
-    <|>
-  (do startPos <- getStartPos
-      a <- actor
-      endPos <- getEndPos
-      return $ ClauseVarHead (mkSrcSpanFromPos startPos endPos) a)
+      try (ClauseDeclHead <$> clauseVarDecl)
+  <|> ClauseVarHead <$> actor
 
 atom :: P (Atom SrcSpan)
 atom = do
@@ -125,16 +102,8 @@ atom = do
 
 -- Parse everything as actorName and post-process them into Vars.
 actor :: P (Actor SrcSpan)
-actor = do
-  startPos <- getStartPos
-  aName <- actorName
-  endPos <- getEndPos
-  return $ Actor (mkSrcSpanFromPos startPos endPos) aName
+actor = Actor <$> actorName
 
 actorName :: P (ActorName SrcSpan)
-actorName = do
-  startPos <- getStartPos
-  eName <- name expName
-  endPos <- getEndPos
-  return $ ActorName (mkSrcSpanFromPos startPos endPos) eName
+actorName = ActorName <$> name expName
 

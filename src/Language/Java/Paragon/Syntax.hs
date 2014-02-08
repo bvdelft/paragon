@@ -70,13 +70,15 @@ data ImportDecl a =
 
 -- | Class or interface declaration.
 data TypeDecl a =
-    ClassTypeDecl     { tdAnn       :: a            -- ^ Annotation.
-                      , tdClassDecl :: ClassDecl a  -- ^ Class declaration.
-                      }
-  | InterfaceTypeDecl { tdAnn     :: a
-                      , tdIntDecl :: InterfaceDecl a  -- ^ Interface declaration.
-                      }
+    -- | Class declaration.
+    ClassTypeDecl (ClassDecl a)
+    -- | Interface declaration.
+  | InterfaceTypeDecl (InterfaceDecl a)
   deriving (Show, Eq, Functor)
+
+instance Annotated TypeDecl where
+  ann (ClassTypeDecl classDecl) = ann classDecl
+  ann (InterfaceTypeDecl intDecl) = ann intDecl
 
 -- | Class declaration.
 data ClassDecl a = ClassDecl
@@ -142,9 +144,7 @@ data InterfaceBody a = IB
 -- | Declaration in class body.
 data ClassBodyDecl a =
     -- | Member declaration.
-    MemberDecl { clBodyDeclAnn        :: a             -- ^ Annotation.
-               , clBodyDeclMemberDecl :: MemberDecl a  -- ^ Member declaration.
-               }
+    MemberDecl (MemberDecl a)
   -- TODO: InitDecl
   deriving (Show, Eq, Functor)
 
@@ -191,10 +191,8 @@ data MethodBody a = MethodBody
   } deriving (Show, Eq, Functor)
 
 -- | Explicit initializer for field/variable declaration.
-data VarInit a = InitExp
-  { varInitAnn :: a      -- ^ Annotation.
-  , varInitExp :: Exp a  -- ^ Initializer expression.
-  } deriving (Show, Eq, Functor)
+data VarInit a = InitExp { varInitExp :: Exp a }
+  deriving (Show, Eq, Functor)
 
 -- | Code block.
 data Block a = Block
@@ -216,5 +214,5 @@ data BlockStmt a =
               }
   deriving (Show, Eq, Functor)
 
-$(deriveAnnotatedMany [''Modifier])
+$(deriveAnnotatedMany [''ClassDecl, ''InterfaceDecl, ''Modifier])
 

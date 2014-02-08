@@ -14,13 +14,9 @@ import Language.Java.Paragon.Syntax.Types
 -- | Expressions.
 data Exp a =
     -- | Literal.
-    Lit { expAnn :: a          -- ^ Annotation.
-        , expLit :: Literal a  -- ^ Literal.
-        }
+    Lit { expLit :: Literal a }
     -- | Referencing some name, e.g. variable.
-  | NameExp { expAnn      :: a
-            , nameExpName :: Name a  -- ^ Name of a variable, for example.
-            }
+  | NameExp { nameExpName :: Name a }
     -- | Assignment.
   | Assign { expAnn    :: a
            , assignLhs :: Lhs a       -- ^ Left-hand side of the assignment.
@@ -28,9 +24,7 @@ data Exp a =
            , assignExp :: Exp a       -- ^ Expression on the right-hand side.
            }
     -- | Policy expression.
-  | PolicyExp { expAnn    :: a
-              , policyExp :: PolicyExp a
-              }
+  | PolicyExp { policyExp :: PolicyExp a }
   deriving (Show, Eq, Functor)
 
 -- | Types of literals.
@@ -62,9 +56,7 @@ data Literal a =
 -- | Left-hand side of an assignment expression.
 data Lhs a =
   -- | Variable.
-  NameLhs { lhsAnn  :: a       -- ^ Annotation.
-          , lhsName :: Name a  -- ^ Variable name.
-          }
+  NameLhs { lhsName :: Name a }
   deriving (Show, Eq, Functor)
 
 -- | Different assignment operators.
@@ -98,34 +90,24 @@ data ClauseVarDecl a = ClauseVarDecl
 
 -- | Head of the clause.
 data ClauseHead a =
-    ClauseDeclHead { clauseHeadAnn     :: a                -- ^ Annotation.
-                   , clauseHeadVarDecl :: ClauseVarDecl a
-                   }
-  | ClauseVarHead { clauseHeadAnn   :: a
-                  , clauseHeadActor :: Actor a
-                  }
+    ClauseDeclHead { clauseHeadVarDecl :: ClauseVarDecl a }
+  | ClauseVarHead { clauseHeadActor :: Actor a }
   deriving (Show, Eq, Functor)
 
 -- | Actor variable.
 data Actor a =
     -- | Free actor variable (and thus concrete w.r.t. the policy under scrutiny).
-    Actor { actorAnn  :: a            -- ^ Annotation.
-          , actorName :: ActorName a  -- ^ Name of free actor variable.
-          }
-    -- | Forall qualified actor variable within the current clause.
-  | Var { actorAnn   :: a
-        , actorVarId :: Id a  -- ^ Quantified variable identifier.
-        }
+    Actor { actorName :: ActorName a }
+    -- | Forall quantified actor variable within the current clause.
+  | Var { actorVarId :: Id a }
   deriving (Show, Eq, Functor)
 
 -- | Representation of actor names.
 data ActorName a =
     -- | Free actor variable.
-    ActorName { actorNameAnn  :: a       -- ^ Annotation.
-              , actorNameName :: Name a  -- ^ Name of free actor variable.
-              }
+    ActorName { actorNameName :: Name a }
     -- | Free actor type parameter.
-  | ActorTypeVar { actorNameAnn     :: a
+  | ActorTypeVar { actorNameAnn     :: a          -- ^ Annotation.
                  , actorTypeVarType :: RefType a  -- ^ Type of actor type variable.
                  , actorTypeVarId   :: Id a       -- ^ Actor type variable identifier.
                  }

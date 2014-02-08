@@ -14,15 +14,8 @@ import Language.Java.Paragon.Parser.Helpers
 
 ttype :: P (Type SrcSpan)
 ttype =
-  (do startPos <- getStartPos
-      t <- primType
-      endPos <- getEndPos
-      return $ PrimType (mkSrcSpanFromPos startPos endPos) t)
-    <|>
-  (do startPos <- getStartPos
-      t <- refType
-      endPos <- getEndPos
-      return $ RefType (mkSrcSpanFromPos startPos endPos) t)
+      PrimType <$> primType
+  <|> RefType <$> refType
   <?> "type"
 
 primType :: P (PrimType SrcSpan)
@@ -39,11 +32,7 @@ primType =
   <|> PolicyT  <$> keywordWithSpan KW_P_Policy
 
 refType :: P (RefType SrcSpan)
-refType = do
-  startPos <- getStartPos
-  ct <- classType
-  endPos <- getEndPos
-  return $ ClassRefType (mkSrcSpanFromPos startPos endPos) ct
+refType = ClassRefType <$> classType
 
 classType :: P (ClassType SrcSpan)
 classType = do
@@ -55,9 +44,6 @@ classType = do
 returnType :: P (ReturnType SrcSpan)
 returnType =
       VoidType <$> keywordWithSpan KW_Void
-  <|> (do startPos <- getStartPos
-          t <- ttype
-          endPos <- getEndPos
-          return $ Type (mkSrcSpanFromPos startPos endPos) t)
+  <|> Type <$> ttype
   <?> "type"
 

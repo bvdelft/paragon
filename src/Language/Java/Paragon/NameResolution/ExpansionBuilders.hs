@@ -128,18 +128,18 @@ buildMapFromTd mPkgPre td expn = do
   -- Extract ident, type params, super types from type declaration
   (pos, i, _tps, supers) <- 
       case td of
-        ctD@(ClassTypeDecl {}) -> do let cdec = (tdClassDecl ctD)
-                                     return ( tdAnn ctD
-                                            , cdId cdec
-                                            , cdTypeParams cdec
-                                            , maybe [] (:[]) (cdSuperClass cdec)
-                                            )
-        itD@(InterfaceTypeDecl {}) -> do let idec = (tdIntDecl itD)
-                                         return ( tdAnn itD
-                                                , intdId idec
-                                                , intdTypeParams idec
-                                                , intdInterfaces idec
-                                                )
+        ClassTypeDecl classDecl ->
+          return ( ann classDecl
+                 , cdId classDecl
+                 , cdTypeParams classDecl
+                 , maybe [] (:[]) (cdSuperClass classDecl)
+                 )
+        InterfaceTypeDecl intDecl ->
+          return ( ann intDecl
+                 , intdId intDecl
+                 , intdTypeParams intDecl
+                 , intdInterfaces intDecl
+                 )
   -- Add package prefix to name
   let thisFullName = Name { nameAnn = pos
                           , nameId = i
@@ -189,9 +189,9 @@ buildMapFromTd mPkgPre td expn = do
                         -> PiReader ([ClassType SrcSpan], [MemberDecl SrcSpan])
        supersAndMembers superTd =
          case superTd of
-           ctD@(ClassTypeDecl {}) -> return $ 
-             ( maybe [] (:[]) (cdSuperClass $ tdClassDecl ctD)
-             , [ clBodyDeclMemberDecl m | m@(MemberDecl {}) <- cbDecls $ cdBody $ tdClassDecl ctD ]
+           ClassTypeDecl classDecl -> return $
+             ( maybe [] (:[]) (cdSuperClass classDecl)
+             , [ memberDecl | MemberDecl memberDecl <- cbDecls $ cdBody classDecl ]
              )
            {-
            itD@(InterfaceTypeDecl {}) -> return $
@@ -199,7 +199,7 @@ buildMapFromTd mPkgPre td expn = do
              , ??  $ intdBody $ tdIntDecl itD
              )
            -}
-           _ -> failEC ([],[]) $ unsupportedError "interface types" (tdAnn superTd)
+           _ -> failEC ([],[]) $ unsupportedError "interface types" (ann superTd)
            
 -- | Resolve the prefix of a name. Each part should be either a type or a
 -- package name.

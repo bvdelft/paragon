@@ -12,13 +12,9 @@ import Language.Java.Paragon.Syntax.Names
 -- | Top-level data type for Paragon types.
 data Type a =
     -- | Primitive type.
-    PrimType { typeAnn      :: a           -- ^ Annotation.
-             , typePrimType :: PrimType a  -- ^ Primitive type.
-             }
+    PrimType { typePrimType :: PrimType a }
     -- | Reference type.
-  | RefType { typeAnn     :: a
-            , typeRefType :: RefType a  -- ^ Reference type.
-            }
+  | RefType { typeRefType :: RefType a }
   deriving (Show, Eq, Functor)
 
 -- | Primitive types.
@@ -38,9 +34,7 @@ data PrimType a =
 -- | Reference type.
 data RefType a =
     -- | Class type.
-    ClassRefType { refTypeAnn       :: a            -- ^ Annotation.
-                 , refTypeClassType :: ClassType a  -- ^ Class type.
-                 }
+    ClassRefType { refTypeClassType :: ClassType a }
   -- TODO: ArrayType
   deriving (Show, Eq, Functor)
 
@@ -64,8 +58,6 @@ data ReturnType a =
     -- | Lock type.
   | LockType { retTypeAnn :: a }
     -- | Other types.
-  | Type { retTypeAnn :: a
-         , retType    :: Type a
-         }
+  | Type { retType :: Type a }
   deriving (Show, Eq, Functor)
 
