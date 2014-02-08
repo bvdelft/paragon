@@ -89,7 +89,7 @@ clause = do
   startPos <- getStartPos
   clVarDs <- lopt $ parens $ seplist clauseVarDecl comma
   clHead <- clauseHead
-  clAtoms <- colon >> lopt (seplist atom comma) -- TODO: Is colon required?
+  clAtoms <- colon >> lopt (seplist atom comma)
   endPos <- getEndPos
   -- TODO: genActorVars
   return $ Clause (mkSrcSpanFromPos startPos endPos) clVarDs clHead clAtoms
