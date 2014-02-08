@@ -203,9 +203,7 @@ data Block a = Block
 -- | Block statement. Unsafe records.
 data BlockStmt a =
     -- | Normal statement.
-    BlockStmt { blockStmtAnn  :: a       -- ^ Annotation.
-              , blockStmtStmt :: Stmt a  -- ^ Statement.
-              }
+    BlockStmt (Stmt a)
     -- | Local variable declaration.
   | LocalVars { blockStmtAnn       :: a
               , localVarsModifiers :: [Modifier a]  -- ^ Modifiers.

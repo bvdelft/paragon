@@ -207,11 +207,7 @@ blockStmt =
         in LocalVars (mkSrcSpanFromPos startPos' endPos) mods t varDs)
     <?> "local variable declaration")
     <|>
-  (do startPos <- getStartPos
-      s <- stmt
-      endPos <- getEndPos
-      return $ BlockStmt (mkSrcSpanFromPos startPos endPos) s
-      <?> "statement")
+  (BlockStmt <$> stmt <?> "statement")
 
 localVarDecl :: P (Type SrcSpan, [VarDecl SrcSpan])
 localVarDecl = do
