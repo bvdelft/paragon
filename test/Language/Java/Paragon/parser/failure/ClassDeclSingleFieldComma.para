@@ -1,4 +1,3 @@
-// Error message should be improved
 class C {
   int x,;
 }

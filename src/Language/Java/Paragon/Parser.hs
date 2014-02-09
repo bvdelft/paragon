@@ -139,24 +139,50 @@ classBodyDecl = withModifiers (do
 memberDeclModsFun :: P (ModifiersFun (MemberDecl SrcSpan))
 memberDeclModsFun = do
   startPos <- getStartPos
-  retT <- returnType  -- try to parse more generally
+  retT <- returnType  -- parse the most general type
   case returnTypeToType retT of
-    Just t  -> try (fieldDeclModsFun startPos t varDecl)
-           <|> methodDeclModsFun startPos retT
-    Nothing -> methodDeclModsFun startPos retT
+    Just t  -> do
+      -- member can be either field or method
+      -- continue with identifier
+      idStartPos <- getStartPos
+      i <- ident <?> "field/method name"
+      fieldDeclAfterTypeIdModsFun t startPos i idStartPos (varDecl "field") <|>
+        methodDeclAfterTypeIdModsFun retT startPos i
+    -- member can only be method (void or lock return type)
+    Nothing -> methodDeclAfterTypeModsFun retT startPos
 
-fieldDeclModsFun :: SrcPos -> Type SrcSpan -> P (VarDecl SrcSpan) -> P (ModifiersFun (MemberDecl SrcSpan))
-fieldDeclModsFun startPos t varDeclFun = do
-  varDs <- varDecls varDeclFun
+-- | Continues to parse field declaration after type and first identifier have been parsed.
+fieldDeclAfterTypeIdModsFun :: Type SrcSpan -> SrcPos
+                            -> Id SrcSpan -> SrcPos
+                            -> P (VarDecl SrcSpan)
+                            -> P (ModifiersFun (MemberDecl SrcSpan))
+fieldDeclAfterTypeIdModsFun t startPos varId varStartPos varDeclFun = do
+  -- continue to parse first VarDecl
+  vInit <- opt $ tok Op_Assign >> varInit
+  varEndPos <- getEndPos
+  let varD = VarDecl (mkSrcSpanFromPos varStartPos varEndPos) varId vInit
+
+  -- try other VarDecls
+  hasComma <- bopt comma
+  varDs <- if hasComma
+             then varDecls varDeclFun
+             else return []
+
   semiColon
   endPos <- getEndPos
   return $ \mods ->
     let startPos' = getModifiersStartPos mods startPos
-    in FieldDecl (mkSrcSpanFromPos startPos' endPos) mods t varDs
+    in FieldDecl (mkSrcSpanFromPos startPos' endPos) mods t (varD:varDs)
 
-methodDeclModsFun :: SrcPos -> ReturnType SrcSpan -> P (ModifiersFun (MemberDecl SrcSpan))
-methodDeclModsFun startPos retT = do
+-- | Continues to parse method declaration after return type has been parsed.
+methodDeclAfterTypeModsFun :: ReturnType SrcSpan -> SrcPos -> P (ModifiersFun (MemberDecl SrcSpan))
+methodDeclAfterTypeModsFun retT startPos = do
   mId <- ident <?> "method name"
+  methodDeclAfterTypeIdModsFun retT startPos mId
+
+-- | Continues to parse method declaration after return type and method identifier have been parsed.
+methodDeclAfterTypeIdModsFun :: ReturnType SrcSpan -> SrcPos -> Id SrcSpan -> P (ModifiersFun (MemberDecl SrcSpan))
+methodDeclAfterTypeIdModsFun retT startPos mId = do
   openParen
   closeParen
   body <- methodBody
@@ -170,10 +196,10 @@ methodDeclModsFun startPos retT = do
 varDecls :: P (VarDecl SrcSpan) -> P [VarDecl SrcSpan]
 varDecls varDeclFun = varDeclFun `sepBy1` comma
 
-varDecl :: P (VarDecl SrcSpan)
-varDecl = do
+varDecl :: String -> P (VarDecl SrcSpan)
+varDecl desc = do
   startPos <- getStartPos
-  varId <- ident <?> "variable/field name"
+  varId <- ident <?> desc ++ " name"
   vInit <- opt $ tok Op_Assign >> varInit
   endPos <- getEndPos
   return $ VarDecl (mkSrcSpanFromPos startPos endPos) varId vInit
@@ -213,7 +239,7 @@ blockStmt =
 localVarDecl :: P (Type SrcSpan, [VarDecl SrcSpan])
 localVarDecl = do
   t <- ttype
-  varDs <- varDecls varDecl
+  varDs <- varDecls (varDecl "variable")
   return (t, varDs)
 
 -- Modifiers
