@@ -724,7 +724,6 @@ spec = do
       it "given a class declaration with single policy field with missing colon in empty initializer" $
         failureCase "ClassDeclSinglePolicyFieldEmptyMissColon"
 
-      -- Error message should be improved
       it "given a class declaration with single policy field with missing colon after clause head in initializer" $
         failureCase "ClassDeclSinglePolicyFieldClauseHeadMissColon"
 

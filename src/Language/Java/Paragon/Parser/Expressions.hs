@@ -64,8 +64,7 @@ policy = exp
 policyExp :: P (PolicyExp SrcSpan)
 policyExp = do
   startPos <- getStartPos
-  cls <- (try $ braces $ seplist1 clause semiColon)
-     <|> (braces colon >> return [])
+  cls <- braces (seplist1 clause semiColon <|> (colon >> return []))
   endPos <- getEndPos
   return $ PolicyLit (mkSrcSpanFromPos startPos endPos) cls
 
