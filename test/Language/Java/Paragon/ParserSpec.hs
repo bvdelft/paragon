@@ -636,7 +636,6 @@ spec = do
       it "given an interface declaration with misspelled modifier" $
         failureCase "InterfaceDeclModTypo"
 
-      -- Error message should be improved
       it "given a class declaration with single field declaration with missing name" $
         failureCase "ClassDeclSingleFieldMissName"
 

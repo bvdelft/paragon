@@ -137,13 +137,16 @@ classBodyDecl = withModifiers (do
   <?> "class body declaration"
 
 memberDeclModsFun :: P (ModifiersFun (MemberDecl SrcSpan))
-memberDeclModsFun = try (fieldDeclModsFun varDecl)
-                <|> methodDeclModsFun
-
-fieldDeclModsFun :: P (VarDecl SrcSpan) -> P (ModifiersFun (MemberDecl SrcSpan))
-fieldDeclModsFun varDeclFun = do
+memberDeclModsFun = do
   startPos <- getStartPos
-  t <- ttype
+  retT <- returnType  -- try to parse more generally
+  case returnTypeToType retT of
+    Just t  -> try (fieldDeclModsFun startPos t varDecl)
+           <|> methodDeclModsFun startPos retT
+    Nothing -> methodDeclModsFun startPos retT
+
+fieldDeclModsFun :: SrcPos -> Type SrcSpan -> P (VarDecl SrcSpan) -> P (ModifiersFun (MemberDecl SrcSpan))
+fieldDeclModsFun startPos t varDeclFun = do
   varDs <- varDecls varDeclFun
   semiColon
   endPos <- getEndPos
@@ -151,10 +154,8 @@ fieldDeclModsFun varDeclFun = do
     let startPos' = getModifiersStartPos mods startPos
     in FieldDecl (mkSrcSpanFromPos startPos' endPos) mods t varDs
 
-methodDeclModsFun :: P (ModifiersFun (MemberDecl SrcSpan))
-methodDeclModsFun = do
-  startPos <- getStartPos
-  retT <- returnType
+methodDeclModsFun :: SrcPos -> ReturnType SrcSpan -> P (ModifiersFun (MemberDecl SrcSpan))
+methodDeclModsFun startPos retT = do
   mId <- ident <?> "method name"
   openParen
   closeParen
