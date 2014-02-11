@@ -193,13 +193,8 @@ buildMapFromTd mPkgPre td expn = do
              ( maybe [] (:[]) (cdSuperClass classDecl)
              , [ memberDecl | MemberDecl memberDecl <- cbDecls $ cdBody classDecl ]
              )
-           {-
-           itD@(InterfaceTypeDecl {}) -> return $
-             ( intdInterfaces $ tdIntDecl itD
-             , ??  $ intdBody $ tdIntDecl itD
-             )
-           -}
-           _ -> failEC ([],[]) $ unsupportedError "interface types" (ann superTd)
+           InterfaceTypeDecl _intDecl -> 
+             failEC ([],[]) $ unsupportedError "interface types" (ann superTd)
            
 -- | Resolve the prefix of a name. Each part should be either a type or a
 -- package name.

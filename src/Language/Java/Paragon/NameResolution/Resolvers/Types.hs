@@ -5,7 +5,10 @@ module Language.Java.Paragon.NameResolution.Resolvers.Types
   , rnTypeDecl
   ) where
 
+import Language.Java.Paragon.Error.StandardErrors
+import Language.Java.Paragon.Monad.Base
 import Language.Java.Paragon.Monad.NameRes
+import Language.Java.Paragon.SrcPos
 import Language.Java.Paragon.Syntax
 
 import Language.Java.Paragon.NameResolution.Resolvers.Names
@@ -17,9 +20,11 @@ rnClassType ct = do
   n'   <- rnName (ctName ct)
   return $ ct {ctName = n' }
 
--- | 
+-- | Resolve type declarations.
 rnTypeDecl :: Resolve TypeDecl
-rnTypeDecl = undefined
+rnTypeDecl (ClassTypeDecl _classDecl) = 
+  -- Typeparams not supported yet. add: extendExpansion (mkTpsExpn tps) $
+  undefined
 {-
 rnTypeDecl (ClassTypeDecl pos (ClassDecl pos' ms ci tps mSuper impls cb)) = do
     extendExpansion (mkTpsExpn tps) $
@@ -43,3 +48,5 @@ rnTypeDecl (InterfaceTypeDecl pos (InterfaceDecl pos' ms ii tps supers ib)) = do
 rnTypeDecl _ = failE . mkErrorFromInfo $
                  UnsupportedFeature "Enum declarations not yet supported"
 -}
+rnTypeDecl i@(InterfaceTypeDecl _) = 
+  failEC i $ unsupportedError "interface types" defaultSpan
