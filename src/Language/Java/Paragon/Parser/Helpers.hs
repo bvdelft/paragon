@@ -17,7 +17,6 @@ module Language.Java.Paragon.Parser.Helpers
     -- * Source positions
   , getStartPos
   , getEndPos
-  , getModifiersStartPos
     -- * Parser combinators
   , opt
   , bopt
@@ -36,7 +35,6 @@ import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Pos (newPos)
 
 import Language.Java.Paragon.Lexer
-import Language.Java.Paragon.Syntax
 import Language.Java.Paragon.SrcPos
 
 -- | Type synonym for the generic parser on TokenWithSpan and SrcPos (as user state).
@@ -129,13 +127,6 @@ parsecToSrcPos pos = SrcPos (sourceName pos)
 -- | Converts Paragon source position to Parsec representation.
 srcPosToParsec :: SrcPos -> SourcePos
 srcPosToParsec (SrcPos fileName l c) = newPos fileName l c
-
--- | Takes a list of modifiers annotated with source spans and a default starting position.
--- If there are no modifiers - returns the default, otherwise - returns the starting 
--- position of the first modifier.
-getModifiersStartPos :: [Modifier SrcSpan] -> SrcPos -> SrcPos
-getModifiersStartPos []    defaultSrcPos = defaultSrcPos
-getModifiersStartPos (m:_) _             = srcSpanToStartPos (ann m)
 
 -- Parser combinators
 

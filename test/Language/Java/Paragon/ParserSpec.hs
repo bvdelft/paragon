@@ -68,7 +68,6 @@ spec = do
           paragonId = Id (srcSpanFun 1 21 1 27) "paragon"
       in successCase fileName (CompilationUnit pdSrcSpan (Just $ PackageDecl pdSrcSpan (Name qIdSrcSpan paragonId PkgName (Just chalmersName))) [] [])
 
-    -- TODO: check correctness of name types
     it "parses single type import declaration" $
       let fileName = "ImportDeclSingle.para"
           srcSpanFun = SrcSpan fileName
