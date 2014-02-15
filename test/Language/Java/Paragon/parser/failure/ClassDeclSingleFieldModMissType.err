@@ -1,3 +1,3 @@
 "ClassDeclSingleFieldModMissType.para" (line 2, column 11):
-unexpected ;
-expecting . or field/method name
+unexpected semicolon
+expecting dot or field/method name

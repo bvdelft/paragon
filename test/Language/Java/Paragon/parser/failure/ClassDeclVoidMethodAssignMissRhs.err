@@ -1,3 +1,3 @@
 "ClassDeclVoidMethodAssignMissRhs.para" (line 3, column 9):
-unexpected ;
+unexpected semicolon
 expecting expression

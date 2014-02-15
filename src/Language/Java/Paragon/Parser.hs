@@ -62,7 +62,7 @@ importDecl = do
     keyword KW_Import
     isStatic <- bopt $ keyword KW_Static
     pkgTypeName <- name ambigName <?> "package/type name"
-    hasStar <- bopt $ period >> (tok Op_Star <?> "* or identifier")
+    hasStar <- bopt $ dot >> (tok Op_Star <?> "* or identifier")
     semiColon
     endPos <- getEndPos
     return $ mkImportDecl isStatic hasStar (mkSrcSpanFromPos startPos endPos) pkgTypeName

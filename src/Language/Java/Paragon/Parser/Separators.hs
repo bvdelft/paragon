@@ -30,8 +30,8 @@ semiColon = tok SemiColon <?> show SemiColon
 comma :: P ()
 comma = tok Comma <?> show Comma
 
-period :: P ()
-period = tok Period <?> show Period
+dot :: P ()
+dot = tok Dot <?> show Dot
 
 colon :: P ()
 colon = tok Colon <?> show Colon

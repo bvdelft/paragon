@@ -18,5 +18,5 @@ ident =
       _       -> Nothing
 
 name :: ([Id SrcSpan] -> Name SrcSpan) -> P (Name SrcSpan)
-name nameFun = nameFun <$> seplist1 ident period
+name nameFun = nameFun <$> seplist1 ident dot
 
