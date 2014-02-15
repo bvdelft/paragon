@@ -28,7 +28,7 @@ resolveNames cu = do
   -- 1. Expand definitions from java.lang
   (_, javaLangExpnMap) <- buildMapFromImportName $
        TypeImportOnDemand defaultSpan (pkgOrTypeName [Id defaultSpan "java", Id defaultSpan "lang"])
-       -- | Make package expansion map that contains only 'java'.
+       -- Make package expansion map that contains only 'java'.
   -- 2. Expand definitions from imports
   (imps, impExpnMap)  <- buildMapFromImports (cuImportDecls cu)
   -- 3. Expand definitions from pi path

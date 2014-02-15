@@ -31,9 +31,9 @@ import Language.Java.Paragon.NameResolution.Errors
 -- A combination of string and the possible nameType, is mapped to a specific 
 -- nameType and the prefix under which it has this nameType.
 type Expansion =
-    Map.Map (String, NameType) -- ^ (Partially) unresolved 
+    Map.Map (String, NameType)  -- (Partially) unresolved 
             (Either ContextualError (Maybe (Name SrcSpan), NameType)) 
-            -- ^ Resolved NameType /or/ an error due to ambiguity
+            -- Resolved NameType /or/ an error due to ambiguity
 
 -- | Create an expansion for a package name.
 mkPkgExpansion :: String -> Expansion
