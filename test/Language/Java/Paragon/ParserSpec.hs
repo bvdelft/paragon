@@ -704,6 +704,9 @@ spec = do
       it "given a class declaration with void method with assignment with missing semicolon" $
         failureCase "ClassDeclVoidMethodAssignMissSemiColon"
 
+      it "given a class declaration with void method with assignment with modifier" $
+        failureCase "ClassDeclVoidMethodAssignMod"
+
       it "given a class declaration with single field declaration with initializer with missing expression" $
         failureCase "ClassDeclSingleFieldInitMissExp"
 

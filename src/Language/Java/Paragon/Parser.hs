@@ -223,22 +223,21 @@ block = do
   return $ Block (mkSrcSpanFromPos startPos endPos) blStmts
 
 blockStmt :: P (BlockStmt SrcSpan)
-blockStmt =
-  (withModifiers (try $ do
-      startPos <- getStartPos
-      (t, varDs) <- localVarDecl
-      semiColon
-      endPos <- getEndPos
-      return $ \mods ->
-        let startPos' = getModifiersStartPos mods startPos
-        in LocalVars (mkSrcSpanFromPos startPos' endPos) mods t varDs)
-    <?> "local variable declaration")
-    <|>
-  (BlockStmt <$> stmt <?> "statement")
+blockStmt = do
+  startPos <- getStartPos
+  mods <- list modifier <?> "local variable declaration"  -- fixing error message
+  if not (null mods)
+    then localVarDecl startPos mods
+    else try (localVarDecl startPos mods)
+           <|>
+         BlockStmt <$> stmt <?> "statement"
 
-localVarDecl :: P (Type SrcSpan, [VarDecl SrcSpan])
-localVarDecl = do
+localVarDecl :: SrcPos -> [Modifier SrcSpan] -> P (BlockStmt SrcSpan)
+localVarDecl startPos mods = do
   t <- ttype
   varDs <- varDecls (varDecl "variable")
-  return (t, varDs)
+  semiColon
+  endPos <- getEndPos            
+  return $ LocalVars (mkSrcSpanFromPos startPos endPos) mods t varDs
+  <?> "local variable declaration"
 

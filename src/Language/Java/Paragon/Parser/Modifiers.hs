@@ -3,6 +3,7 @@ module Language.Java.Paragon.Parser.Modifiers
   (
     ModifiersFun
   , withModifiers
+  , modifier
   , getModifiersStartPos
   ) where
 
