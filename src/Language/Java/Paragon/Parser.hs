@@ -67,7 +67,6 @@ importDecl = do
     endPos <- getEndPos
     return $ mkImportDecl isStatic hasStar (mkSrcSpanFromPos startPos endPos) pkgTypeName
     <?> "import declaration"
-    -- TODO: check correctness of name types
   where mkImportDecl False False sp n = SingleTypeImport     sp (typeName $ flattenName n)
         mkImportDecl False True  sp n = TypeImportOnDemand   sp (pkgOrTypeName $ flattenName n)
         mkImportDecl True  False sp n = SingleStaticImport   sp (mkSingleStaticImport n)
