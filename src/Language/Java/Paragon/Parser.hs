@@ -20,6 +20,7 @@ import Language.Java.Paragon.Parser.Names
 import Language.Java.Paragon.Parser.Types
 import Language.Java.Paragon.Parser.Statements
 import Language.Java.Paragon.Parser.Expressions
+import Language.Java.Paragon.Parser.Modifiers
 import Language.Java.Paragon.Parser.Separators
 import Language.Java.Paragon.Parser.Helpers
 
@@ -213,53 +214,4 @@ localVarDecl = do
   t <- ttype
   varDs <- varDecls varDecl
   return (t, varDs)
-
--- Modifiers
-
--- | There are several syntax tree nodes that have a list of modifiers data field. 
--- This type synonym is for the nodes that have this gap to be filled in (by 'withModifiers').
--- When 'ModifiersFun' and 'withModifiers' are used, be careful to deal correctly with the
--- source span. Look at the example of how to fix it in existing parsing functions.
-type ModifiersFun a = [Modifier SrcSpan] -> a
-
--- | Takes a parser for an entity that expects modifiers before it.
--- Parses zero or more modifiers, runs a given parser which results in
--- a function of type 'ModifiersFun' and applies this function to modifiers.
-withModifiers :: P (ModifiersFun a) -> P a
-withModifiers pmf = do
-  mods <- list modifier
-  mf <- pmf
-  return $ mf mods
-
-modifier :: P (Modifier SrcSpan)
-modifier =
-      Public       <$> keywordWithSpan KW_Public
-  <|> Protected    <$> keywordWithSpan KW_Protected
-  <|> Private      <$> keywordWithSpan KW_Private
-  <|> Static       <$> keywordWithSpan KW_Static
-  <|> Abstract     <$> keywordWithSpan KW_Abstract
-  <|> Final        <$> keywordWithSpan KW_Final
-  <|> Native       <$> keywordWithSpan KW_Native
-  <|> Synchronized <$> keywordWithSpan KW_Synchronized
-  <|> Transient    <$> keywordWithSpan KW_Transient
-  <|> Volatile     <$> keywordWithSpan KW_Volatile
-  <|> StrictFP     <$> keywordWithSpan KW_Strictfp
-  -- Paragon specific
-  <|> Typemethod   <$> keywordWithSpan KW_P_Typemethod
-  <|> Reflexive    <$> keywordWithSpan KW_P_Reflexive
-  <|> Transitive   <$> keywordWithSpan KW_P_Transitive
-  <|> Symmetric    <$> keywordWithSpan KW_P_Symmetric
-  <|> Readonly     <$> keywordWithSpan KW_P_Readonly
-  <|> Notnull      <$> keywordWithSpan KW_P_Notnull
-  <|> (do startPos <- getStartPos
-          tok Question
-          p <- policy
-          endPos <- getEndPos
-          return $ Reads (mkSrcSpanFromPos startPos endPos) p)
-  <|> (do startPos <- getStartPos
-          tok Op_Bang
-          p <- policy
-          endPos <- getEndPos
-          return $ Writes (mkSrcSpanFromPos startPos endPos) p)
-  <?> "modifier"
 

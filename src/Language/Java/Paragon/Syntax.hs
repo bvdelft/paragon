@@ -10,6 +10,7 @@ module Language.Java.Paragon.Syntax
   , module Language.Java.Paragon.Syntax.Types
   , module Language.Java.Paragon.Syntax.Statements
   , module Language.Java.Paragon.Syntax.Expressions
+  , module Language.Java.Paragon.Syntax.Modifiers
   , module Language.Java.Paragon.Annotated
   ) where
 
@@ -19,6 +20,7 @@ import Language.Java.Paragon.Syntax.Names
 import Language.Java.Paragon.Syntax.Types
 import Language.Java.Paragon.Syntax.Statements
 import Language.Java.Paragon.Syntax.Expressions
+import Language.Java.Paragon.Syntax.Modifiers
 
 import Language.Java.Paragon.Annotated
 
@@ -97,34 +99,6 @@ data InterfaceDecl a = InterfaceDecl
   , intdInterfaces :: [ClassType a]    -- ^ Interfaces it extends.
   , intdBody       :: InterfaceBody a  -- ^ Interface body.
   } deriving (Show, Eq, Functor)
-
--- | Modifiers for declarations.
-data Modifier a
-  = Public    a     -- ^ public
-  | Protected a     -- ^ protected
-  | Private   a     -- ^ private
-  | Static    a     -- ^ static
-  | Abstract  a     -- ^ abstract
-  | Final     a     -- ^ final
-  | Native    a     -- ^ native
-  | Synchronized a  -- ^ synchronized
-  | Transient a     -- ^ transient
-  | Volatile  a     -- ^ volatile
-  | StrictFP  a     -- ^ strictfp
-
-  -- Paragon specific
-  | Typemethod a  -- ^ typemethod
-  | Reflexive  a  -- ^ reflexive
-  | Transitive a  -- ^ transitive
-  | Symmetric  a  -- ^ symmetric
-  | Readonly   a  -- ^ readonly
-  | Notnull    a  -- ^ notnull
-
-  | Reads      a (Policy a)  -- ^ ?
-  | Writes     a (Policy a)  -- ^ !
-
-  -- TODO: more Paragon modifiers
-  deriving (Show, Eq, Functor)
 
 data TypeParam a = TP
   deriving (Show, Eq, Functor)
@@ -216,7 +190,6 @@ $(deriveAnnotatedMany
   , ''TypeDecl
   , ''ClassDecl
   , ''InterfaceDecl
-  , ''Modifier
   , ''ClassBody
   , ''ClassBodyDecl
   , ''MemberDecl

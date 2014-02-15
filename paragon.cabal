@@ -58,6 +58,7 @@ Library
                         Language.Java.Paragon.Parser.Types
                         Language.Java.Paragon.Parser.Statements
                         Language.Java.Paragon.Parser.Expressions
+                        Language.Java.Paragon.Parser.Modifiers
                         Language.Java.Paragon.Parser.Separators
                         Language.Java.Paragon.Parser.Helpers
                         Language.Java.Paragon.SrcPos
@@ -66,6 +67,7 @@ Library
                         Language.Java.Paragon.Syntax.Types
                         Language.Java.Paragon.Syntax.Statements
                         Language.Java.Paragon.Syntax.Expressions
+                        Language.Java.Paragon.Syntax.Modifiers
   hs-source-dirs:       src
   ghc-options:          -Wall -Werror -O2 -rtsopts
 
