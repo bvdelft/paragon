@@ -29,7 +29,7 @@ instance Eq Message where
 -- Configuration
 
 testDir :: FilePath
-testDir = "test" </> "Language" </> "Java" </> "Paragon" </> "parser"
+testDir = "test" </> "parsertests"
 
 successDir :: FilePath
 successDir = testDir </> "success"
