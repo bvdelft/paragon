@@ -1,0 +1,3 @@
+"ClassDeclVoidMethodAssignMissSemiColon.para" (line 4, column 5):
+unexpected int
+expecting semicolon

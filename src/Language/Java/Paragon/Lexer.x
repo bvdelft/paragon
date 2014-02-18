@@ -126,7 +126,7 @@ tokens :-
   "}" { \p s -> TokWSpan CloseCurly  (posn p s) }
   ";" { \p s -> TokWSpan SemiColon   (posn p s) }
   "," { \p s -> TokWSpan Comma       (posn p s) }
-  "." { \p s -> TokWSpan Period      (posn p s) }
+  "." { \p s -> TokWSpan Dot         (posn p s) }
 
   -- Literals
   true  { \p s -> TokWSpan (BoolLit True)  (posn p s) }
@@ -290,7 +290,7 @@ data Token
     | CloseCurly
     | SemiColon
     | Comma
-    | Period
+    | Dot
 
     -- Literals
     | IntLit Integer
@@ -345,8 +345,8 @@ data Token
     -- Symbols
     | Question
     | Colon
-    | AtSign
     | Ellipsis
+    | AtSign
   deriving Eq
 
 -- | Token with it's source span.
@@ -355,6 +355,8 @@ data TokenWithSpan = TokWSpan
   , twsSrcSpan :: SrcSpan
   } deriving Eq
 
+-- | The Show instance for Token is used in parsing error messages.
+-- Don't use it for code pretty printing.
 instance Show Token where
   -- Keywords
   show KW_Abstract     = "abstract"
@@ -428,9 +430,11 @@ instance Show Token where
   show CloseSquare = "]"
   show OpenCurly   = "{"
   show CloseCurly  = "}"
-  show SemiColon   = ";"
-  show Comma       = ","
-  show Period      = "."
+  -- These are shown as words for more readable parsing error messages
+  -- because they are punctuation symbols
+  show SemiColon   = "semicolon"
+  show Comma       = "comma"
+  show Dot         = "dot"
   -- Literals
   show (IntLit i)      = show i
   show (LongLit l)     = show l
@@ -479,10 +483,12 @@ instance Show Token where
   show Op_RShiftAssign       = ">>="
   show Op_UnSignRShiftAssign = ">>>="
   -- Symbols
-  show Question = "?"
-  show Colon    = ":"
+  -- These are shown as words for more readable parsing error messages
+  -- because they are punctuation symbols
+  show Question = "question mark"
+  show Colon    = "colon"
+  show Ellipsis = "ellipsis"
   show AtSign   = "@"
-  show Ellipsis = "..."
 
 instance Show TokenWithSpan where
   show (TokWSpan t _) = show t

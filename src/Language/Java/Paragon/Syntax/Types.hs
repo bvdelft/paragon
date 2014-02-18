@@ -65,6 +65,12 @@ data ReturnType a =
   | Type (Type a)
   deriving (Show, Eq, Functor)
 
+-- | If given argument represents void or lock type - returns nothing.
+-- Otherwise - return Just type it represents.
+returnTypeToType :: ReturnType a -> Maybe (Type a)
+returnTypeToType (Type t) = Just t
+returnTypeToType        _ = Nothing
+
 $(deriveAnnotatedMany
   [ ''Type
   , ''PrimType

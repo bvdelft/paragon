@@ -29,7 +29,7 @@ instance Eq Message where
 -- Configuration
 
 testDir :: FilePath
-testDir = "test" </> "Language" </> "Java" </> "Paragon" </> "parser"
+testDir = "test" </> "parsertests"
 
 successDir :: FilePath
 successDir = testDir </> "success"
@@ -68,7 +68,6 @@ spec = do
           paragonId = Id (srcSpanFun 1 21 1 27) "paragon"
       in successCase fileName (CompilationUnit pdSrcSpan (Just $ PackageDecl pdSrcSpan (Name qIdSrcSpan paragonId PkgName (Just chalmersName))) [] [])
 
-    -- TODO: check correctness of name types
     it "parses single type import declaration" $
       let fileName = "ImportDeclSingle.para"
           srcSpanFun = SrcSpan fileName
@@ -636,23 +635,23 @@ spec = do
       it "given an interface declaration with misspelled modifier" $
         failureCase "InterfaceDeclModTypo"
 
-      -- Error message should be improved
       it "given a class declaration with single field declaration with missing name" $
         failureCase "ClassDeclSingleFieldMissName"
 
       it "given a class declaration with single field declaration with missing type" $
         failureCase "ClassDeclSingleFieldMissType"
 
-      -- Error message should be improved
       it "given a class declaration with single field declaration with missing semicolon" $
         failureCase "ClassDeclSingleFieldMissSemiColon"
 
       it "given a class declaration with single field declaration with modifier and missing type" $
         failureCase "ClassDeclSingleFieldModMissType"
 
-      -- Error message should be improved
       it "given a class declaration with single field and comma" $
         failureCase "ClassDeclSingleFieldComma"
+
+      it "given a class declaration with multiple fields and missing comma" $
+        failureCase "ClassDeclMultFieldsMissComma"
 
       it "given a class declaration with void method with missing name with semicolon body" $
        failureCase "ClassDeclVoidMethodSemiColonMissName"
@@ -705,11 +704,12 @@ spec = do
       it "given a class declaration with void method with assignment with missing semicolon" $
         failureCase "ClassDeclVoidMethodAssignMissSemiColon"
 
-      -- Error message should be improved
+      it "given a class declaration with void method with assignment with modifier" $
+        failureCase "ClassDeclVoidMethodAssignMod"
+
       it "given a class declaration with single field declaration with initializer with missing expression" $
         failureCase "ClassDeclSingleFieldInitMissExp"
 
-      -- Error message should be improved
       it "given a class declaration with single field declaration with initializer with missing semicolon" $
         failureCase "ClassDeclSingleFieldInitMissSemiColon"
 
@@ -717,18 +717,15 @@ spec = do
       it "given a class declaration with void method with single local variable declaration with initializer with missing semicolon" $
         failureCase "ClassDeclSingleLocalVarInitMissSemiColon"
 
-      -- Error message should be improved
       it "given a class declaration with single policy field with missing opening brace in initializer" $
         failureCase "ClassDeclSinglePolicyFieldMissOpenBrace"
 
-      -- Error message should be improved
       it "given a class declaration with single policy field with missing closing brace in initializer" $
         failureCase "ClassDeclSinglePolicyFieldMissCloseBrace"
 
       it "given a class declaration with single policy field with missing colon in empty initializer" $
         failureCase "ClassDeclSinglePolicyFieldEmptyMissColon"
 
-      -- Error message should be improved
       it "given a class declaration with single policy field with missing colon after clause head in initializer" $
         failureCase "ClassDeclSinglePolicyFieldClauseHeadMissColon"
 

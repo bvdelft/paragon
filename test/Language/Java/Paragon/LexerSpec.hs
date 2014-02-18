@@ -67,7 +67,7 @@ spec = do
     it "recognizes all separators" $
       map twsTok (lexer "(    )    {    }    [    ]    ;    ,    .")
       `shouldBe`
-      [ OpenParen, CloseParen, OpenCurly, CloseCurly, OpenSquare, CloseSquare, SemiColon, Comma, Period ]
+      [ OpenParen, CloseParen, OpenCurly, CloseCurly, OpenSquare, CloseSquare, SemiColon, Comma, Dot ]
 
     it "recognizes boolean literals and null" $
       map twsTok (lexer "true false null") `shouldBe` [ BoolLit True, BoolLit False, NullLit ]

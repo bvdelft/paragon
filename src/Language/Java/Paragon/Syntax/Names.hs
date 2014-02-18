@@ -21,19 +21,19 @@ data Id a = Id
   , idIdent :: String  -- ^ Identifier's string.
   } deriving (Show, Eq, Functor, Ord)
 
--- | Qualified name. A period-separated list of identifiers.
+-- | Qualified name. A dot-separated list of identifiers.
 data Name a = Name
   { nameAnn    :: a               -- ^ Annotation.
   , nameId     :: Id a            -- ^ Identifier.
   , nameType   :: NameType        -- ^ Type of the name.
-  , namePrefix :: Maybe (Name a)  -- ^ Possibly, name part before the period.
+  , namePrefix :: Maybe (Name a)  -- ^ Possibly, name part before the dot.
   } deriving (Show, Eq, Functor)
 
 instance Unparse (Name a) where
   unparse name =
     case namePrefix name of
-      Nothing  -> text $ show (idIdent (nameId name))
-      Just pre -> unparse pre <> text "." <> text (show (idIdent (nameId name)))
+      Nothing  -> text $ idIdent (nameId name)
+      Just pre -> unparse pre <> text "." <> text (idIdent (nameId name))
 
 -- | Types of the names, e.g. expression, method, type etc.
 data NameType = ExpName           -- ^ Expression name.

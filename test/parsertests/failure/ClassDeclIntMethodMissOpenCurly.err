@@ -1,0 +1,3 @@
+"ClassDeclIntMethodMissOpenCurly.para" (line 2, column 11):
+unexpected }
+expecting semicolon or {

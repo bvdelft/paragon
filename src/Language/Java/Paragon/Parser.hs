@@ -20,6 +20,7 @@ import Language.Java.Paragon.Parser.Names
 import Language.Java.Paragon.Parser.Types
 import Language.Java.Paragon.Parser.Statements
 import Language.Java.Paragon.Parser.Expressions
+import Language.Java.Paragon.Parser.Modifiers
 import Language.Java.Paragon.Parser.Separators
 import Language.Java.Paragon.Parser.Helpers
 
@@ -62,12 +63,11 @@ importDecl = do
     keyword KW_Import
     isStatic <- bopt $ keyword KW_Static
     pkgTypeName <- name ambigName <?> "package/type name"
-    hasStar <- bopt $ period >> (tok Op_Star <?> "* or identifier")
+    hasStar <- bopt $ dot >> (tok Op_Star <?> "* or identifier")
     semiColon
     endPos <- getEndPos
     return $ mkImportDecl isStatic hasStar (mkSrcSpanFromPos startPos endPos) pkgTypeName
     <?> "import declaration"
-    -- TODO: check correctness of name types
   where mkImportDecl False False sp n = SingleTypeImport     sp (typeName $ flattenName n)
         mkImportDecl False True  sp n = TypeImportOnDemand   sp (pkgOrTypeName $ flattenName n)
         mkImportDecl True  False sp n = SingleStaticImport   sp (mkSingleStaticImport n)
@@ -137,25 +137,52 @@ classBodyDecl = withModifiers (do
   <?> "class body declaration"
 
 memberDeclModsFun :: P (ModifiersFun (MemberDecl SrcSpan))
-memberDeclModsFun = try (fieldDeclModsFun varDecl)
-                <|> methodDeclModsFun
-
-fieldDeclModsFun :: P (VarDecl SrcSpan) -> P (ModifiersFun (MemberDecl SrcSpan))
-fieldDeclModsFun varDeclFun = do
+memberDeclModsFun = do
   startPos <- getStartPos
-  t <- ttype
-  varDs <- varDecls varDeclFun
+  retT <- returnType  -- parse the most general type
+  case returnTypeToType retT of
+    Just t  -> do
+      -- member can be either field or method
+      -- continue with identifier
+      idStartPos <- getStartPos
+      i <- ident <?> "field/method name"
+      fieldDeclAfterTypeIdModsFun t startPos i idStartPos (varDecl "field") <|>
+        methodDeclAfterTypeIdModsFun retT startPos i
+    -- member can only be method (void or lock return type)
+    Nothing -> methodDeclAfterTypeModsFun retT startPos
+
+-- | Continues to parse field declaration after type and first identifier have been parsed.
+fieldDeclAfterTypeIdModsFun :: Type SrcSpan -> SrcPos
+                            -> Id SrcSpan -> SrcPos
+                            -> P (VarDecl SrcSpan)
+                            -> P (ModifiersFun (MemberDecl SrcSpan))
+fieldDeclAfterTypeIdModsFun t startPos varId varStartPos varDeclFun = do
+  -- continue to parse first VarDecl
+  vInit <- opt $ tok Op_Assign >> varInit
+  varEndPos <- getEndPos
+  let varD = VarDecl (mkSrcSpanFromPos varStartPos varEndPos) varId vInit
+
+  -- try other VarDecls
+  hasComma <- bopt comma
+  varDs <- if hasComma
+             then varDecls varDeclFun
+             else return []
+
   semiColon
   endPos <- getEndPos
   return $ \mods ->
     let startPos' = getModifiersStartPos mods startPos
-    in FieldDecl (mkSrcSpanFromPos startPos' endPos) mods t varDs
+    in FieldDecl (mkSrcSpanFromPos startPos' endPos) mods t (varD:varDs)
 
-methodDeclModsFun :: P (ModifiersFun (MemberDecl SrcSpan))
-methodDeclModsFun = do
-  startPos <- getStartPos
-  retT <- returnType
+-- | Continues to parse method declaration after return type has been parsed.
+methodDeclAfterTypeModsFun :: ReturnType SrcSpan -> SrcPos -> P (ModifiersFun (MemberDecl SrcSpan))
+methodDeclAfterTypeModsFun retT startPos = do
   mId <- ident <?> "method name"
+  methodDeclAfterTypeIdModsFun retT startPos mId
+
+-- | Continues to parse method declaration after return type and method identifier have been parsed.
+methodDeclAfterTypeIdModsFun :: ReturnType SrcSpan -> SrcPos -> Id SrcSpan -> P (ModifiersFun (MemberDecl SrcSpan))
+methodDeclAfterTypeIdModsFun retT startPos mId = do
   openParen
   closeParen
   body <- methodBody
@@ -169,10 +196,10 @@ methodDeclModsFun = do
 varDecls :: P (VarDecl SrcSpan) -> P [VarDecl SrcSpan]
 varDecls varDeclFun = varDeclFun `sepBy1` comma
 
-varDecl :: P (VarDecl SrcSpan)
-varDecl = do
+varDecl :: String -> P (VarDecl SrcSpan)
+varDecl desc = do
   startPos <- getStartPos
-  varId <- ident <?> "variable/field name"
+  varId <- ident <?> desc ++ " name"
   vInit <- opt $ tok Op_Assign >> varInit
   endPos <- getEndPos
   return $ VarDecl (mkSrcSpanFromPos startPos endPos) varId vInit
@@ -196,71 +223,21 @@ block = do
   return $ Block (mkSrcSpanFromPos startPos endPos) blStmts
 
 blockStmt :: P (BlockStmt SrcSpan)
-blockStmt =
-  (withModifiers (try $ do
-      startPos <- getStartPos
-      (t, varDs) <- localVarDecl
-      semiColon
-      endPos <- getEndPos
-      return $ \mods ->
-        let startPos' = getModifiersStartPos mods startPos
-        in LocalVars (mkSrcSpanFromPos startPos' endPos) mods t varDs)
-    <?> "local variable declaration")
-    <|>
-  (BlockStmt <$> stmt <?> "statement")
+blockStmt = do
+  startPos <- getStartPos
+  mods <- list modifier <?> "local variable declaration"  -- fixing error message
+  if not (null mods)
+    then localVarDecl startPos mods
+    else try (localVarDecl startPos mods)
+           <|>
+         BlockStmt <$> stmt <?> "statement"
 
-localVarDecl :: P (Type SrcSpan, [VarDecl SrcSpan])
-localVarDecl = do
+localVarDecl :: SrcPos -> [Modifier SrcSpan] -> P (BlockStmt SrcSpan)
+localVarDecl startPos mods = do
   t <- ttype
-  varDs <- varDecls varDecl
-  return (t, varDs)
-
--- Modifiers
-
--- | There are several syntax tree nodes that have a list of modifiers data field. 
--- This type synonym is for the nodes that have this gap to be filled in (by 'withModifiers').
--- When 'ModifiersFun' and 'withModifiers' are used, be careful to deal correctly with the
--- source span. Look at the example of how to fix it in existing parsing functions.
-type ModifiersFun a = [Modifier SrcSpan] -> a
-
--- | Takes a parser for an entity that expects modifiers before it.
--- Parses zero or more modifiers, runs a given parser which results in
--- a function of type 'ModifiersFun' and applies this function to modifiers.
-withModifiers :: P (ModifiersFun a) -> P a
-withModifiers pmf = do
-  mods <- list modifier
-  mf <- pmf
-  return $ mf mods
-
-modifier :: P (Modifier SrcSpan)
-modifier =
-      Public       <$> keywordWithSpan KW_Public
-  <|> Protected    <$> keywordWithSpan KW_Protected
-  <|> Private      <$> keywordWithSpan KW_Private
-  <|> Static       <$> keywordWithSpan KW_Static
-  <|> Abstract     <$> keywordWithSpan KW_Abstract
-  <|> Final        <$> keywordWithSpan KW_Final
-  <|> Native       <$> keywordWithSpan KW_Native
-  <|> Synchronized <$> keywordWithSpan KW_Synchronized
-  <|> Transient    <$> keywordWithSpan KW_Transient
-  <|> Volatile     <$> keywordWithSpan KW_Volatile
-  <|> StrictFP     <$> keywordWithSpan KW_Strictfp
-  -- Paragon specific
-  <|> Typemethod   <$> keywordWithSpan KW_P_Typemethod
-  <|> Reflexive    <$> keywordWithSpan KW_P_Reflexive
-  <|> Transitive   <$> keywordWithSpan KW_P_Transitive
-  <|> Symmetric    <$> keywordWithSpan KW_P_Symmetric
-  <|> Readonly     <$> keywordWithSpan KW_P_Readonly
-  <|> Notnull      <$> keywordWithSpan KW_P_Notnull
-  <|> (do startPos <- getStartPos
-          tok Question
-          p <- policy
-          endPos <- getEndPos
-          return $ Reads (mkSrcSpanFromPos startPos endPos) p)
-  <|> (do startPos <- getStartPos
-          tok Op_Bang
-          p <- policy
-          endPos <- getEndPos
-          return $ Writes (mkSrcSpanFromPos startPos endPos) p)
-  <?> "modifier"
+  varDs <- varDecls (varDecl "variable")
+  semiColon
+  endPos <- getEndPos            
+  return $ LocalVars (mkSrcSpanFromPos startPos endPos) mods t varDs
+  <?> "local variable declaration"
 
