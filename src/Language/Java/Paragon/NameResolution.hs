@@ -27,7 +27,7 @@ resolveNames cu = do
   let javaExpnMap = mkPkgExpansion "java"
   -- 1. Expand definitions from java.lang
   (_, javaLangExpnMap) <- buildMapFromImportName $
-       TypeImportOnDemand defaultSpan (pkgOrTypeName [Id defaultSpan "java", Id defaultSpan "lang"])
+       TypeImportOnDemand defaultSpan (pkgName [Id defaultSpan "java", Id defaultSpan "lang"])
        -- Make package expansion map that contains only 'java'.
   -- 2. Expand definitions from imports
   (imps, impExpnMap)  <- buildMapFromImports (cuImportDecls cu)
@@ -37,7 +37,9 @@ resolveNames cu = do
   pkgExpnMap           <- buildMapFromPkg (cuPkgDecl cu)
   -- Collect all the 'other' definitions
   let jipExpnMap = expansionUnion [javaExpnMap, javaLangExpnMap, 
-                                   impExpnMap, piExpnMap, pkgExpnMap]
+                                   impExpnMap, piExpnMap, pkgExpnMap]                                  
+  when (length (cuTypeDecls cu) == 0) $
+    failE $ unsupportedError "type definition is missing for compilation unit" defaultSpan
   -- Only supporting one type / compilation unit:
   when (length (cuTypeDecls cu) /= 1) $
     failE $ unsupportedError "multiple types per compilation unit" defaultSpan
