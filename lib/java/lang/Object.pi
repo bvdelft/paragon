@@ -1,0 +1,5 @@
+public native class Object {
+
+  public Object(){}
+
+}
