@@ -51,8 +51,10 @@ Library
                         Language.Java.Paragon.NameResolution.ExpansionRecord
                         Language.Java.Paragon.NameResolution.Helpers
                         Language.Java.Paragon.NameResolution.Resolvers
+                        Language.Java.Paragon.NameResolution.Resolvers.Expressions
                         Language.Java.Paragon.NameResolution.Resolvers.Names
                         Language.Java.Paragon.NameResolution.Resolvers.Types
+                        Language.Java.Paragon.NameResolution.Resolvers.Statements
                         Language.Java.Paragon.Parac
                         Language.Java.Paragon.Parser
                         Language.Java.Paragon.Parser.Names
