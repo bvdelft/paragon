@@ -4,7 +4,11 @@ import Test.Hspec
 
 import Language.Java.Paragon.NameResolution
 
-import System.FilePath ((</>))
+import Control.Exception (tryJust)
+import Control.Monad (guard)
+import System.Environment (getEnv)
+import System.FilePath ((</>), splitSearchPath)
+import System.IO.Error (isDoesNotExistError)
 
 import Language.Java.Paragon.Monad.Base
 import Language.Java.Paragon.Monad.PiReader
@@ -18,8 +22,16 @@ main = hspec spec
 
 -- Configuration
 
-piPath :: [String]
-piPath = ["/scratch/paragon/paragonDARCS/lib"]
+getPIPATH :: IO [String]
+getPIPATH = do
+  -- guard indicates that the only expected exception is isDoesNotExistError
+  -- returns an Either type, left exception, right path
+  ePpStr <- tryJust (guard . isDoesNotExistError) $ getEnv "PIPATH"
+  -- splitSearchPath comes from System.FilePath, splitting String into filepaths
+  -- In case the PIPATH variable did not exist, the empty list is used.
+  -- (either takes two functions, const makes a function ignoring the other
+  -- argument, i.e. the exception is ignored).
+  return $ splitSearchPath $ either (const []) id ePpStr
 
 testDir :: FilePath
 testDir = "test" </> "namerestests"
@@ -41,6 +53,7 @@ successCase :: String -> AST SrcSpan -> IO ()
 successCase fileName result = do
   input <- successRead fileName
   let (Right ast) = parse input fileName
+  piPath <- getPIPATH
   (Right nrAst) <- runBaseM [] (liftToBaseM piPath (resolveNames ast))
   nrAst `shouldBe` result
 
