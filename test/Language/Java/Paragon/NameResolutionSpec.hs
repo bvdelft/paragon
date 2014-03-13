@@ -78,30 +78,6 @@ afterAltering ast targetAst = do
   (Right nrAst) <- runBaseM [] (liftToBaseM piPath (resolveNames ast))
   nrAst `shouldBe` targetAst
 
--- Helpers for modifying AST
-
-type ASTModifier a b = (a -> a) -> Int -> AST b -> AST b
-
--- | Modify the i-th declaration in the body. Assumes there is only one
--- classTypeDecl.
-modifyBodyDecl :: ASTModifier (ClassBodyDecl a) a
-modifyBodyDecl f i ast =
-  let (ClassTypeDecl classDecl) = head $ cuTypeDecls ast
-      classBody = cdBody classDecl
-      (xs,y:ys) = splitAt i (cbDecls classBody)
-  in ast { cuTypeDecls = [ClassTypeDecl classDecl { cdBody  = classBody { cbDecls = xs ++ (f y:ys)} }] }
-
-modifyFieldDeclPrefix :: ASTModifier (Maybe (Name a)) a
-modifyFieldDeclPrefix f = modifyBodyDecl $
-  \(MemberDecl fieldDecl@(FieldDecl {})) ->
-    let (RefType (ClassRefType ct)) = fieldDeclType fieldDecl
-        name = ctName ct
-    in MemberDecl (fieldDecl {
-         fieldDeclType = (RefType (ClassRefType 
-           ct { ctName = name { namePrefix = f (namePrefix name) } } 
-          ))
-       })                
-
 -- For debugging when a test fails
 
 getFailing :: String -> IO [Error]
@@ -141,194 +117,110 @@ spec = do
     it "resolves class declaration with void method with single local variable declaration with modifier" $
       noAltering "ClassDeclVoidMethodSingleLocalVarDeclMod.para"
     it "resolves class declaration with void method with multiple local variable declarations" $
-      noAltering "ClassDeclVoidMethodMultLocalVarDecls.para"  
+      noAltering "ClassDeclVoidMethodMultLocalVarDecls.para"
+    it "resolves class declaration with single field declaration of primitive type with literal initializer" $
+      noAltering "ClassDeclSinglePrimFieldInit.para"
+    it "resolves class declaration with multiple field declarations of primitive types with literal initializers" $
+      noAltering "ClassDeclMultPrimFieldsInit.para"
+    it "parses class declaration with single high policy field" $
+      noAltering "ClassDeclSingleHighPolicyField.para"
+    it "parses class declaration with single field with reads policy modifier" $
+      noAltering "ClassDeclSingleFieldReadsMod.para"
+    it "parses class declaration with single field with writes policy modifier" $
+      noAltering "ClassDeclSingleFieldWritesMod.para"
           
     -- Success, resolving does alter AST
     
-    it "parses class declaration with single field declaration with reference type" $ do      
+    it "resolves class declaration with single field declaration with reference type" $ do      
       ast <- parseFile "ClassDeclSingleFieldRefType.para"
-      -- construct new name prefix
-      let newPrefix = mkName (\x -> \_ -> x) PkgName [Id defaultSpan "java", Id defaultSpan "lang"]
-      let newAst = modifyFieldDeclPrefix (const $ Just newPrefix) 0 ast
-      afterAltering ast newAst
-{-
-          srcSpanFun = SrcSpan fileName
-          cdSrcSpan = srcSpanFun 1 1 3 1
-          cbSrcSpan = srcSpanFun 1 9 3 1
-          fdSrcSpan = srcSpanFun 2 3 2 11
-          cbDecl = MemberDecl fieldDecl
-          tSrcSpan = srcSpanFun 2 3 2 8
-          varId = Id varSrcSpan "x"
-          varSrcSpan = srcSpanFun 2 10 2 10
-          varDecl = VarDecl varSrcSpan varId Nothing
-          tName = Name tSrcSpan (Id tSrcSpan "Object") TypeName Nothing
-          fieldDecl = FieldDecl fdSrcSpan [] (RefType (ClassRefType (ClassType tSrcSpan tName []))) [varDecl]
-          cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
-          cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+      let newPrefix = mkName const PkgName [Id defaultSpan "java", Id defaultSpan "lang"]
+      let transform = modifyBodyDecl 0 $ modifyFieldDeclType $ 
+                        modifyRefTypePrefix (const $ Just newPrefix)
+      afterAltering ast (transform ast)
+    it "resolves class declaration with single field declaration of reference type with null initializer" $ do      
+      ast <- parseFile "ClassDeclSingleRefFieldInit.para"
+      let newPrefix = mkName const PkgName [Id defaultSpan "java", Id defaultSpan "lang"]
+      let transform = modifyBodyDecl 0 $ modifyFieldDeclType $ 
+                        modifyRefTypePrefix (const $ Just newPrefix)
+      afterAltering ast (transform ast)
+    it "resolves class declaration with void method with single local variable declaration of reference type with null initializer" $ do
+      ast <- parseFile "ClassDeclVoidMethodSingleRefLocalVarInit.para"
+      let newPrefix = mkName const PkgName [Id defaultSpan "java", Id defaultSpan "lang"]
+      let transform = modifyBodyDecl 0 $ modifyMethodBlockStmt 0 $
+                        modifyLocalVarsType $ modifyRefTypePrefix (const $ Just newPrefix)
+      afterAltering ast (transform ast)
+    it "resolves class declaration with single low policy field" $ do
+      ast <- parseFile "ClassDeclSingleLowPolicyField.para"
+      let newPrefix = mkName const PkgName [Id defaultSpan "java", Id defaultSpan "lang"]
+      let transform = modifyBodyDecl 0 $ modifyFieldDeclInitExp 0 $
+                        modifyPolicyClause 0 $ modifyDeclHeadRef $
+                          modifyRefTypePrefix (const $ Just newPrefix)
+      afterAltering ast (transform ast)
 
-    it "parses class declaration with single field declaration of primitive type with literal initializer" $
-      let fileName = "ClassDeclSinglePrimFieldInit.para"
-          srcSpanFun = SrcSpan fileName
-          cdSrcSpan = srcSpanFun 1 1 3 1
-          cbSrcSpan = srcSpanFun 1 9 3 1
-          fdSrcSpan = srcSpanFun 2 3 2 19
-          cbDecl = MemberDecl fieldDecl
-          tSrcSpan = srcSpanFun 2 3 2 9
-          fieldDecl = FieldDecl fdSrcSpan [] (PrimType (BooleanT tSrcSpan)) [varDecl]
-          varId = Id varSrcSpan "b"
-          varSrcSpan = srcSpanFun 2 11 2 11
-          eSrcSpan = srcSpanFun 2 15 2 18
-          varDecl = VarDecl (srcSpanFun 2 11 2 18) varId (Just $ InitExp (Lit (Boolean eSrcSpan True)))
-          cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
-          cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+-- Helpers for modifying AST. Some assumption here, e.g. only altering RefType,
+-- not PrimType.
 
-    it "parses class declaration with single field declaration of reference type with null initializer" $
-      let fileName = "ClassDeclSingleRefFieldInit.para"
-          srcSpanFun = SrcSpan fileName
-          cdSrcSpan = srcSpanFun 1 1 3 1
-          cbSrcSpan = srcSpanFun 1 9 3 1
-          fdSrcSpan = srcSpanFun 2 3 2 18
-          cbDecl = MemberDecl fieldDecl
-          tSrcSpan = srcSpanFun 2 3 2 8
-          tName = Name tSrcSpan (Id tSrcSpan "Object") TypeName Nothing
-          fieldDecl = FieldDecl fdSrcSpan [] (RefType (ClassRefType (ClassType tSrcSpan tName []))) [varDecl]
-          varId = Id varSrcSpan "x"
-          varSrcSpan = srcSpanFun 2 10 2 10
-          eSrcSpan = srcSpanFun 2 14 2 17
-          varDecl = VarDecl (srcSpanFun 2 10 2 17) varId (Just $ InitExp (Lit (Null eSrcSpan)))
-          cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
-          cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+type ASTModifier a b = (a -> a) -> b -> b
 
-    it "parses class declaration with multiple field declarations of primitive types with literal initializers" $
-      let fileName = "ClassDeclMultPrimFieldsInit.para"
-          srcSpanFun = SrcSpan fileName
-          cdSrcSpan = srcSpanFun 1 1 3 1
-          cbSrcSpan = srcSpanFun 1 9 3 1
-          fdSrcSpan = srcSpanFun 2 3 2 19
-          cbDecl = MemberDecl fieldDecl
-          tSrcSpan = srcSpanFun 2 3 2 5
-          fieldDecl = FieldDecl fdSrcSpan [] (PrimType (IntT tSrcSpan)) [varDecl1, varDecl2]
-          varId1 = Id varSrcSpan1 "x"
-          varSrcSpan1 = srcSpanFun 2 7 2 7
-          eSrcSpan1 = srcSpanFun 2 11 2 11
-          varDecl1 = VarDecl (srcSpanFun 2 7 2 11) varId1 (Just $ InitExp (Lit (Int eSrcSpan1 1)))
-          varId2 = Id varSrcSpan2 "y"
-          varSrcSpan2 = srcSpanFun 2 14 2 14
-          eSrcSpan2 = srcSpanFun 2 18 2 18
-          varDecl2 = VarDecl (srcSpanFun 2 14 2 18) varId2 (Just $ InitExp (Lit (Int eSrcSpan2 2)))
-          cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
-          cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+-- | Modify the i-th declaration in the body. Assumes there is only one
+-- classTypeDecl.
+modifyBodyDecl :: Int -> ASTModifier (ClassBodyDecl a) (AST a)
+modifyBodyDecl i f ast =
+  let (ClassTypeDecl classDecl) = head $ cuTypeDecls ast
+      classBody = cdBody classDecl
+      (xs,y:ys) = splitAt i (cbDecls classBody)
+      newDecls  = xs ++ (f y:ys)
+      newBody   = classBody { cbDecls = newDecls }
+  in ast { cuTypeDecls = [ClassTypeDecl classDecl { cdBody = newBody} ] }
 
-    it "parses class declaration with void method with single local variable declaration of reference type with null initializer" $
-      let fileName = "ClassDeclVoidMethodSingleRefLocalVarInit.para"
-          srcSpanFun = SrcSpan fileName
-          cdSrcSpan = srcSpanFun 1 1 5 1
-          cbSrcSpan = srcSpanFun 1 9 5 1
-          mdSrcSpan = srcSpanFun 2 3 4 3
-          cbDecl = MemberDecl methodDecl
-          mId = Id (srcSpanFun 2 8 2 8) "f"
-          bodySrcSpan = srcSpanFun 2 12 4 3
-          stmtSrcSpan = srcSpanFun 3 5 3 20
-          tSrcSpan = srcSpanFun 3 5 3 10
-          tName = Name tSrcSpan (Id tSrcSpan "Object") TypeName Nothing
-          objectT = RefType (ClassRefType (ClassType tSrcSpan tName []))
-          varId = Id varSrcSpan "x"
-          varSrcSpan = srcSpanFun 3 12 3 12
-          eSrcSpan = srcSpanFun 3 16 3 19
-          varDecl = VarDecl (srcSpanFun 3 12 3 19) varId (Just $ InitExp (Lit (Null eSrcSpan)))
-          body = MethodBody bodySrcSpan (Just (Block bodySrcSpan [LocalVars stmtSrcSpan [] objectT [varDecl]]))
-          methodDecl = MethodDecl mdSrcSpan [] [] (VoidType (srcSpanFun 2 3 2 6)) mId [] body
-          cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
-          cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+modifyRefTypePrefix :: ASTModifier (Maybe (Name a)) (RefType a)
+modifyRefTypePrefix f (ClassRefType ct) =
+  let name    = ctName ct
+      newName = name { namePrefix = f (namePrefix name) }
+  in ClassRefType ct { ctName = newName }
 
-    it "parses class declaration with single low policy field" $
-      let fileName = "ClassDeclSingleLowPolicyField.para"
-          srcSpanFun = SrcSpan fileName
-          cdSrcSpan = srcSpanFun 1 1 3 1
-          cbSrcSpan = srcSpanFun 1 9 3 1
-          fdSrcSpan = srcSpanFun 2 3 2 43
-          cbDecl = MemberDecl fieldDecl
-          tSrcSpan = srcSpanFun 2 16 2 21
-          mods = [Public $ srcSpanFun 2 3 2 8, Final $ srcSpanFun 2 10 2 14]
-          fieldDecl = FieldDecl fdSrcSpan mods (PrimType (PolicyT tSrcSpan)) [varDecl]
-          varId = Id varSrcSpan "low"
-          varSrcSpan = srcSpanFun 2 23 2 25
-          eSrcSpan = srcSpanFun 2 29 2 42
-          cl = Clause (srcSpanFun 2 31 2 40) [] clHead []
-          clHead = ClauseDeclHead clVarDecl
-          clVarTSrcSpan = srcSpanFun 2 31 2 36
-          clVarTName = Name clVarTSrcSpan (Id clVarTSrcSpan "Object") TypeName Nothing
-          clVarType = ClassRefType (ClassType clVarTSrcSpan clVarTName [])
-          clVarDeclSrcSpan = srcSpanFun 2 31 2 38
-          clVarDecl = ClauseVarDecl clVarDeclSrcSpan clVarType (Id (srcSpanFun 2 38 2 38) "x")
-          policyE = PolicyExp (PolicyLit eSrcSpan [cl])
-          varDecl = VarDecl (srcSpanFun 2 23 2 42) varId (Just $ InitExp policyE)
-          cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
-          cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+modifyFieldDeclType :: ASTModifier (RefType a) (ClassBodyDecl a)
+modifyFieldDeclType f (MemberDecl fieldDecl) = 
+  let (RefType rt) = fieldDeclType fieldDecl
+      rt' = f rt
+  in MemberDecl fieldDecl { fieldDeclType = RefType rt' }
 
-    it "parses class declaration with single high policy field" $
-      let fileName = "ClassDeclSingleHighPolicyField.para"
-          srcSpanFun = SrcSpan fileName
-          cdSrcSpan = srcSpanFun 1 1 3 1
-          cbSrcSpan = srcSpanFun 1 9 3 1
-          fdSrcSpan = srcSpanFun 2 3 2 33
-          cbDecl = MemberDecl fieldDecl
-          tSrcSpan = srcSpanFun 2 16 2 21
-          mods = [Public $ srcSpanFun 2 3 2 8, Final $ srcSpanFun 2 10 2 14]
-          fieldDecl = FieldDecl fdSrcSpan mods (PrimType (PolicyT tSrcSpan)) [varDecl]
-          varId = Id varSrcSpan "high"
-          varSrcSpan = srcSpanFun 2 23 2 26
-          eSrcSpan = srcSpanFun 2 30 2 32
-          policyE = PolicyExp (PolicyLit eSrcSpan [])
-          varDecl = VarDecl (srcSpanFun 2 23 2 32) varId (Just $ InitExp policyE)
-          cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
-          cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+modifyLocalVarsType :: ASTModifier (RefType a) (BlockStmt a)
+modifyLocalVarsType f localVars =
+  let (RefType rt) = localVarsType localVars
+  in localVars { localVarsType = RefType $ f rt }
 
-    it "parses class declaration with single field with reads policy modifier" $
-      let fileName = "ClassDeclSingleFieldReadsMod.para"
-          srcSpanFun = SrcSpan fileName
-          cdSrcSpan = srcSpanFun 1 1 3 1
-          cbSrcSpan = srcSpanFun 1 9 3 1
-          fdSrcSpan = srcSpanFun 2 3 2 13
-          cbDecl = MemberDecl fieldDecl
-          tSrcSpan = srcSpanFun 2 8 2 10
-          mods = [Reads (srcSpanFun 2 3 2 6) p]
-          pSrcSpan = srcSpanFun 2 4 2 6
-          p = PolicyExp (PolicyLit pSrcSpan [])
-          fieldDecl = FieldDecl fdSrcSpan mods (PrimType (IntT tSrcSpan)) [varDecl]
-          varId = Id varSrcSpan "x"
-          varSrcSpan = srcSpanFun 2 12 2 12
-          varDecl = VarDecl varSrcSpan varId Nothing
-          cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
-          cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+-- | Modify the i-th statement in this method
+modifyMethodBlockStmt :: Int -> ASTModifier (BlockStmt a) (ClassBodyDecl a)
+modifyMethodBlockStmt i f (MemberDecl methodDecl) =
+  let body = methodDeclBody methodDecl
+      bodyBlock = methodBodyBlock body
+  in case bodyBlock of
+       Just block -> let (xs,y:ys) = splitAt i (blockAnnStmts block)
+                         newBlock  = block { blockAnnStmts = xs ++ (f y:ys) }
+                     in (MemberDecl methodDecl { methodDeclBody =
+                           body { methodBodyBlock = Just newBlock } } )
+       Nothing    -> (MemberDecl methodDecl) 
 
-    it "parses class declaration with single field with writes policy modifier" $
-      let fileName = "ClassDeclSingleFieldWritesMod.para"
-          srcSpanFun = SrcSpan fileName
-          cdSrcSpan = srcSpanFun 1 1 3 1
-          cbSrcSpan = srcSpanFun 1 9 3 1
-          fdSrcSpan = srcSpanFun 2 3 2 13
-          cbDecl = MemberDecl fieldDecl
-          tSrcSpan = srcSpanFun 2 8 2 10
-          mods = [Writes (srcSpanFun 2 3 2 6) p]
-          pSrcSpan = srcSpanFun 2 4 2 6
-          p = PolicyExp (PolicyLit pSrcSpan [])
-          fieldDecl = FieldDecl fdSrcSpan mods (PrimType (IntT tSrcSpan)) [varDecl]
-          varId = Id varSrcSpan "x"
-          varSrcSpan = srcSpanFun 2 12 2 12
-          varDecl = VarDecl varSrcSpan varId Nothing
-          cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
-          cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
--}
+modifyFieldDeclInitExp :: Int -> ASTModifier (Exp a) (ClassBodyDecl a)
+modifyFieldDeclInitExp i f (MemberDecl fieldDecl) = 
+  let (xs,y:ys) = splitAt i (fieldDeclVarDecls fieldDecl)
+      newInit   = fmap (\x -> x { varInitExp = f (varInitExp x) }) (varDeclInit y)
+      newVarD   = xs ++ (y { varDeclInit = newInit }:ys)
+  in MemberDecl fieldDecl { fieldDeclVarDecls = newVarD }
+
+modifyPolicyClause :: Int -> ASTModifier (Clause a) (Exp a)
+modifyPolicyClause i f (PolicyExp polExp) =
+  let (xs,y:ys) = splitAt i (policyClauses polExp)
+  in PolicyExp polExp { policyClauses = xs ++ (f y:ys) }
+modifyPolicyClause _ _ _ = error "Incorrect call by test: modifyPolicyClause"
+
+modifyDeclHeadRef :: ASTModifier (RefType a) (Clause a)
+modifyDeclHeadRef f clause =
+  let (ClauseDeclHead hd) = clauseHead clause
+      nt = f (clauseVarDeclType hd)
+  in clause { clauseHead = ClauseDeclHead hd { clauseVarDeclType = nt } }
+
 {- Fail -- and supposed to do so
     it "resolves an empty program" $ noAltering "Empty.para"
     it "parses class declaration with void method with single assignment expression statement with literal" $

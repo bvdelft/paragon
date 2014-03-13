@@ -8,6 +8,7 @@ import Language.Java.Paragon.Syntax.Expressions
 
 import Language.Java.Paragon.NameResolution.Expansion
 import Language.Java.Paragon.NameResolution.Resolvers.Names
+import Language.Java.Paragon.NameResolution.Resolvers.Types
 
 rnExp :: Resolve Exp
 rnExp (Lit lit) = return $ Lit lit
@@ -48,10 +49,24 @@ rnClause clause = do
                     }
 
 rnClauseVarDecl :: Resolve ClauseVarDecl
-rnClauseVarDecl = error "rnClauseVarDecl not implemented"
+rnClauseVarDecl clauseVarDecl = do
+  refType <- rnRefType (clauseVarDeclType clauseVarDecl)
+  return $ clauseVarDecl { clauseVarDeclType = refType }
 
 rnClauseHead :: Resolve ClauseHead
-rnClauseHead = error "rnClauseHead not implemented"
+rnClauseHead (ClauseDeclHead declHead) =
+  fmap ClauseDeclHead $ rnClauseVarDecl declHead
+rnClauseHead (ClauseVarHead varHead) = fmap ClauseVarHead $ rnActor varHead
+
+rnActor :: Resolve Actor
+rnActor (Actor actorName) = fmap Actor $ rnActorName actorName
+rnActor (Var i) = return $ Var i
+
+rnActorName :: Resolve ActorName
+rnActorName (ActorName name) = fmap ActorName $ rnName name
+rnActorName typeVar@(ActorTypeVar {}) = do
+  varType <- rnRefType (actorTypeVarType typeVar)
+  return $ typeVar { actorTypeVarType = varType }
 
 rnAtom :: Resolve Atom
 rnAtom = error "rnAtom not implemented"

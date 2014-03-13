@@ -1,6 +1,7 @@
 module Language.Java.Paragon.NameResolution.Resolvers.Types
   (
     rnType
+  , rnRefType
   , rnReturnType
   ) where
 
