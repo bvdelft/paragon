@@ -50,7 +50,7 @@ failureDir :: FilePath
 failureDir = testDir </> "failure"
 -}
 
--- Helpers
+-- Helpers for creating AST and checking
 
 successRead :: String -> IO String
 successRead fileName = readFile (successDir </> fileName)
@@ -77,6 +77,30 @@ afterAltering ast targetAst = do
   piPath <- getPIPATH
   (Right nrAst) <- runBaseM [] (liftToBaseM piPath (resolveNames ast))
   nrAst `shouldBe` targetAst
+
+-- Helpers for modifying AST
+
+type ASTModifier a b = (a -> a) -> Int -> AST b -> AST b
+
+-- | Modify the i-th declaration in the body. Assumes there is only one
+-- classTypeDecl.
+modifyBodyDecl :: ASTModifier (ClassBodyDecl a) a
+modifyBodyDecl f i ast =
+  let (ClassTypeDecl classDecl) = head $ cuTypeDecls ast
+      classBody = cdBody classDecl
+      (xs,y:ys) = splitAt i (cbDecls classBody)
+  in ast { cuTypeDecls = [ClassTypeDecl classDecl { cdBody  = classBody { cbDecls = xs ++ (f y:ys)} }] }
+
+modifyFieldDeclPrefix :: ASTModifier (Maybe (Name a)) a
+modifyFieldDeclPrefix f = modifyBodyDecl $
+  \(MemberDecl fieldDecl@(FieldDecl {})) ->
+    let (RefType (ClassRefType ct)) = fieldDeclType fieldDecl
+        name = ctName ct
+    in MemberDecl (fieldDecl {
+         fieldDeclType = (RefType (ClassRefType 
+           ct { ctName = name { namePrefix = f (namePrefix name) } } 
+          ))
+       })                
 
 -- For debugging when a test fails
 
@@ -125,23 +149,7 @@ spec = do
       ast <- parseFile "ClassDeclSingleFieldRefType.para"
       -- construct new name prefix
       let newPrefix = mkName (\x -> \_ -> x) PkgName [Id defaultSpan "java", Id defaultSpan "lang"]
-      -- replace prefix in ast
-      -- TODO: find an easier way :D
-      let (ClassTypeDecl typeDecl) = head (cuTypeDecls ast)
-      let (MemberDecl fieldDecl)   = head (cbDecls (cdBody typeDecl))
-      let (RefType (ClassRefType crt)) = fieldDeclType fieldDecl
-      let newAst = ast { cuTypeDecls = [ClassTypeDecl $ typeDecl {
-                         cdBody = (cdBody typeDecl) {
-                           cbDecls = [MemberDecl $ fieldDecl {
-                             fieldDeclType = RefType (ClassRefType (crt {
-                               ctName = (ctName crt) {
-                                   namePrefix = Just newPrefix
-                                 }
-                               }))
-                             }]
-                           }
-                         }]
-                       }
+      let newAst = modifyFieldDeclPrefix (const $ Just newPrefix) 0 ast
       afterAltering ast newAst
 {-
           srcSpanFun = SrcSpan fileName
