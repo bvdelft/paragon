@@ -164,7 +164,7 @@ buildMapFromTd mPkgPre td expn = do
        buildMapFromSuper :: ClassType SrcSpan -> PiReader Expansion
        buildMapFromSuper ct = do
          --mPre <- resolvePrefix (namePrefix $ ctName ct)
-         let resName = undefined ct --(ctName ct) { nameType = TypeName, namePrefix = mPre }
+         let resName = (undefined ct) --{ nameType = TypeName, namePrefix = mPre }
          -- The super class/interface must of course also be a type
          withType resName $ do 
            cu             <- getTypeContents resName

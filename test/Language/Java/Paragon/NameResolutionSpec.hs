@@ -175,9 +175,9 @@ modifyBodyDecl i f ast =
 
 modifyRefTypePrefix :: ASTModifier (Maybe (Name a)) (RefType a)
 modifyRefTypePrefix f (ClassRefType ct) =
-  let name    = ctName ct
-      newName = name { namePrefix = f (namePrefix name) }
-  in ClassRefType ct { ctName = newName }
+  let name    = undefined TypeName $ map fst $ ctIdsAndTypeArgs ct
+      newName = zip (flattenName name { namePrefix = f (namePrefix name) }) (map snd $ ctIdsAndTypeArgs ct)
+  in ClassRefType ct { ctIdsAndTypeArgs = newName }
 
 modifyFieldDeclType :: ASTModifier (RefType a) (ClassBodyDecl a)
 modifyFieldDeclType f (MemberDecl fieldDecl) = 

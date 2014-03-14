@@ -24,8 +24,8 @@ rnRefType (ClassRefType classType) = do
 rnClassType :: Resolve ClassType
 rnClassType classType = do
   -- TODO: type arguments
-  name <- rnName (ctName classType)
-  return $ classType { ctName = name }
+  name <- rnName (mkNameSrcSpan TypeName $ map fst $ ctIdsAndTypeArgs classType)
+  return $ classType { ctIdsAndTypeArgs = zip (flattenName name) (map snd $ ctIdsAndTypeArgs classType) }
 
 rnReturnType :: Resolve ReturnType
 rnReturnType voidType@(VoidType {}) = return voidType

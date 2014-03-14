@@ -26,9 +26,9 @@ import Language.Java.Paragon.NameResolution.Resolvers.Statements
 -- | Resolves a class type by simply calling the resolvers on its name and
 -- type arguments. TODO: type arguments not yet supported.
 rnClassType :: Resolve ClassType
-rnClassType ct = do
-  n'   <- rnName (ctName ct)
-  return $ ct {ctName = n' }
+rnClassType classType = do
+  name <- rnName (mkNameSrcSpan TypeName $ map fst $ ctIdsAndTypeArgs classType)
+  return $ classType { ctIdsAndTypeArgs = zip (flattenName name) (map snd $ ctIdsAndTypeArgs classType) }
 
 -- | Resolve type declarations.
 rnTypeDecl :: Resolve TypeDecl
