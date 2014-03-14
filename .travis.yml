@@ -1,6 +1,6 @@
 language: haskell
 env: 
-  - PIPATH=./bvdelft/paragon/lib
+  - PIPATH="lib"
 branches:
   only:
     - master

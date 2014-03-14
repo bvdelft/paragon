@@ -1,42 +1,34 @@
 module Language.Java.Paragon.NameResolution.Resolvers.Types
   (
-    -- * Resolvers
-    rnClassType
-  , rnTypeDecl
+    rnType
+  , rnRefType
+  , rnReturnType
   ) where
 
 import Language.Java.Paragon.Monad.NameRes
-import Language.Java.Paragon.Syntax
+import Language.Java.Paragon.Syntax.Types
 
--- TODO:
--- | Resolves a class type by simply calling the resolvers on its name and
--- type arguments. TODO: type arguments not yet supported.
+import Language.Java.Paragon.NameResolution.Resolvers.Names
+
+rnType :: Resolve Type
+rnType (PrimType primType) = return $ PrimType primType
+rnType (RefType  refType) = do
+  r <- rnRefType refType
+  return $ RefType r
+
+rnRefType :: Resolve RefType
+rnRefType (ClassRefType classType) = do
+  c <- rnClassType classType
+  return $ ClassRefType c
+
 rnClassType :: Resolve ClassType
-rnClassType = undefined
+rnClassType classType = do
+  -- TODO: type arguments
+  name <- rnName (ctName classType)
+  return $ classType { ctName = name }
 
--- | 
-rnTypeDecl :: Resolve TypeDecl
-rnTypeDecl = undefined
-{-
-rnTypeDecl (ClassTypeDecl pos (ClassDecl pos' ms ci tps mSuper impls cb)) = do
-    extendExpansion (mkTpsExpn tps) $
-      ClassTypeDecl pos <$> 
-          (ClassDecl pos'
-              <$> mapM rnModifier ms
-              <*> pure ci
-              <*> mapM rnTypeParam tps -- relevant because of wildcards
-              <*> mapM rnClassType mSuper
-              <*> mapM rnClassType impls
-              <*> rnClassBody cb)
-rnTypeDecl (InterfaceTypeDecl pos (InterfaceDecl pos' ms ii tps supers ib)) = do
-    extendExpansion (mkTpsExpn tps) $
-      InterfaceTypeDecl pos <$>
-          (InterfaceDecl pos'
-              <$> mapM rnModifier ms
-              <*> pure ii
-              <*> mapM rnTypeParam tps -- relevant because of wildcards
-              <*> mapM rnClassType supers
-              <*> rnInterfaceBody ib)
-rnTypeDecl _ = failE . mkErrorFromInfo $
-                 UnsupportedFeature "Enum declarations not yet supported"
--}
+rnReturnType :: Resolve ReturnType
+rnReturnType voidType@(VoidType {}) = return voidType
+rnReturnType lockType@(LockType {}) = return lockType
+rnReturnType (Type ty) = do res <- rnType ty
+                            return $ Type res

@@ -1,0 +1,4 @@
+class C {
+  public boolean x;
+  boolean y, z;
+}
