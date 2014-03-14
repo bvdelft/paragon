@@ -20,7 +20,7 @@ spec = do
       ann (Lit (Int "ann" 2)) `shouldBe` "ann"
 
     it "returns annotation for internal node (2 levels)" $
-      ann (RefType (ClassRefType (ClassType "ann" (Name "annWrong" (Id "annWrong" "Object") TypeName Nothing) [])))
+      ann (RefType (ClassRefType (ClassType "ann" [(Id "annWrong" "Object", [])])))
         `shouldBe`
       "ann"
 

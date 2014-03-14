@@ -8,14 +8,11 @@ module Language.Java.Paragon.NameResolution.Resolvers.Types
 import Language.Java.Paragon.Monad.NameRes
 import Language.Java.Paragon.Syntax
 
-import Language.Java.Paragon.NameResolution.Resolvers.Names
-
+-- TODO:
 -- | Resolves a class type by simply calling the resolvers on its name and
 -- type arguments. TODO: type arguments not yet supported.
 rnClassType :: Resolve ClassType
-rnClassType ct = do
-  n'   <- rnName (ctName ct)
-  return $ ct {ctName = n' }
+rnClassType = undefined
 
 -- | 
 rnTypeDecl :: Resolve TypeDecl

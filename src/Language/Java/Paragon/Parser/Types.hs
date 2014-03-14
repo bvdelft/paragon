@@ -10,6 +10,7 @@ import Language.Java.Paragon.Syntax.Types
 import Language.Java.Paragon.SrcPos
 
 import Language.Java.Paragon.Parser.Names
+import Language.Java.Paragon.Parser.Separators
 import Language.Java.Paragon.Parser.Helpers
 
 ttype :: P (Type SrcSpan)
@@ -36,10 +37,13 @@ refType = ClassRefType <$> classType
 
 classType :: P (ClassType SrcSpan)
 classType = do
-  startPos <- getStartPos
-  n <- name typeName
-  endPos <- getEndPos
-  return $ ClassType (mkSrcSpanFromPos startPos endPos) n []
+    startPos <- getStartPos
+    idsAndTypeArgs <- seplist1 idAndTypeArgs dot
+    endPos <- getEndPos
+    return $ ClassType (mkSrcSpanFromPos startPos endPos) idsAndTypeArgs
+  where idAndTypeArgs :: P (Id SrcSpan, [TypeArgument a])
+        idAndTypeArgs = do i <- ident
+                           return (i, [])
 
 returnType :: P (ReturnType SrcSpan)
 returnType =
