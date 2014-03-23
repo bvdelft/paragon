@@ -98,10 +98,10 @@ spec = do
 {-
     it "recognizes integer octal literals with underscores" $
       map twsTok (lexer "0_1 0_1l 0_1L") `shouldBe` [ IntLit 1, LongLit 1, LongLit 1 ]
-
+-}
     it "recognizes integer binary literals" $
       map twsTok (lexer "0b10 0B10 0b10l 0B10l 0b10L 0B10L") `shouldBe` [ IntLit 2, IntLit 2, LongLit 2, LongLit 2, LongLit 2, LongLit 2 ]
-
+{-
     it "recognizes integer binary literals with underscores" $
       map twsTok (lexer "0b1_0 0B1_0 0b1_0l 0B1_0l 0b1_0L 0B1_0L") `shouldBe` [ IntLit 2, IntLit 2, LongLit 2, LongLit 2, LongLit 2, LongLit 2 ]
 -}

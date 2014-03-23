@@ -27,6 +27,7 @@ $digit   = [0-9]
 $nonzero = [1-9]
 $octdig  = [0-7]
 $hexdig  = [0-9A-Fa-f]
+$bindig  = [0-1]
 
 @lineterm = [\n\r] | \r\n
 
@@ -148,6 +149,10 @@ tokens :-
   -- octal
   0 $digit+       { \p s -> TokWSpan (IntLit (pickyReadOct s))         (posn p s) }
   0 $digit+ [lL]  { \p s -> TokWSpan (LongLit (pickyReadOct (init s))) (posn p s) }
+
+  -- binary
+  0 [bB] $bindig+      { \p s -> TokWSpan (IntLit (fst . head $ readBin s (drop 2 s)))         (posn p s) }
+  0 [bB] $bindig+ [lL] { \p s -> TokWSpan (LongLit (fst . head $ readBin s (init (drop 2 s)))) (posn p s) }
 
   $digit+ \. $digit* @exponent? [dD]?  { \p s -> TokWSpan (DoubleLit (fst . head $ readFloat $ '0':s)) (posn p s) }
           \. $digit+ @exponent? [dD]?  { \p s -> TokWSpan (DoubleLit (fst . head $ readFloat $ '0':s)) (posn p s) }
@@ -514,6 +519,13 @@ readHexExp s = let (m, suf) = head $ readHex s
                                 p:r | toLower p == 'p' -> head $ readHex r
                                 _ -> (0, "")
                in m ** e
+
+readBin :: Num a => String -> ReadS a
+readBin s = readInt 2 (\c -> c == '0' || c == '1')
+                      (\c -> case c of
+                               '0' -> 0
+                               '1' -> 1
+                               _   -> lexicalError $ "Non-binary digit " ++ show c ++ " in \"" ++ s ++ "\".")
 
 readCharTok :: String -> Char
 readCharTok s = head . convChar . dropQuotes $ s
