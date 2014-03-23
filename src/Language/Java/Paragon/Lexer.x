@@ -29,6 +29,24 @@ $octdig  = [0-7]
 $hexdig  = [0-9A-Fa-f]
 $bindig  = [0-1]
 
+@unders = (\_)+
+
+@digitorunder = $digit | \_
+@digitsandunders = @digitorunder+
+@digits = $digit | $digit @digitsandunders? $digit
+
+@hexdigorunder = $hexdig | \_
+@hexdigitsandunders = @hexdigorunder+
+@hexdigits = $hexdig | $hexdig @hexdigitsandunders? $hexdig
+
+@octdigorunder = $octdig | \_
+@octdigitsandunders = @octdigorunder+
+@octdigits = $octdig | $octdig @octdigitsandunders? $octdig
+
+@bindigorunder = $bindig | \_
+@bindigitsandunders = @bindigorunder+
+@bindigits = $bindig | $bindig @bindigitsandunders? $bindig
+
 @lineterm = [\n\r] | \r\n
 
 @tradcomment = \/\*(~[\*]|[\r\n]|(\*+(~[\*\/]|[\r\n])))*\*+\/
@@ -139,20 +157,26 @@ tokens :-
   0               { \p s -> TokWSpan (IntLit 0)  (posn p s) }
   0 [lL]          { \p s -> TokWSpan (LongLit 0) (posn p s) }
 
-  $nonzero $digit*       { \p s -> TokWSpan (IntLit (read s))         (posn p s) }
-  $nonzero $digit* [lL]  { \p s -> TokWSpan (LongLit (read (init s))) (posn p s) }
+  $nonzero @digits?       { \p s -> TokWSpan (IntLit (read $ removeUnderscores s))         (posn p s) }
+  $nonzero @digits? [lL]  { \p s -> TokWSpan (LongLit (read (removeUnderscores $ init s))) (posn p s) }
+
+  $nonzero @unders @digits       { \p s -> TokWSpan (IntLit (read $ removeUnderscores s))         (posn p s) }
+  $nonzero @unders @digits [lL]  { \p s -> TokWSpan (LongLit (read (removeUnderscores $ init s))) (posn p s) }
 
   -- hex
-  0 [xX] $hexdig+       { \p s -> TokWSpan (IntLit (fst . head $ readHex (drop 2 s)))         (posn p s) }
-  0 [xX] $hexdig+ [lL]  { \p s -> TokWSpan (LongLit (fst . head $ readHex (init (drop 2 s)))) (posn p s) }
+  0 [xX] @hexdigits       { \p s -> TokWSpan (IntLit (fst . head $ readHex (removeUnderscores $ drop 2 s)))         (posn p s) }
+  0 [xX] @hexdigits [lL]  { \p s -> TokWSpan (LongLit (fst . head $ readHex (removeUnderscores $ init $ drop 2 s))) (posn p s) }
 
   -- octal
-  0 $digit+       { \p s -> TokWSpan (IntLit (pickyReadOct s))         (posn p s) }
-  0 $digit+ [lL]  { \p s -> TokWSpan (LongLit (pickyReadOct (init s))) (posn p s) }
+  0 @octdigits       { \p s -> TokWSpan (IntLit (pickyReadOct $ removeUnderscores s))         (posn p s) }
+  0 @octdigits [lL]  { \p s -> TokWSpan (LongLit (pickyReadOct $ removeUnderscores $ init s)) (posn p s) }
+
+  0 @unders @octdigits       { \p s -> TokWSpan (IntLit (pickyReadOct $ removeUnderscores s))         (posn p s) }
+  0 @unders @octdigits [lL]  { \p s -> TokWSpan (LongLit (pickyReadOct $ removeUnderscores $ init s)) (posn p s) }
 
   -- binary
-  0 [bB] $bindig+      { \p s -> TokWSpan (IntLit (fst . head $ readBin s (drop 2 s)))         (posn p s) }
-  0 [bB] $bindig+ [lL] { \p s -> TokWSpan (LongLit (fst . head $ readBin s (init (drop 2 s)))) (posn p s) }
+  0 [bB] @bindigits      { \p s -> TokWSpan (IntLit (fst . head $ readBin s (removeUnderscores $ drop 2 s)))         (posn p s) }
+  0 [bB] @bindigits [lL] { \p s -> TokWSpan (LongLit (fst . head $ readBin s (removeUnderscores $ init $ drop 2 s))) (posn p s) }
 
   $digit+ \. $digit* @exponent? [dD]?  { \p s -> TokWSpan (DoubleLit (fst . head $ readFloat $ '0':s)) (posn p s) }
           \. $digit+ @exponent? [dD]?  { \p s -> TokWSpan (DoubleLit (fst . head $ readFloat $ '0':s)) (posn p s) }
@@ -536,6 +560,9 @@ readStringTok = convChar . dropQuotes
 -- | Drops quotes by removing first and last characters.
 dropQuotes :: String -> String
 dropQuotes s = take (length s - 2) (tail s)
+
+removeUnderscores :: String -> String
+removeUnderscores = filter (/= '_')
 
 -- | Converts a sequence of (unquoted) Java character literals, including
 -- escapes, into the sequence of corresponding Chars. The calls to

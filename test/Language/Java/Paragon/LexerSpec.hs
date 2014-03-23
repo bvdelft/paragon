@@ -77,34 +77,34 @@ spec = do
 
     it "recognizes integer decimal literals" $
       map twsTok (lexer "10 10l 10L") `shouldBe` [ IntLit 10, LongLit 10, LongLit 10 ]
-{-
+
     it "recognizes integer decimal literals with underscores" $
       map twsTok (lexer "1_0 1_0l 1_0L") `shouldBe` [ IntLit 10, LongLit 10, LongLit 10 ]
--}
+
     it "recognizes integer hex literals" $
       map twsTok (lexer "0xa 0xA 0Xa 0XA 0xal 0xAl 0Xal 0XAl 0xaL 0xAL 0XaL 0XAL") `shouldBe` [ IntLit 10,  IntLit 10,  IntLit 10,  IntLit 10
                                                                                               , LongLit 10, LongLit 10, LongLit 10, LongLit 10
                                                                                               , LongLit 10, LongLit 10, LongLit 10, LongLit 10 ]
-{-
+
     it "recognizes integer hex literals with underscores" $
       map twsTok (lexer "0x1_f 0x1_F 0X1_f 0X1_F 0x1_fl 0x1_Fl 0X1_fl 0X1_Fl 0x1_fL 0x1_FL 0X1_fL 0X1_FL")
       `shouldBe`
       [ IntLit 31,  IntLit 31,  IntLit 31,  IntLit 31
       , LongLit 31, LongLit 31, LongLit 31, LongLit 31
       , LongLit 31, LongLit 31, LongLit 31, LongLit 31 ]
--}
+
     it "recognizes integer octal literals" $
       map twsTok (lexer "01 01l 01L") `shouldBe` [ IntLit 1, LongLit 1, LongLit 1 ]
-{-
+
     it "recognizes integer octal literals with underscores" $
       map twsTok (lexer "0_1 0_1l 0_1L") `shouldBe` [ IntLit 1, LongLit 1, LongLit 1 ]
--}
+
     it "recognizes integer binary literals" $
       map twsTok (lexer "0b10 0B10 0b10l 0B10l 0b10L 0B10L") `shouldBe` [ IntLit 2, IntLit 2, LongLit 2, LongLit 2, LongLit 2, LongLit 2 ]
-{-
+
     it "recognizes integer binary literals with underscores" $
       map twsTok (lexer "0b1_0 0B1_0 0b1_0l 0B1_0l 0b1_0L 0B1_0L") `shouldBe` [ IntLit 2, IntLit 2, LongLit 2, LongLit 2, LongLit 2, LongLit 2 ]
--}
+
     it "recognizes identifiers" $
       map twsTok (lexer "x _x $x Var x123") `shouldBe` [ IdTok "x", IdTok "_x", IdTok "$x", IdTok "Var", IdTok "x123" ]
 
