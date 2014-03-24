@@ -8,6 +8,7 @@ module Language.Java.Paragon.NameResolutionSpec
 import Test.Hspec
 
 import Language.Java.Paragon.NameResolution
+import Language.Java.Paragon.NameResolution.Errors
 
 import Control.Exception (tryJust)
 import Control.Monad (guard)
@@ -16,6 +17,8 @@ import System.FilePath ((</>), splitSearchPath)
 import System.IO.Error (isDoesNotExistError)
 
 import Language.Java.Paragon.Error
+import Language.Java.Paragon.Error.StandardErrors
+--import Language.Java.Paragon.Interaction.Flags
 import Language.Java.Paragon.Monad.Base
 import Language.Java.Paragon.Monad.PiReader
 import Language.Java.Paragon.Syntax
@@ -45,15 +48,16 @@ testDir = "test" </> "namerestests"
 successDir :: FilePath
 successDir = testDir </> "success"
 
-{-
 failureDir :: FilePath
 failureDir = testDir </> "failure"
--}
 
 -- Helpers for creating AST and checking
 
 successRead :: String -> IO String
 successRead fileName = readFile (successDir </> fileName)
+
+failureRead :: String -> IO String
+failureRead fileName = readFile (failureDir </> fileName)
 
 successCase :: AST SrcSpan -> AST SrcSpan -> IO ()
 successCase ast result = do
@@ -61,28 +65,35 @@ successCase ast result = do
   (Right nrAst) <- runBaseM [] (liftToBaseM piPath (resolveNames ast))
   nrAst `shouldBe` result
 
-parseFile :: String -> IO (AST SrcSpan)
-parseFile fileName = do
+parseSuccessFile :: String -> IO (AST SrcSpan)
+parseSuccessFile fileName = do
   input <- successRead fileName
+  let (Right ast) = parse input fileName
+  return ast
+
+parseFailureFile :: String -> IO (AST SrcSpan)
+parseFailureFile fileName = do
+  input <- failureRead fileName
   let (Right ast) = parse input fileName
   return ast
 
 noAltering :: String -> IO ()
 noAltering fileName = do
-  ast <- parseFile fileName
+  ast <- parseSuccessFile fileName
   successCase ast ast
 
-afterAltering :: AST SrcSpan -> AST SrcSpan -> IO ()
-afterAltering ast targetAst = do
+failureCase :: String -> [Error] -> IO ()
+failureCase fileName err = do
+  ast <- parseFailureFile fileName
   piPath <- getPIPATH
-  (Right nrAst) <- runBaseM [] (liftToBaseM piPath (resolveNames ast))
-  nrAst `shouldBe` targetAst
+  (Left e) <- runBaseM [] (liftToBaseM piPath (resolveNames ast))
+  e `shouldBe` err
 
 -- For debugging when a test fails
 
 getFailing :: String -> IO [Error]
 getFailing file = do
-  ast <- parseFile file
+  ast <- parseFailureFile file
   piPath <- getPIPATH
   (Left err) <- runBaseM [] (liftToBaseM piPath (resolveNames ast))
   return err  
@@ -132,31 +143,57 @@ spec = do
     -- Success, resolving does alter AST
     
     it "resolves class declaration with single field declaration with reference type" $ do      
-      ast <- parseFile "ClassDeclSingleFieldRefType.para"
+      ast <- parseSuccessFile "ClassDeclSingleFieldRefType.para"
       let newPrefix = mkName const PkgName [Id defaultSpan "java", Id defaultSpan "lang"]
       let transform = modifyBodyDecl 0 $ modifyFieldDeclType $ 
                         modifyRefTypePrefix (const $ Just newPrefix)
-      afterAltering ast (transform ast)
+      successCase ast (transform ast)
     it "resolves class declaration with single field declaration of reference type with null initializer" $ do      
-      ast <- parseFile "ClassDeclSingleRefFieldInit.para"
+      ast <- parseSuccessFile "ClassDeclSingleRefFieldInit.para"
       let newPrefix = mkName const PkgName [Id defaultSpan "java", Id defaultSpan "lang"]
       let transform = modifyBodyDecl 0 $ modifyFieldDeclType $ 
                         modifyRefTypePrefix (const $ Just newPrefix)
-      afterAltering ast (transform ast)
+      successCase ast (transform ast)
     it "resolves class declaration with void method with single local variable declaration of reference type with null initializer" $ do
-      ast <- parseFile "ClassDeclVoidMethodSingleRefLocalVarInit.para"
+      ast <- parseSuccessFile "ClassDeclVoidMethodSingleRefLocalVarInit.para"
       let newPrefix = mkName const PkgName [Id defaultSpan "java", Id defaultSpan "lang"]
       let transform = modifyBodyDecl 0 $ modifyMethodBlockStmt 0 $
                         modifyLocalVarsType $ modifyRefTypePrefix (const $ Just newPrefix)
-      afterAltering ast (transform ast)
+      successCase ast (transform ast)
     it "resolves class declaration with single low policy field" $ do
-      ast <- parseFile "ClassDeclSingleLowPolicyField.para"
+      ast <- parseSuccessFile "ClassDeclSingleLowPolicyField.para"
       let newPrefix = mkName const PkgName [Id defaultSpan "java", Id defaultSpan "lang"]
       let transform = modifyBodyDecl 0 $ modifyFieldDeclInitExp 0 $
                         modifyPolicyClause 0 $ modifyDeclHeadRef $
                           modifyRefTypePrefix (const $ Just newPrefix)
-      afterAltering ast (transform ast)
-
+      successCase ast (transform ast)
+    {- not working perhaps due to problem in parsing.. commented for now.
+    it "Does allow new variables in the policy body" $ do
+      ast <- parseSuccessFile "BartTest.para"
+      piPath <- getPIPATH
+      (Right nrAst) <- runBaseM [Verbose 5] (liftToBaseM piPath (resolveNames ast))
+      ast `shouldBe` nrAst
+    -}
+    
+    -- Failure, error message type should be as expected.
+    it "cannot resolve an empty program" $ do
+      let err = unsupportedError "compilation unit without type definition" defaultSpan []
+      failureCase "Empty.para" [err]
+    it "refuses assignments to undefined variables" $ do
+      let fileName = "ClassDeclVoidMethodSingleAssignLit.para"
+          vSrcSpan = SrcSpan fileName 3 5 3 5
+          vId      = Id vSrcSpan "x"
+          vName    = Name vSrcSpan vId ExpName Nothing
+          err      = unresolvedName vName vSrcSpan []
+      failureCase fileName [err]
+    it "cannot resolve an undefined variable on right-hand side" $ do
+      let fileName = "ClassDeclVoidMethodSingleAssignVar.para"
+          vSrcSpan = SrcSpan fileName 4 9 4 9
+          vId      = Id vSrcSpan "y"
+          vName    = Name vSrcSpan vId ExpOrLockName Nothing
+          err      = unresolvedName vName vSrcSpan []
+      failureCase fileName [err]
+    
 -- Helpers for modifying AST. Some assumption here, e.g. only altering RefType,
 -- not PrimType.
 
@@ -221,10 +258,3 @@ modifyDeclHeadRef f clause =
       nt = f (clauseVarDeclType hd)
   in clause { clauseHead = ClauseDeclHead hd { clauseVarDeclType = nt } }
 
-{- Fail -- and supposed to do so
-    it "resolves an empty program" $ noAltering "Empty.para"
-    it "parses class declaration with void method with single assignment expression statement with literal" $
-      noAltering "ClassDeclVoidMethodSingleAssignLit.para"
-    it "parses class declaration with void method with single assignment expression statement with variable" $
-      noAltering "ClassDeclVoidMethodSingleAssignVar.para"
--}

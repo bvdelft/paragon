@@ -36,6 +36,7 @@ data Error = Error
     -- can be both labeled as Error and as ImplicitFlow.
   , labels     :: [ErrorLabel]
   }
+  deriving (Eq, Show)
 
 -- | Error that is needs to be put in context
 type ContextualError = [ErrorContext] -> Error
@@ -75,6 +76,7 @@ data ErrorContext = ErrorContext
     -- | The location where this context started
   , contextStart :: SrcPos
   }
+  deriving (Eq, Show)
 
 -- | Default context; any context should be extending this context for the sake
 -- of modularity.

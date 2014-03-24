@@ -10,3 +10,4 @@ data ErrorLabel
   | LBLWarning   -- ^ Warnings
   | LBLExplicit  -- ^ Information leak via an explicit flow.
   | LBLImplicit  -- ^ Information leak via an implicit flow.
+  deriving (Eq, Show)
