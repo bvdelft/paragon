@@ -40,6 +40,7 @@ rnPolicyExp policyLit@(PolicyLit {}) = do
 rnClause :: Resolve Clause
 rnClause clause = do
   let clauseVarIds  = [clauseVarDeclId v | v <- clauseVarDecls clause]
+  -- do or do not cons the head, depending on it being a declaration or not.
   let consHeadVarId = case (clauseHead clause) of
                         ClauseDeclHead v -> (clauseVarDeclId v:)
                         _                -> id
@@ -54,25 +55,30 @@ rnClause clause = do
                     , clauseAtoms    = atoms
                     }
 
+-- | Resolve clause variable declaration.
 rnClauseVarDecl :: Resolve ClauseVarDecl
 rnClauseVarDecl clauseVarDecl = do
   refType <- rnRefType (clauseVarDeclType clauseVarDecl)
   return $ clauseVarDecl { clauseVarDeclType = refType }
 
+-- | Resolve the head of the clause.
 rnClauseHead :: Resolve ClauseHead
 rnClauseHead (ClauseDeclHead declHead) =
   fmap ClauseDeclHead $ rnClauseVarDecl declHead
 rnClauseHead (ClauseVarHead varHead) = fmap ClauseVarHead $ rnActor varHead
 
+-- | Resolving actor variable.
 rnActor :: Resolve Actor
 rnActor (Actor actorName) = fmap Actor $ rnActorName actorName
 rnActor (Var i) = return $ Var i
 
+-- | Resolving the representation of actor name.
 rnActorName :: Resolve ActorName
 rnActorName (ActorName name) = fmap ActorName $ rnName name
 rnActorName typeVar@(ActorTypeVar {}) = do
   varType <- rnRefType (actorTypeVarType typeVar)
   return $ typeVar { actorTypeVarType = varType }
 
+-- | Resolving an atom (lock).
 rnAtom :: Resolve Atom
 rnAtom = error "rnAtom not implemented"

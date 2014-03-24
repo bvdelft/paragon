@@ -112,7 +112,7 @@ resolveCandMethod pre n = do
     _        -> panic (thisModule ++ ".resolveCandMethod") $
                   "Unexpected name: " ++ show n
 
--- | Resolves locks.
+-- | Resolves locks. Basically not yet implemented.
 resolveLock :: Name SrcSpan -> Resolve Name
 resolveLock pre n = do
   case nameType pre of
