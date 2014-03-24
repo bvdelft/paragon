@@ -52,6 +52,7 @@ Library
                         Language.Java.Paragon.NameResolution.Helpers
                         Language.Java.Paragon.NameResolution.Resolvers
                         Language.Java.Paragon.NameResolution.Resolvers.Expressions
+                        Language.Java.Paragon.NameResolution.Resolvers.Modifiers
                         Language.Java.Paragon.NameResolution.Resolvers.Names
                         Language.Java.Paragon.NameResolution.Resolvers.Types
                         Language.Java.Paragon.NameResolution.Resolvers.Statements

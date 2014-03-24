@@ -1,6 +1,7 @@
 -- | This module implements the name resolution stage of the compiler
 module Language.Java.Paragon.NameResolution
   (
+    -- * Resolve names
     resolveNames
   ) where
 
@@ -23,37 +24,35 @@ import Language.Java.Paragon.NameResolution.Resolvers
 resolveNames :: CompilationUnit SrcSpan
              -> PiReader (CompilationUnit SrcSpan)
 resolveNames cu = do
-  -- 0. The package name 'java' is always in scope.
-  let javaExpnMap = mkPkgExpansion "java"
-  -- 1. Expand definitions from java.lang
-  (_, javaLangExpnMap) <- buildMapFromImportName $
-       TypeImportOnDemand defaultSpan (pkgName [Id defaultSpan "java", Id defaultSpan "lang"])
-       -- Make package expansion map that contains only 'java'.
-  -- 2. Expand definitions from imports
-  (imps, impExpnMap)  <- buildMapFromImports (cuImportDecls cu)
-  -- 3. Expand definitions from pi path
-  piExpnMap            <- buildMapFromPiPath
-  -- 4. Expand definitions from surrounding package
-  pkgExpnMap           <- buildMapFromPkg (cuPkgDecl cu)
-  -- Collect all the 'other' definitions
-  let jipExpnMap = expansionUnion [javaExpnMap, javaLangExpnMap, 
-                                   impExpnMap, piExpnMap, pkgExpnMap]                                  
+  -- Check: Only supporting one type per compilation unit:                             
   when (length (cuTypeDecls cu) == 0) $
-    failE $ unsupportedError "type definition is missing for compilation unit" defaultSpan
-  -- Only supporting one type / compilation unit:
+    failE $ unsupportedError "compilation unit without type definition" defaultSpan
   when (length (cuTypeDecls cu) /= 1) $
     failE $ unsupportedError "multiple types per compilation unit" defaultSpan
+  -- 0. The package name 'java' is always in scope.
+  let javaExpnMap = mkPkgExpansion "java"
+  -- 1. Expand definitions from java.lang.
+  (_, javaLangExpnMap) <- buildMapFromImportName $ TypeImportOnDemand
+    defaultSpan $ pkgName $ map (Id defaultSpan) ["java", "lang"]
+  -- 2. Expand definitions from imports.
+  (imps, impExpnMap) <- buildMapFromImports (cuImportDecls cu)
+  -- 3. Expand definitions from pi path.
+  piExpnMap <- buildMapFromPiPath
+  -- 4. Expand definitions from surrounding package.
+  pkgExpnMap <- buildMapFromPkg (cuPkgDecl cu)
+  -- _. Collect all the 'other' definitions.
+  let jipExpnMap = expansionUnion [javaExpnMap, javaLangExpnMap, 
+                                   impExpnMap, piExpnMap, pkgExpnMap]
   let td = head $ cuTypeDecls cu
   -- 5. Expand definition of and in the type itself & its super-types  
-  (thisFullName,tnExpnMap,supExpnMap) <- buildMapFromTd (fmap pdName $ cuPkgDecl cu) td jipExpnMap
+  (thisFullName, tnExpnMap, supExpnMap) <-
+    buildMapFromTd (fmap pdName $ cuPkgDecl cu) td jipExpnMap
   -- 6. Construct final expansion context according to precedence rule
   -- (I.e. local definitions hide definitions in super types hide other defs)
   -- Using left-biased union
   let expnMap = expansionUnionLeftB [tnExpnMap, supExpnMap, jipExpnMap]
   -- 7. Now we can finally annotate the AST, resolving all names in the type
-  -- declaration using the painstakingly constructed expansion map
-  --debugPrint $ "Expansions: "
-  --mapM_ (debugPrint . show) $ Map.toList expnMap
+  -- declaration using the painstakingly constructed expansion map.
   td' <- runNameRes (rnTypeDecl td) $ NameResEnv { nrCurrentName = thisFullName 
                                                  , nrExpansion   = expnMap
                                                  }

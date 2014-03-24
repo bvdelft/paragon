@@ -1,5 +1,7 @@
 -- | The resolvers follow the same order as the data definitions in @Syntax@ as
--- much as possible.
+-- much as possible. The resolvers are split accordingly into separate modules
+-- as is done for @Syntax@, i.e. Expressions, Modifiers, Names, Types and
+-- Statements.
 module Language.Java.Paragon.NameResolution.Resolvers
   (
     module Language.Java.Paragon.NameResolution.Resolvers.Names
@@ -19,16 +21,10 @@ import Language.Java.Paragon.Syntax
 
 import Language.Java.Paragon.NameResolution.Expansion
 import Language.Java.Paragon.NameResolution.Resolvers.Expressions
+import Language.Java.Paragon.NameResolution.Resolvers.Modifiers
 import Language.Java.Paragon.NameResolution.Resolvers.Names
 import Language.Java.Paragon.NameResolution.Resolvers.Types
 import Language.Java.Paragon.NameResolution.Resolvers.Statements
-
--- | Resolves a class type by simply calling the resolvers on its name and
--- type arguments. TODO: type arguments not yet supported.
-rnClassType :: Resolve ClassType
-rnClassType ct = do
-  n'   <- rnName (ctName ct)
-  return $ ct {ctName = n' }
 
 -- | Resolve type declarations.
 rnTypeDecl :: Resolve TypeDecl
@@ -56,31 +52,38 @@ rnTypeDecl (InterfaceTypeDecl intDecl) = do
     , intdBody       = body
     }
 
-rnInterfaceBody :: Resolve InterfaceBody
-rnInterfaceBody i = failEC i $ unsupportedError "non-empty interfaces" defaultSpan
+-- | Resolves a class type by simply calling the resolvers on its name and
+-- type arguments. TODO: type arguments not yet supported.
+rnClassType :: Resolve ClassType
+rnClassType ct = do
+  n'   <- rnName (ctName ct)
+  return $ ct {ctName = n' }
 
--- | Resolve modifiers - in particular, Paragon-specific modifiers.
-rnModifier :: Resolve Modifier
-rnModifier modifier = return modifier -- only for Paragon-modifiers
+-- | Interface declarations are not supported yet.
+rnInterfaceBody :: Resolve InterfaceBody
+rnInterfaceBody i = failEC i $ unsupportedError "interface body" defaultSpan
 
 -- | Extends the expansion to include all fields and method defined in the class
 -- body, then continues name resolving on the class body itself.
 rnClassBody :: Resolve ClassBody
 rnClassBody classBody = do 
-  let fieldNames  = map varDeclId $ concat [ fieldDeclVarDecls f | MemberDecl f@(FieldDecl {}) <- (cbDecls classBody) ]
-  let methodNames = [ methodDeclId m | MemberDecl m@(MethodDecl {}) <- (cbDecls classBody) ]
+  let fieldNames  = map varDeclId $ concat [ fieldDeclVarDecls f |
+                      MemberDecl f@(FieldDecl {}) <- (cbDecls classBody) ]
+  let methodNames = [ methodDeclId m |
+                      MemberDecl m@(MethodDecl {}) <- (cbDecls classBody) ]
   let expns = expansionUnion $ map mkExpExpansion (map idIdent fieldNames) ++
                                map mkMethodExpansion (map idIdent methodNames)
   extendExpansion expns $ do
     decls <- mapM rnClassBodyDecl (cbDecls classBody)
     return $ classBody { cbDecls = decls }
 
--- | Resolve all declarations in the class body
+-- | Resolve all declarations in the class body.
 rnClassBodyDecl :: Resolve ClassBodyDecl
 rnClassBodyDecl (MemberDecl memberDecl) = do
   newMDecl <- rnMemberDecl memberDecl
   return $ MemberDecl newMDecl
 
+-- | Resolve member declaration.
 rnMemberDecl :: Resolve MemberDecl
 rnMemberDecl fieldDecl@(FieldDecl {}) = do
   modifiers <- mapM rnModifier (fieldDeclModifiers fieldDecl)
@@ -101,11 +104,13 @@ rnMemberDecl methodDecl@(MethodDecl {}) = do
                       , methodDeclBody         = body
                       }
 
+-- | Resolve variable/field declaration.
 rnVarDecl :: Resolve VarDecl
 rnVarDecl varDecl = do
   varInit <- mapM rnVarInit (varDeclInit varDecl)
   return $ varDecl { varDeclInit = varInit }
 
+-- | Resolve formal parameter.
 rnFormalParam :: Resolve FormalParam
 rnFormalParam formalParam = do
   modifiers <- mapM rnModifier (formalParamModifiers formalParam)
@@ -114,29 +119,34 @@ rnFormalParam formalParam = do
                        , formalParamType      = ty
                        }
 
+-- | Resolve optional method body.
 rnMethodBody :: Resolve MethodBody
 rnMethodBody methodBody = do
   block <- mapM rnBlock (methodBodyBlock methodBody)
   return $ methodBody { methodBodyBlock = block }
 
+-- | Resolve the explicit initialiser for field/variable declaration.
 rnVarInit :: Resolve VarInit
 rnVarInit varInit = do
   initExpr <- rnExp (varInitExp varInit)
   return $ varInit { varInitExp = initExpr }
 
+-- | Resolve a code block.
 rnBlock :: Resolve Block
 rnBlock block = do
   blockS <- rnBlockStmts (blockAnnStmts block)
   return $ block { blockAnnStmts = blockS }
 
--- | Special function instead of mapM, since declarations need to extend the
--- expansion.
+-- | Resolve a list of block statements. Using special function instead of mapM,
+-- since possible declarations need to extend the expansion.
 rnBlockStmts :: [BlockStmt SrcSpan] -> NameRes [BlockStmt SrcSpan]
 rnBlockStmts [] = return []
 rnBlockStmts (bs:bss) = do
   (bs', bss') <- rnBlockStmt bs $ rnBlockStmts bss
   return $ bs':bss'
 
+-- | Resolve a single block statement. In case the statement is a local variable
+-- declaration, extend the expansion with this declaration(s) in @rnVarDecls@.
 rnBlockStmt :: BlockStmt SrcSpan -> NameRes a -> NameRes (BlockStmt SrcSpan, a)
 rnBlockStmt (BlockStmt stmt) cont = do
   stmt' <- rnStmt stmt
@@ -152,6 +162,10 @@ rnBlockStmt localVars@(LocalVars {}) cont = do
                        }
            , a)
 
+-- | Resolve a list of variable declarations. Makes a call to @rnVarDecl@ and
+-- extends the current expansion for the provided continuation, i.e. these
+-- variable declarations can be found in the expansion for the remaining name
+-- resolution.
 rnVarDecls :: [VarDecl SrcSpan] -> NameRes a -> NameRes ([VarDecl SrcSpan], a)
 rnVarDecls = rnVarDeclsAcc []
  where rnVarDeclsAcc :: [VarDecl SrcSpan]    -- ^ Accumulator (reversed)

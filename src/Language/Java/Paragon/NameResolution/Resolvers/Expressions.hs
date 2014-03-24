@@ -1,5 +1,6 @@
 module Language.Java.Paragon.NameResolution.Resolvers.Expressions
   (
+    -- * Resolver
     rnExp
   ) where
 
@@ -10,6 +11,7 @@ import Language.Java.Paragon.NameResolution.Expansion
 import Language.Java.Paragon.NameResolution.Resolvers.Names
 import Language.Java.Paragon.NameResolution.Resolvers.Types
 
+-- | Resolve an expression.
 rnExp :: Resolve Exp
 rnExp (Lit lit) = return $ Lit lit
 rnExp (NameExp name) = do n <- rnName name
@@ -22,15 +24,19 @@ rnExp assign@(Assign {}) = do lhs <- rnLhs (assignLhs assign)
 rnExp (PolicyExp policyExp) = do p <- rnPolicyExp policyExp
                                  return $ PolicyExp p
 
+-- | Resolve the left-hand side of an assignment expression.
 rnLhs :: Resolve Lhs
 rnLhs lhs = do name <- rnName (lhsName lhs)
                return $ lhs { lhsName = name }
 
+-- | Resolve a policy by mapping the clause resolver over its clauses.
 rnPolicyExp :: Resolve PolicyExp
 rnPolicyExp policyLit@(PolicyLit {}) = do
   clauses <- mapM rnClause (policyClauses policyLit)
   return $ policyLit { policyClauses = clauses }
 
+-- | Resolve a clause. Both the variable declarations and the clause head might
+-- introduce new names for which the expansion needs to be extended accordingly.
 rnClause :: Resolve Clause
 rnClause clause = do
   let clauseVarIds  = [clauseVarDeclId v | v <- clauseVarDecls clause]
