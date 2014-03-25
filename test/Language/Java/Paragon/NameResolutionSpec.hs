@@ -17,6 +17,7 @@ import System.FilePath ((</>), splitSearchPath)
 import System.IO.Error (isDoesNotExistError)
 
 import Language.Java.Paragon.Error
+import Language.Java.Paragon.Error.StandardContexts
 import Language.Java.Paragon.Error.StandardErrors
 --import Language.Java.Paragon.Interaction.Flags
 import Language.Java.Paragon.Monad.Base
@@ -175,7 +176,8 @@ spec = do
       ast `shouldBe` nrAst
     -}
     
-    -- Failure, error message type should be as expected.
+    -- Failure, error should be as expected.
+    
     it "cannot resolve an empty program" $ do
       let err = unsupportedError "compilation unit without type definition" defaultSpan []
       failureCase "Empty.para" [err]
@@ -184,16 +186,24 @@ spec = do
           vSrcSpan = SrcSpan fileName 3 5 3 5
           vId      = Id vSrcSpan "x"
           vName    = Name vSrcSpan vId ExpName Nothing
-          err      = unresolvedName vName vSrcSpan []
+          err      = unresolvedName vName vSrcSpan [defaultClassBodyContext "C"]
       failureCase fileName [err]
     it "cannot resolve an undefined variable on right-hand side" $ do
       let fileName = "ClassDeclVoidMethodSingleAssignVar.para"
           vSrcSpan = SrcSpan fileName 4 9 4 9
           vId      = Id vSrcSpan "y"
           vName    = Name vSrcSpan vId ExpOrLockName Nothing
-          err      = unresolvedName vName vSrcSpan []
+          err      = unresolvedName vName vSrcSpan [defaultClassBodyContext "C"]
       failureCase fileName [err]
-    
+
+-- Some default error contexts:
+
+defaultClassBodyContext :: String -> ErrorContext
+defaultClassBodyContext name =
+  let cId   = Id defaultSpan name
+      cDecl = ClassDecl defaultSpan [] cId [] Nothing [] undefined
+  in classBodyContext cDecl
+
 -- Helpers for modifying AST. Some assumption here, e.g. only altering RefType,
 -- not PrimType.
 

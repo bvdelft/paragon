@@ -11,8 +11,6 @@ module Language.Java.Paragon.Error
    -- * The @ErrorContext@ data type
   , ErrorContext(..)
   , defaultContext
-  , mkContext
-  , MkErrorContext
   ) where
 
 import Language.Java.Paragon.SrcPos
@@ -69,12 +67,10 @@ undefinedError err ec =
     , errContext = ec
     }
 
--- | Context in which errors can occur.
+-- | Context in which errors can occur (class, method, constructor...).
 data ErrorContext = ErrorContext
   { -- | A pretty-printed version of this context, used in console output.
     context      :: String
-    -- | The location where this context started
-  , contextStart :: SrcPos
   }
   deriving (Eq, Show)
 
@@ -83,12 +79,4 @@ data ErrorContext = ErrorContext
 defaultContext :: ErrorContext
 defaultContext = ErrorContext
   { context      = "This error context has no pretty printing"
-  , contextStart = defaultPos
   }
-
--- | Adds the source code location to the error context.
-mkContext :: ErrorContext -> SrcPos -> ErrorContext
-mkContext ec sp = ec { contextStart = sp }
-
--- | Type abbreviation to simplify error context defining source code
-type MkErrorContext = SrcPos -> ErrorContext

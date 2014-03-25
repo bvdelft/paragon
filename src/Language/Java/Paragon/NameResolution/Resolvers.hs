@@ -13,6 +13,7 @@ import Control.Applicative ((<$>))
 import Data.Traversable (mapM)
 import Prelude hiding (mapM)
 
+import Language.Java.Paragon.Error.StandardContexts
 import Language.Java.Paragon.Error.StandardErrors
 import Language.Java.Paragon.Monad.Base
 import Language.Java.Paragon.Monad.NameRes
@@ -35,13 +36,14 @@ rnTypeDecl (ClassTypeDecl classDecl) = do
                   Nothing -> return Nothing
                   Just s  -> Just <$> rnClassType s
   interfaces <- mapM rnClassType (cdInterfaces classDecl)
-  body       <- rnClassBody (cdBody classDecl)
-  return $ ClassTypeDecl $ classDecl {
-      cdModifiers  = modifiers
-    , cdSuperClass = superClass
-    , cdInterfaces = interfaces
-    , cdBody       = body
-    }
+  withErrCtxt (classBodyContext classDecl) $ do
+    body       <- rnClassBody (cdBody classDecl)
+    return $ ClassTypeDecl $ classDecl {
+        cdModifiers  = modifiers
+      , cdSuperClass = superClass
+      , cdInterfaces = interfaces
+      , cdBody       = body
+      }
 rnTypeDecl (InterfaceTypeDecl intDecl) = do
   modifiers  <- mapM rnModifier (intdModifiers intDecl)
   interfaces <- mapM rnClassType (intdInterfaces intDecl)

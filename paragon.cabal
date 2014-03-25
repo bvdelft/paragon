@@ -25,9 +25,9 @@ Library
     exposed-modules:    Language.Java.Paragon.Annotated
                         Language.Java.Paragon.CodeGenJava
                         Language.Java.Paragon.Error
-                        Language.Java.Paragon.Error.Contexts
                         Language.Java.Paragon.Error.ErrorLabel
                         Language.Java.Paragon.Error.ExampleErrors
+                        Language.Java.Paragon.Error.StandardContexts
                         Language.Java.Paragon.Error.StandardErrors
                         Language.Java.Paragon.Interaction
                         Language.Java.Paragon.Interaction.Debugging
