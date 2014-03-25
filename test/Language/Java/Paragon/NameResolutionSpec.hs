@@ -179,30 +179,44 @@ spec = do
     -- Failure, error should be as expected.
     
     it "cannot resolve an empty program" $ do
-      let err = unsupportedError "compilation unit without type definition" defaultSpan []
+      let err = unsupportedError "compilation unit without type definition" 
+                  defaultSpan [nrCtxt]
       failureCase "Empty.para" [err]
     it "refuses assignments to undefined variables" $ do
       let fileName = "ClassDeclVoidMethodSingleAssignLit.para"
           vSrcSpan = SrcSpan fileName 3 5 3 5
           vId      = Id vSrcSpan "x"
           vName    = Name vSrcSpan vId ExpName Nothing
-          err      = unresolvedName vName vSrcSpan [defaultClassBodyContext "C"]
+          ctxt     = [nrCtxt,defClassBodyContext "C",defMethodContext "f"]
+          err      = unresolvedName vName vSrcSpan ctxt
       failureCase fileName [err]
     it "cannot resolve an undefined variable on right-hand side" $ do
       let fileName = "ClassDeclVoidMethodSingleAssignVar.para"
           vSrcSpan = SrcSpan fileName 4 9 4 9
           vId      = Id vSrcSpan "y"
           vName    = Name vSrcSpan vId ExpOrLockName Nothing
-          err      = unresolvedName vName vSrcSpan [defaultClassBodyContext "C"]
+          ctxt     = [nrCtxt,defClassBodyContext "C",defMethodContext "f"]
+          err      = unresolvedName vName vSrcSpan ctxt
       failureCase fileName [err]
 
 -- Some default error contexts:
 
-defaultClassBodyContext :: String -> ErrorContext
-defaultClassBodyContext name =
+nrCtxt :: ErrorContext
+nrCtxt = compPhaseContext "Name Resolution"
+
+defClassBodyContext :: String -> ErrorContext
+defClassBodyContext name =
   let cId   = Id defaultSpan name
-      cDecl = ClassDecl defaultSpan [] cId [] Nothing [] undefined
+      u     = undefined
+      cDecl = ClassDecl u u cId u u u u
   in classBodyContext cDecl
+
+defMethodContext :: String -> ErrorContext
+defMethodContext name =
+  let mId   = Id defaultSpan name
+      u     = undefined
+      mDecl = MethodDecl u u u u mId u u
+  in memberDeclContext mDecl
 
 -- Helpers for modifying AST. Some assumption here, e.g. only altering RefType,
 -- not PrimType.

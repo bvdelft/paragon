@@ -7,8 +7,9 @@ module Language.Java.Paragon.NameResolution
 
 import Control.Monad (when)
 
+import Language.Java.Paragon.Error.StandardContexts
 import Language.Java.Paragon.Error.StandardErrors
-import Language.Java.Paragon.Monad.Base (failE)
+import Language.Java.Paragon.Monad.Base (failE, withErrCtxt)
 import Language.Java.Paragon.Monad.NameRes
 import Language.Java.Paragon.Monad.PiReader
 import Language.Java.Paragon.SrcPos (SrcSpan, defaultSpan)
@@ -23,7 +24,7 @@ import Language.Java.Paragon.NameResolution.Resolvers
 -- Name resolution is based on the .pi files in the given pipath.
 resolveNames :: CompilationUnit SrcSpan
              -> PiReader (CompilationUnit SrcSpan)
-resolveNames cu = do
+resolveNames cu = withErrCtxt (compPhaseContext "Name Resolution") $ do
   -- Check: Only supporting one type per compilation unit:                             
   when (length (cuTypeDecls cu) == 0) $
     failE $ unsupportedError "compilation unit without type definition" defaultSpan

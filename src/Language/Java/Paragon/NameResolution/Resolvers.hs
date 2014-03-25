@@ -47,12 +47,13 @@ rnTypeDecl (ClassTypeDecl classDecl) = do
 rnTypeDecl (InterfaceTypeDecl intDecl) = do
   modifiers  <- mapM rnModifier (intdModifiers intDecl)
   interfaces <- mapM rnClassType (intdInterfaces intDecl)
-  body       <- rnInterfaceBody (intdBody intDecl)
-  return $ InterfaceTypeDecl $ intDecl {
-      intdModifiers  = modifiers
-    , intdInterfaces = interfaces
-    , intdBody       = body
-    }
+  withErrCtxt (interfaceBodyContext intDecl) $ do
+    body       <- rnInterfaceBody (intdBody intDecl)
+    return $ InterfaceTypeDecl $ intDecl {
+        intdModifiers  = modifiers
+      , intdInterfaces = interfaces
+      , intdBody       = body
+      }
 
 -- | Resolves a class type by simply calling the resolvers on its name and
 -- type arguments. TODO: type arguments not yet supported.
@@ -81,7 +82,8 @@ rnClassBody classBody = do
 
 -- | Resolve all declarations in the class body.
 rnClassBodyDecl :: Resolve ClassBodyDecl
-rnClassBodyDecl (MemberDecl memberDecl) = do
+rnClassBodyDecl (MemberDecl memberDecl) =
+ withErrCtxt (memberDeclContext memberDecl) $ do
   newMDecl <- rnMemberDecl memberDecl
   return $ MemberDecl newMDecl
 
