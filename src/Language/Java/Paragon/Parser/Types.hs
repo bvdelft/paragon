@@ -37,7 +37,7 @@ refType = ClassRefType <$> classType
 classType :: P (ClassType SrcSpan)
 classType = do
   startPos <- getStartPos
-  n <- name typeName
+  n <- name qualifiedTypeName
   endPos <- getEndPos
   return $ ClassType (mkSrcSpanFromPos startPos endPos) n []
 

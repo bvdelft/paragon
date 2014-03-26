@@ -95,6 +95,7 @@ ambigName :: [Id SrcSpan] -> Name SrcSpan
 ambigName = mkNameSrcSpan AmbigName
 
 qualifiedTypeName :: [Id SrcSpan] -> Name SrcSpan
+qualifiedTypeName [x] = typeName [x]
 qualifiedTypeName ids = 
   let prefix = pkgOrTypeName (init ids)
       name   = typeName [last ids]

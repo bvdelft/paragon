@@ -144,13 +144,13 @@ spec = do
           
     -- Success, resolving does alter AST
     
-    it "resolves class declaration with single field declaration with reference type" $ do      
+    it "resolves class declaration with single field declaration with reference type" $ do
       ast <- parseSuccessFile "ClassDeclSingleFieldRefType.para"
       let newPrefix = mkName const PkgName [Id defaultSpan "java", Id defaultSpan "lang"]
       let transform = modifyBodyDecl 0 $ modifyFieldDeclType $ 
                         modifyRefTypePrefix (const $ Just newPrefix)
       successCase ast (transform ast)
-    it "resolves class declaration with single field declaration of reference type with null initializer" $ do      
+    it "resolves class declaration with single field declaration of reference type with null initializer" $ do
       ast <- parseSuccessFile "ClassDeclSingleRefFieldInit.para"
       let newPrefix = mkName const PkgName [Id defaultSpan "java", Id defaultSpan "lang"]
       let transform = modifyBodyDecl 0 $ modifyFieldDeclType $ 
@@ -169,13 +169,16 @@ spec = do
                         modifyPolicyClause 0 $ modifyDeclHeadRef $
                           modifyRefTypePrefix (const $ Just newPrefix)
       successCase ast (transform ast)
-    {- not working perhaps due to problem in parsing.. commented for now.
-    it "Does allow new variables in the policy body" $ do
-      ast <- parseSuccessFile "BartTest.para"
-      piPath <- getPIPATH
-      (Right nrAst) <- runBaseM [Verbose 5] (liftToBaseM piPath (resolveNames ast))
-      ast `shouldBe` nrAst
-    -}
+    it "parses class declaration with shadowing" $ do
+      ast <- parseSuccessFile "ClassDeclShadowing.para"
+      let t1 = modifyBodyDecl 0 $ modifyFieldDeclType $ 
+                 modifyRefTypePrefix $ prefixNameType PkgName
+      let t2 = modifyBodyDecl 1 $ modifyFieldDeclInitExp 0 $ modifyPolicyClause 0 $
+                 modifyDeclHeadRef $ modifyRefTypePrefix $ prefixNameType PkgName
+      let t3 = modifyBodyDecl 2 $ modifyMethodBlockStmt 0 $ modifyLocalVarsType $
+                 modifyRefTypePrefix $ prefixNameType PkgName
+      let transform = t3 . t2 . t1
+      successCase ast (transform ast)
     
     -- Failure, error should be as expected.
     
@@ -200,7 +203,12 @@ spec = do
           err      = unresolvedName vName vSrcSpan ctxt
       failureCase fileName [err]
 
--- Some default error contexts:
+prefixNameType :: NameType -> Maybe (Name a) -> Maybe (Name a)
+prefixNameType _ Nothing     = Nothing
+prefixNameType t (Just name) = 
+  Just $ name { nameType   = t
+              , namePrefix = prefixNameType t (namePrefix name) }
 
+-- Some default error contexts:
 nrCtxt :: ErrorContext
 nrCtxt = compPhaseContext "Name Resolution"

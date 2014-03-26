@@ -36,7 +36,7 @@ spec = do
 callParac :: FilePath -> IO [Error]
 callParac fp = do
   files <- fmap lines $ readFile (fp </> ".compile")
-  res   <- mapM (\file-> parac [PiPath fp, SourcePath fp, Verbose 5] file) files
+  res   <- mapM (\file-> parac [PiPath fp, SourcePath fp] file) files
   return $ concat res
   
 -- | Returns all paths that contain .compile files found under the provided
