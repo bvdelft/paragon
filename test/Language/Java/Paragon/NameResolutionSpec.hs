@@ -169,8 +169,8 @@ spec = do
                         modifyPolicyClause 0 $ modifyDeclHeadRef $
                           modifyRefTypePrefix (const $ Just newPrefix)
       successCase ast (transform ast)
-    it "parses class declaration with shadowing" $ do
-      ast <- parseSuccessFile "ClassDeclShadowing.para"
+    it "parses class declaration with shadowing reference type - reference type" $ do
+      ast <- parseSuccessFile "ClassDeclShadowingRefRef.para"
       let t1 = modifyBodyDecl 0 $ modifyFieldDeclType $ 
                  modifyRefTypePrefix $ prefixNameType PkgName
       let t2 = modifyBodyDecl 1 $ modifyFieldDeclInitExp 0 $ modifyPolicyClause 0 $
@@ -178,6 +178,14 @@ spec = do
       let t3 = modifyBodyDecl 2 $ modifyMethodBlockStmt 0 $ modifyLocalVarsType $
                  modifyRefTypePrefix $ prefixNameType PkgName
       let transform = t3 . t2 . t1
+      successCase ast (transform ast)
+    it "parses class declaration with shadowing primitive type - reference type" $ do
+      ast <- parseSuccessFile "ClassDeclShadowingPrimRef.para"
+      let t2 = modifyBodyDecl 1 $ modifyFieldDeclInitExp 0 $ modifyPolicyClause 0 $
+                 modifyDeclHeadRef $ modifyRefTypePrefix $ prefixNameType PkgName
+      let t3 = modifyBodyDecl 2 $ modifyMethodBlockStmt 0 $ modifyLocalVarsType $
+                 modifyRefTypePrefix $ prefixNameType PkgName
+      let transform = t3 . t2
       successCase ast (transform ast)
     
     -- Failure, error should be as expected.
