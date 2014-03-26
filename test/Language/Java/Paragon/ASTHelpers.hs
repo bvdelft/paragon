@@ -4,6 +4,7 @@ module Language.Java.Paragon.ASTHelpers
 import Language.Java.Paragon.Error.StandardContexts
 
 import Language.Java.Paragon.Error
+import Language.Java.Paragon.Interaction
 import Language.Java.Paragon.Syntax
 import Language.Java.Paragon.SrcPos
 
@@ -13,14 +14,18 @@ import Language.Java.Paragon.SrcPos
 defClassBodyContext :: String -> ErrorContext
 defClassBodyContext name =
   let cId   = Id defaultSpan name
-      u     = undefined
+      u     = panic ("Language.Java.Paragon.ASTHelpers.defClassBodyContext") $
+               "Error context created during testing did not provide a " ++
+               "required attribute"
       cDecl = ClassDecl u u cId u u u u
   in classBodyContext cDecl
 
 defMethodContext :: String -> ErrorContext
 defMethodContext name =
   let mId   = Id defaultSpan name
-      u     = undefined
+      u     = panic ("Language.Java.Paragon.ASTHelpers.defMethodContext") $
+               "Error context created during testing did not provide a " ++
+               "required attribute"
       mDecl = MethodDecl u u u u mId u u
   in memberDeclContext mDecl
 
