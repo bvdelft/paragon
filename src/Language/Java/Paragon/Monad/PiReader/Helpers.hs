@@ -47,6 +47,10 @@ pkgNameToDir pkgName =
       case namePrefix pkgName of
         Just pre -> pkgNameToDir pre </> idIdent (nameId pkgName)
         Nothing  -> idIdent (nameId pkgName)
+    PkgOrTypeName ->
+      case namePrefix pkgName of
+        Just pre -> pkgNameToDir pre </> idIdent (nameId pkgName)
+        Nothing  -> idIdent (nameId pkgName)
     TypeName  -> panic (prHelperModule ++ ".packNameToDir") 
                        "Inner types are not yet supported"
     _         -> panic (prHelperModule ++ ".packNameToDir") (unparsePrint pkgName)
@@ -59,5 +63,9 @@ typeNameToFile typeName =
       case namePrefix typeName of
         Just pre -> pkgNameToDir pre </> idIdent (nameId typeName) <.> "pi"
         Nothing  -> idIdent (nameId typeName) <.> "pi"
-    _         -> panic (prHelperModule ++ "typeNameToDir") (unparsePrint typeName)
+    PkgOrTypeName ->
+      case namePrefix typeName of
+        Just pre -> pkgNameToDir pre </> idIdent (nameId typeName) <.> "pi"
+        Nothing  -> idIdent (nameId typeName) <.> "pi"
+    _         -> panic (prHelperModule ++ ".typeNameToDir") (unparsePrint typeName)
 

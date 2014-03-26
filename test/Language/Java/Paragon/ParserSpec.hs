@@ -76,7 +76,7 @@ spec = do
           policyId = Id (srcSpanFun 1 16 1 21) "Policy"
           paragonSrcSpan = srcSpanFun 1 8 1 14
           paragonId = Id paragonSrcSpan "paragon"
-          paragonName = Name paragonSrcSpan paragonId TypeName Nothing
+          paragonName = Name paragonSrcSpan paragonId PkgOrTypeName Nothing
       in successCase fileName (CompilationUnit impdSrcSpan Nothing [SingleTypeImport impdSrcSpan (Name qIdSrcSpan policyId TypeName (Just paragonName))] [])
 
     it "parses import declaration for all the types in a package" $
@@ -107,7 +107,7 @@ spec = do
           qIdSrcSpan = srcSpanFun 1 15 1 23
           mathId = Id (srcSpanFun 1 20 1 23) "Math"
           langSrcSpan = srcSpanFun 1 15 1 18
-          langName = Name langSrcSpan langId TypeName Nothing
+          langName = Name langSrcSpan langId PkgOrTypeName Nothing
           langId = Id langSrcSpan "lang"
       in successCase fileName (CompilationUnit impdSrcSpan Nothing [StaticImportOnDemand impdSrcSpan (Name qIdSrcSpan mathId TypeName (Just langName))] [])
 

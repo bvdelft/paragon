@@ -3,6 +3,7 @@ module Language.Java.Paragon.Parser
   (
     parse
   , runParser
+  , parseError
   ) where
 
 import Prelude hiding (exp)
@@ -12,6 +13,7 @@ import Data.Maybe (catMaybes)
 import Text.ParserCombinators.Parsec hiding (parse, runParser)
 import qualified Text.ParserCombinators.Parsec as Parsec (runParser)
 
+import Language.Java.Paragon.Error
 import Language.Java.Paragon.Lexer
 import Language.Java.Paragon.Syntax
 import Language.Java.Paragon.SrcPos
@@ -33,6 +35,10 @@ runParser :: P a -> String -> String -> Either ParseError a
 runParser p input fileName = Parsec.runParser (p >>= \r -> eof >> return r) initState fileName toks
   where initState = SrcPos fileName 1 1
         toks = lexer input
+
+-- | Convert parse error to Paragon error.
+parseError :: ParseError -> MkError
+parseError pe = mkError $ defaultError { pretty = show pe }
 
 -- Parser building blocks. They almost follow the syntax tree structure.
 
@@ -68,10 +74,10 @@ importDecl = do
     endPos <- getEndPos
     return $ mkImportDecl isStatic hasStar (mkSrcSpanFromPos startPos endPos) pkgTypeName
     <?> "import declaration"
-  where mkImportDecl False False sp n = SingleTypeImport     sp (typeName $ flattenName n)
+  where mkImportDecl False False sp n = SingleTypeImport     sp (qualifiedTypeName $ flattenName n)
         mkImportDecl False True  sp n = TypeImportOnDemand   sp (pkgOrTypeName $ flattenName n)
         mkImportDecl True  False sp n = SingleStaticImport   sp (mkSingleStaticImport n)
-        mkImportDecl True  True  sp n = StaticImportOnDemand sp (typeName $ flattenName n)
+        mkImportDecl True  True  sp n = StaticImportOnDemand sp (qualifiedTypeName $ flattenName n)
 
         mkSingleStaticImport n =
           let flName = flattenName n

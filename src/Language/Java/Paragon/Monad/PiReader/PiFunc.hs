@@ -14,12 +14,13 @@ import Control.Applicative ((<$>))
 import System.Directory (doesDirectoryExist, doesFileExist, getDirectoryContents)
 import System.FilePath ((</>))
 
+import Language.Java.Paragon.Error.StandardErrors
 import Language.Java.Paragon.Interaction
 import Language.Java.Paragon.Monad.PiReader.Helpers
 import Language.Java.Paragon.Monad.PiReader.MonadPR
 import Language.Java.Paragon.Parser (parse)
 import Language.Java.Paragon.SrcPos
-import Language.Java.Paragon.Syntax (Name(..), CompilationUnit)
+import Language.Java.Paragon.Syntax (ann, Name(..), CompilationUnit)
 
 piReaderModule :: String
 piReaderModule = libraryBase ++ ".Monad.PiReader.PiFunc"
@@ -34,21 +35,29 @@ doesPkgExist pkgName = liftPR $ do
 
 -- | Checks if there is a file corresponding to the given type name
 -- in the pi-path environment.
-doesTypeExist :: MonadPR m => Name a -> m Bool
+doesTypeExist :: MonadPR m => Name SrcSpan -> m Bool
 doesTypeExist typeName = liftPR $ do
-  let path = typeNameToFile typeName
-  piPath <- getPiPath
-  go piPath path
-  where go [] _ = return False
-        go (p:pis) path = do
-              let fp = p </> path
-              debugPrint $ "Checking for " ++ fp
-              found <- liftIO $ doesFileExist fp
-              if found
-               then do
-                 debugPrint $ "Found " ++ fp
-                 return True
-               else go pis path
+  -- Check for inner types:
+  case namePrefix typeName of
+    Just pre -> do 
+      isType <- doesTypeExist pre
+      if isType then failEC False $ unsupportedError "inner types" (ann typeName)
+                else cont
+    Nothing  -> cont
+  -- Not an inner type:
+  where cont = do let path = typeNameToFile typeName
+                  piPath <- getPiPath
+                  go piPath path
+                  where go [] _ = return False
+                        go (p:pis) path = do
+                              let fp = p </> path
+                              debugPrint $ "Checking if type exists: " ++ fp
+                              found <- liftIO $ doesFileExist fp
+                              if found
+                               then do
+                                 debugPrint $ "Found " ++ fp
+                                 return True
+                               else go pis path
 
 -- | Returns the list of all .pi files in the package, on the top-level.
 -- Note: If more than 1 corresponding directory in path, the first is selected.

@@ -94,3 +94,10 @@ expOrLockName = mkNameSrcSpan ExpOrLockName
 ambigName :: [Id SrcSpan] -> Name SrcSpan
 ambigName = mkNameSrcSpan AmbigName
 
+qualifiedTypeName :: [Id SrcSpan] -> Name SrcSpan
+qualifiedTypeName ids = 
+  let prefix = pkgOrTypeName (init ids)
+      name   = typeName [last ids]
+  in name { namePrefix = Just $ prefix
+          , nameAnn = combineSrcSpan (ann name) (ann prefix) }
+
