@@ -17,7 +17,7 @@ main :: IO ()
 main = hspec spec
 
 testDir :: FilePath
-testDir = "test" </> "fulltests"
+testDir = "test" </> "paractests"
 
 -- | Main specification function.
 spec :: Spec
@@ -26,7 +26,9 @@ spec = do
     it "The first elementary test" $ do
       cf <- getCompFiles $ testDir </> "elementary"
       err <- mapM callParac cf
-      mapM_ (\e -> length e `shouldBe` 2) err
+      -- With the current phases, there should be no errors. However with the
+      -- policy constraint solving phase, there should be.
+      mapM_ (\e -> e `shouldBe` []) err
 
 -- | Given a filepath that contains a .compile file which instructs which files
 -- should be compiled and in which order, relatively to that filepath. Runs the
@@ -34,7 +36,7 @@ spec = do
 callParac :: FilePath -> IO [Error]
 callParac fp = do
   files <- fmap lines $ readFile (fp </> ".compile")
-  res   <- mapM (\file-> parac [PiPath fp, SourcePath fp] file) files
+  res   <- mapM (\file-> parac [PiPath fp, SourcePath fp, Verbose 5] file) files
   return $ concat res
   
 -- | Returns all paths that contain .compile files found under the provided

@@ -1,0 +1,26 @@
+package alpha.beta.gamma;
+
+import alpha.beta.A;
+
+/**
+ * The first full test for Paragon compiler v 0.3.0 !
+ **/
+public class B {
+
+    /**
+     * This method runs a very simple information flow test.
+     **/
+    public void m() {
+
+        // This integer has the policy that everyone can read its value.
+        ?A.low int lowInt;
+        lowInt  = 4;
+        // This integer's policy has no clauses, so no one can read it.
+        ?{:}    int highInt;
+        highInt = 5;
+
+        lowInt = highInt; // This is an illegal flow and should be detected.
+        highInt = lowInt; // Should be allowed.
+        lowInt = highInt; // Should be detected.
+    }
+}

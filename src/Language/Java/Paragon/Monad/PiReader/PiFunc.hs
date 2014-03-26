@@ -20,7 +20,7 @@ import Language.Java.Paragon.Monad.PiReader.Helpers
 import Language.Java.Paragon.Monad.PiReader.MonadPR
 import Language.Java.Paragon.Parser (parse)
 import Language.Java.Paragon.SrcPos
-import Language.Java.Paragon.Syntax (ann, Name(..), CompilationUnit)
+import Language.Java.Paragon.Syntax (ann, Name(..), CompilationUnit, NameType(..))
 
 piReaderModule :: String
 piReaderModule = libraryBase ++ ".Monad.PiReader.PiFunc"
@@ -34,19 +34,26 @@ doesPkgExist pkgName = liftPR $ do
   or <$> mapM (\p -> liftIO $ doesDirectoryExist $ p </> path) piPath
 
 -- | Checks if there is a file corresponding to the given type name
--- in the pi-path environment.
+-- in the pi-path environment. If a component of the prefix is a type
+-- (determined by recursive calls) we return False since inner types are not
+-- supported.
 doesTypeExist :: MonadPR m => Name SrcSpan -> m Bool
 doesTypeExist typeName = liftPR $ do
-  -- Check for inner types:
-  case namePrefix typeName of
-    Just pre -> do 
-      isType <- doesTypeExist pre
-      if isType then failEC False $ unsupportedError "inner types" (ann typeName)
-                else cont
-    Nothing  -> cont
-  -- Not an inner type:
+  tracePrint $ "Checking if type exists: " ++ unparsePrint typeName
+  -- Might be a PkgName due to recursive calls.
+  if not (nameType typeName `elem` [TypeName, PkgOrTypeName])
+   then return False
+   else -- Check for inner types:
+    case namePrefix typeName of
+      Just pre -> do 
+        isType <- doesTypeExist pre
+        if isType then failEC False $ unsupportedError "inner types" (ann typeName)
+                  else cont
+      Nothing  -> cont
+    -- Not an inner type:
   where cont = do let path = typeNameToFile typeName
                   piPath <- getPiPath
+                  tracePrint $ "Checking for type with piPath " ++ show piPath
                   go piPath path
                   where go [] _ = return False
                         go (p:pis) path = do

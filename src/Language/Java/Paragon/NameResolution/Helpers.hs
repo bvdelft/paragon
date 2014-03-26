@@ -6,6 +6,7 @@ module Language.Java.Paragon.NameResolution.Helpers
   , checkForType
   ) where
 
+import Language.Java.Paragon.Interaction
 import Language.Java.Paragon.Monad.Base
 import Language.Java.Paragon.Monad.NameRes
 import Language.Java.Paragon.Monad.PiReader
@@ -16,7 +17,8 @@ import Language.Java.Paragon.NameResolution.Errors
 
 -- | Execute action if given name is a package. Fails with error otherwise
 withPackage :: MonadPR m => Name SrcSpan -> m a -> m a
-withPackage pkg action = do 
+withPackage pkg action = do
+  tracePrint $ "withPackage " ++ (unparsePrint pkg)
   isP <- doesPkgExist pkg
   if isP 
    then action
