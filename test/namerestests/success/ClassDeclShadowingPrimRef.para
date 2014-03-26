@@ -1,0 +1,11 @@
+public class C {
+  public int y;
+
+  public policy p = { java.lang.Object y : };
+
+  public void foo() {
+    java.lang.Object y;
+    y = null;
+  }
+
+}
