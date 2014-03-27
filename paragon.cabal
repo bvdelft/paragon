@@ -23,6 +23,7 @@ Library
                         template-haskell, containers >= 0.5
     cpp-options:        -DBASE4
     exposed-modules:    Language.Java.Paragon.Annotated
+                        Language.Java.Paragon.Annotation
                         Language.Java.Paragon.CodeGenJava
                         Language.Java.Paragon.Error
                         Language.Java.Paragon.Error.ErrorLabel
@@ -72,6 +73,8 @@ Library
                         Language.Java.Paragon.Syntax.Statements
                         Language.Java.Paragon.Syntax.Expressions
                         Language.Java.Paragon.Syntax.Modifiers
+                        Language.Java.Paragon.TypeChecker
+                        Language.Java.Paragon.TypeChecker.Types
   hs-source-dirs:       src
   ghc-options:          -Wall -Werror -O2 -rtsopts
 

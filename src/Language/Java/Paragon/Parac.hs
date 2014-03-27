@@ -24,7 +24,7 @@ import Language.Java.Paragon.SrcPos
 parac :: [Flag] -> String -> IO [Error]
 parac flags filePath = do
   piPath <- buildPiPath flags filePath
-  erOrA <- runBaseM flags $ do
+  erOrU <- runBaseM flags $ do
     detailPrint $ "Starting compilation of " ++ filePath
     debugPrint $ "With .pi-directories " ++ show piPath
     let sourcepath = fromMaybe "." (getSourcePath flags)
@@ -32,12 +32,12 @@ parac flags filePath = do
     case parse content filePath of
       Left e    -> failE (parseError e defaultSpan)
       Right ast -> do
-        resolvedAST <- liftToBaseM piPath (resolveNames ast)
+        _resolvedAST <- raiseErrors $ liftToBaseM piPath (resolveNames ast)        
         detailPrint $ "Finished compilation of " ++ filePath ++ "\n"
-        return resolvedAST
-  case erOrA of
+        return ()
+  case erOrU of
     Left  e  -> return e
-    Right _  -> return []
+    Right () -> return []
 
 -- | Collect paths to interface files from options and environment
 buildPiPath :: [Flag] -> String -> IO [String]
