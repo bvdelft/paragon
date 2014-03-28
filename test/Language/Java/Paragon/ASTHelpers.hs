@@ -3,17 +3,17 @@ module Language.Java.Paragon.ASTHelpers
 
 import Language.Java.Paragon.Error.StandardContexts
 
+import Language.Java.Paragon.Annotation
 import Language.Java.Paragon.Error
 import Language.Java.Paragon.Interaction
 import Language.Java.Paragon.Syntax
-import Language.Java.Paragon.SrcPos
 
 -- Some short-hands for creating error contexts, with undefined/panic messages
 -- for locations that the error context is assumed not to address.
 
 defClassBodyContext :: String -> ErrorContext
 defClassBodyContext name =
-  let cId   = Id defaultSpan name
+  let cId   = Id emptyAnnotation name
       u     = panic ("Language.Java.Paragon.ASTHelpers.defClassBodyContext") $
                "Error context created during testing did not provide a " ++
                "required attribute"
@@ -22,7 +22,7 @@ defClassBodyContext name =
 
 defMethodContext :: String -> ErrorContext
 defMethodContext name =
-  let mId   = Id defaultSpan name
+  let mId   = Id emptyAnnotation name
       u     = panic ("Language.Java.Paragon.ASTHelpers.defMethodContext") $
                "Error context created during testing did not provide a " ++
                "required attribute"
@@ -40,7 +40,7 @@ type ASTModifier a b = (a -> a) -- ^ Modifies an element in b
 
 -- | Modify the i-th declaration in the body. Assumes there is only one
 -- classTypeDecl.
-modifyBodyDecl :: Int -> ASTModifier (ClassBodyDecl a) (AST a)
+modifyBodyDecl :: Int -> ASTModifier ClassBodyDecl AST 
 modifyBodyDecl i f ast =
   let (ClassTypeDecl classDecl) = head $ cuTypeDecls ast
       classBody = cdBody classDecl
@@ -49,25 +49,25 @@ modifyBodyDecl i f ast =
       newBody   = classBody { cbDecls = newDecls }
   in ast { cuTypeDecls = [ClassTypeDecl classDecl { cdBody = newBody} ] }
 
-modifyRefTypePrefix :: ASTModifier (Maybe (Name a)) (RefType a)
+modifyRefTypePrefix :: ASTModifier (Maybe Name) RefType
 modifyRefTypePrefix f (ClassRefType ct) =
   let name    = ctName ct
       newName = name { namePrefix = f (namePrefix name) }
   in ClassRefType ct { ctName = newName }
 
-modifyFieldDeclType :: ASTModifier (RefType a) (ClassBodyDecl a)
+modifyFieldDeclType :: ASTModifier RefType ClassBodyDecl
 modifyFieldDeclType f (MemberDecl fieldDecl) = 
   let (RefType rt) = fieldDeclType fieldDecl
       rt' = f rt
   in MemberDecl fieldDecl { fieldDeclType = RefType rt' }
 
-modifyLocalVarsType :: ASTModifier (RefType a) (BlockStmt a)
+modifyLocalVarsType :: ASTModifier RefType BlockStmt
 modifyLocalVarsType f localVars =
   let (RefType rt) = localVarsType localVars
   in localVars { localVarsType = RefType $ f rt }
 
 -- | Modify the i-th statement in this method
-modifyMethodBlockStmt :: Int -> ASTModifier (BlockStmt a) (ClassBodyDecl a)
+modifyMethodBlockStmt :: Int -> ASTModifier BlockStmt ClassBodyDecl
 modifyMethodBlockStmt i f (MemberDecl methodDecl) =
   let body = methodDeclBody methodDecl
       bodyBlock = methodBodyBlock body
@@ -78,20 +78,20 @@ modifyMethodBlockStmt i f (MemberDecl methodDecl) =
                            body { methodBodyBlock = Just newBlock } } )
        Nothing    -> (MemberDecl methodDecl) 
 
-modifyFieldDeclInitExp :: Int -> ASTModifier (Exp a) (ClassBodyDecl a)
+modifyFieldDeclInitExp :: Int -> ASTModifier Exp ClassBodyDecl
 modifyFieldDeclInitExp i f (MemberDecl fieldDecl) = 
   let (xs,y:ys) = splitAt i (fieldDeclVarDecls fieldDecl)
       newInit   = fmap (\x -> x { varInitExp = f (varInitExp x) }) (varDeclInit y)
       newVarD   = xs ++ (y { varDeclInit = newInit }:ys)
   in MemberDecl fieldDecl { fieldDeclVarDecls = newVarD }
 
-modifyPolicyClause :: Int -> ASTModifier (Clause a) (Exp a)
+modifyPolicyClause :: Int -> ASTModifier Clause Exp
 modifyPolicyClause i f (PolicyExp polExp) =
   let (xs,y:ys) = splitAt i (policyClauses polExp)
   in PolicyExp polExp { policyClauses = xs ++ (f y:ys) }
 modifyPolicyClause _ _ _ = error "Incorrect call by test: modifyPolicyClause"
 
-modifyDeclHeadRef :: ASTModifier (RefType a) (Clause a)
+modifyDeclHeadRef :: ASTModifier RefType Clause
 modifyDeclHeadRef f clause =
   let (ClauseDeclHead hd) = clauseHead clause
       nt = f (clauseVarDeclType hd)
