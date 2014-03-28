@@ -7,12 +7,13 @@ module Language.Java.Paragon.NameResolution
 
 import Control.Monad (when)
 
+import Language.Java.Paragon.Annotation
 import Language.Java.Paragon.Error.StandardContexts
 import Language.Java.Paragon.Error.StandardErrors
 import Language.Java.Paragon.Monad.Base (failE, withErrCtxt)
 import Language.Java.Paragon.Monad.NameRes
 import Language.Java.Paragon.Monad.PiReader
-import Language.Java.Paragon.SrcPos (SrcSpan, defaultSpan)
+import Language.Java.Paragon.SrcPos (defaultSpan)
 import Language.Java.Paragon.Syntax
 
 import Language.Java.Paragon.NameResolution.Expansion
@@ -22,19 +23,19 @@ import Language.Java.Paragon.NameResolution.Resolvers
 -- | Here we resolve names in a single compilation unit (.para file) 
 -- The method returns the same compilation unit with names resolved
 -- Name resolution is based on the .pi files in the given pipath.
-resolveNames :: CompilationUnit SrcSpan
-             -> PiReader (CompilationUnit SrcSpan)
+resolveNames :: CompilationUnit
+             -> PiReader CompilationUnit
 resolveNames cu = withErrCtxt (compPhaseContext "Name Resolution") $ do
   -- Check: Only supporting one type per compilation unit:                             
   when (length (cuTypeDecls cu) == 0) $
-    failE $ unsupportedError "compilation unit without type definition" defaultSpan
+    failE $ unsupportedError "compilation unit without type definition" cu
   when (length (cuTypeDecls cu) /= 1) $
-    failE $ unsupportedError "multiple types per compilation unit" defaultSpan
+    failE $ unsupportedError "multiple types per compilation unit" cu
   -- 0. The package name 'java' is always in scope.
   let javaExpnMap = mkPkgExpansion "java"
   -- 1. Expand definitions from java.lang.
   (_, javaLangExpnMap) <- buildMapFromImportName $ TypeImportOnDemand
-    defaultSpan $ pkgName $ map (Id defaultSpan) ["java", "lang"]
+    (srcSpanToAnn defaultSpan) $ pkgName $ map (Id (srcSpanToAnn defaultSpan)) ["java", "lang"]
   -- 2. Expand definitions from imports.
   (imps, impExpnMap) <- buildMapFromImports (cuImportDecls cu)
   -- 3. Expand definitions from pi path.
