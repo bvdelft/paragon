@@ -13,11 +13,11 @@ import Control.Applicative ((<$>))
 import Data.Traversable (mapM)
 import Prelude hiding (mapM)
 
+import Language.Java.Paragon.Error
 import Language.Java.Paragon.Error.StandardContexts
 import Language.Java.Paragon.Error.StandardErrors
 import Language.Java.Paragon.Monad.Base
 import Language.Java.Paragon.Monad.NameRes
-import Language.Java.Paragon.SrcPos
 import Language.Java.Paragon.Syntax
 
 import Language.Java.Paragon.NameResolution.Expansion
@@ -64,7 +64,7 @@ rnClassType ct = do
 
 -- | Interface declarations are not supported yet.
 rnInterfaceBody :: Resolve InterfaceBody
-rnInterfaceBody i = failEC i $ unsupportedError "interface body" defaultSpan
+rnInterfaceBody i = failEC i $ unsupportedError "interface body" errorAnnotation
 
 -- | Extends the expansion to include all fields and method defined in the class
 -- body, then continues name resolving on the class body itself.
@@ -143,7 +143,7 @@ rnBlock block = do
 
 -- | Resolve a list of block statements. Using special function instead of mapM,
 -- since possible declarations need to extend the expansion.
-rnBlockStmts :: [BlockStmt SrcSpan] -> NameRes [BlockStmt SrcSpan]
+rnBlockStmts :: [BlockStmt] -> NameRes [BlockStmt]
 rnBlockStmts [] = return []
 rnBlockStmts (bs:bss) = do
   (bs', bss') <- rnBlockStmt bs $ rnBlockStmts bss
@@ -151,7 +151,7 @@ rnBlockStmts (bs:bss) = do
 
 -- | Resolve a single block statement. In case the statement is a local variable
 -- declaration, extend the expansion with this declaration(s) in @rnVarDecls@.
-rnBlockStmt :: BlockStmt SrcSpan -> NameRes a -> NameRes (BlockStmt SrcSpan, a)
+rnBlockStmt :: BlockStmt -> NameRes a -> NameRes (BlockStmt, a)
 rnBlockStmt (BlockStmt stmt) cont = do
   stmt' <- rnStmt stmt
   cont' <- cont
@@ -170,12 +170,12 @@ rnBlockStmt localVars@(LocalVars {}) cont = do
 -- extends the current expansion for the provided continuation, i.e. these
 -- variable declarations can be found in the expansion for the remaining name
 -- resolution.
-rnVarDecls :: [VarDecl SrcSpan] -> NameRes a -> NameRes ([VarDecl SrcSpan], a)
+rnVarDecls :: [VarDecl] -> NameRes a -> NameRes ([VarDecl], a)
 rnVarDecls = rnVarDeclsAcc []
- where rnVarDeclsAcc :: [VarDecl SrcSpan]    -- ^ Accumulator (reversed)
-                     -> [VarDecl SrcSpan]    -- ^ List to resolve
-                     -> NameRes a            -- ^ Continuation
-                     -> NameRes ([VarDecl SrcSpan], a) -- ^ Result (re-reversed)
+ where rnVarDeclsAcc :: [VarDecl]              -- ^ Accumulator (reversed)
+                     -> [VarDecl]              -- ^ List to resolve
+                     -> NameRes a              -- ^ Continuation
+                     -> NameRes ([VarDecl], a) -- ^ Result (re-reversed)
        rnVarDeclsAcc acc [] cont = ((,) (reverse acc)) <$> cont
        rnVarDeclsAcc acc (vd@(VarDecl _ i _) : vds) cont = do
          let expn = mkExpExpansion $ idIdent i

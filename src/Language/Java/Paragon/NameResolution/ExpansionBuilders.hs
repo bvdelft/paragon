@@ -19,7 +19,6 @@ import Language.Java.Paragon.Monad.Base
 import Language.Java.Paragon.Monad.PiReader
 import Language.Java.Paragon.Monad.NameRes
 import Language.Java.Paragon.Syntax
-import Language.Java.Paragon.SrcPos
 
 import Language.Java.Paragon.NameResolution.Errors
 import Language.Java.Paragon.NameResolution.Expansion
@@ -35,28 +34,30 @@ thisModule = libraryBase ++ ".NameResolution.ExpansionBuilders"
 -- Creates error when encountering an unsupported import, i.e. a static
 -- import; the phase is continued with an empty expansion mapping for the
 -- provided import.
-buildMapFromImportName :: ImportDecl SrcSpan
-                       -> PiReader (ImportDecl SrcSpan, Expansion)
-buildMapFromImportName (SingleTypeImport srcspan name) = do
+buildMapFromImportName :: ImportDecl
+                       -> PiReader (ImportDecl, Expansion)
+buildMapFromImportName singleTypeImport@(SingleTypeImport {}) = do
   -- eg: import java.util.Vector;
+  let name = impdName singleTypeImport
   finePrint $ "Building expansion map for single import: " ++ unparsePrint name
   mPre <- resolvePrefix (namePrefix name) -- eg: java.util
   let resName = name {nameType = TypeName, namePrefix = mPre }
-  let resImp  = SingleTypeImport srcspan resName
+  let resImp  = singleTypeImport { impdName = resName }
   let resExpn = mkTypeExpansionWithPrefix mPre (idIdent (nameId resName))
   isTy <- doesTypeExist resName
   if isTy
    then return $ (resImp, resExpn)
    else failEC (resImp, emptyExpansion) $ 
-     unresolvedName resName srcspan
+     unresolvedName resName singleTypeImport
   
-buildMapFromImportName (TypeImportOnDemand srcspan name) = do
+buildMapFromImportName typeImportOnDemand@(TypeImportOnDemand {}) = do
   -- eg: import java.util.*;
+  let name = impdName typeImportOnDemand
   finePrint $ "Building expansion map for onDemand import: " ++ 
               unparsePrint name
   mPre <- resolvePrefix (namePrefix name) -- eg: java
   let resName = name { namePrefix = mPre }
-  let resImp  = TypeImportOnDemand srcspan resName
+  let resImp  = typeImportOnDemand { impdName = resName }
   case nameType name of
     PkgName       -> do 
       isPkg <- doesPkgExist resName
@@ -67,34 +68,33 @@ buildMapFromImportName (TypeImportOnDemand srcspan name) = do
            expansionUnion $ 
              map (mkTypeExpansionWithPrefix (Just resName)) piIds)
        else failEC (resImp, emptyExpansion) $
-         unresolvedName resName srcspan
+         unresolvedName resName typeImportOnDemand
     TypeName      -> do
-      failEC (resImp, emptyExpansion) $ unsupportedError "inner types" srcspan
+      failEC (resImp, emptyExpansion) $ unsupportedError "inner types" typeImportOnDemand
     PkgOrTypeName -> do 
       isType <- doesTypeExist name
       isPkg  <- doesPkgExist  name
       if isType
-       then buildMapFromImportName
-              (TypeImportOnDemand srcspan name { nameType = TypeName })
+       then buildMapFromImportName $
+              typeImportOnDemand { impdName = name { nameType = TypeName } }
        else if isPkg
-         then buildMapFromImportName
-                (TypeImportOnDemand srcspan name { nameType = PkgName })
+         then buildMapFromImportName $
+                typeImportOnDemand { impdName = name { nameType = PkgName } }
          else failEC (resImp, emptyExpansion) $
-                invalidPrefix (unparsePrint name) (nameAnn name)
+                invalidPrefix (unparsePrint name) name
     other         -> panic (thisModule ++ ".buildMapFromImportName") $
       "Unexpected name " ++ show name ++ " of nametype " ++ show other
   
 buildMapFromImportName other = do
   finePrint $ "Throwing error for static import: " ++ show other
-  failEC (other, emptyExpansion) $ 
-    unsupportedError "static imports" (impdAnn other)
+  failEC (other, emptyExpansion) $ unsupportedError "static imports" other
 
 
 
 -- | Build an expansion map from explicit (or implicit) imports
 -- (or, incidentally, for implicit import of local package).
-buildMapFromImports :: [ImportDecl SrcSpan] 
-                    -> PiReader ([ImportDecl SrcSpan], Expansion)
+buildMapFromImports :: [ImportDecl] 
+                    -> PiReader ([ImportDecl], Expansion)
 buildMapFromImports imps = do
   (imps', expns) <- fmap unzip $ mapM buildMapFromImportName imps
   return (imps', expansionUnion expns)
@@ -109,7 +109,7 @@ buildMapFromPiPath = do
                             map mkTypeExpansion tys
          
 -- | Build an expansion map from a package declaration
-buildMapFromPkg :: Maybe (PackageDecl SrcSpan) -> PiReader Expansion
+buildMapFromPkg :: Maybe PackageDecl -> PiReader Expansion
 buildMapFromPkg Nothing = return emptyExpansion
 buildMapFromPkg (Just (PackageDecl pos n)) = 
     fmap snd $ buildMapFromImportName (TypeImportOnDemand pos n)
@@ -120,10 +120,10 @@ buildMapFromPkg (Just (PackageDecl pos n)) =
 -- Returns (fully qualified name,
 --          expansion for type itself,
 --          expansion for all its super types)
-buildMapFromTd :: Maybe (Name SrcSpan) -- ^ Name of surrounding package.
-               -> TypeDecl SrcSpan     -- ^ The type declaration.
-               -> Expansion            -- ^ Expansion of java.lang, imports etc.
-               -> PiReader (Name SrcSpan, Expansion, Expansion)
+buildMapFromTd :: Maybe Name   -- ^ Name of surrounding package.
+               -> TypeDecl     -- ^ The type declaration.
+               -> Expansion    -- ^ Expansion of java.lang, imports etc.
+               -> PiReader (Name, Expansion, Expansion)
 buildMapFromTd mPkgPre td expn = do
   -- Extract ident, type params, super types from type declaration
   (pos, i, _tps, supers) <- 
@@ -161,7 +161,7 @@ buildMapFromTd mPkgPre td expn = do
   return (thisFullName, tdExpn, expansionUnion   superExpns)
 
  where -- | Build expansion map for super type and its super types, recursively.
-       buildMapFromSuper :: ClassType SrcSpan -> PiReader Expansion
+       buildMapFromSuper :: ClassType -> PiReader Expansion
        buildMapFromSuper ct = do
          mPre <- resolvePrefix (namePrefix $ ctName ct)
          let resName = (ctName ct) { nameType = TypeName, namePrefix = mPre }
@@ -170,7 +170,7 @@ buildMapFromTd mPkgPre td expn = do
            cu             <- getTypeContents resName
            let sup = cuTypeDecls cu
            when (length sup /= 1) $
-             failE $ unsupportedError "extending multiple types" defaultSpan
+             failE $ unsupportedError "extending multiple types" ct
            (supSups, mDs) <- supersAndMembers (head sup)
            -- Recurse: Build map for super types farther up the hierarchy
            supExpns       <- mapM buildMapFromSuper supSups
@@ -185,8 +185,8 @@ buildMapFromTd mPkgPre td expn = do
            return (expansionUnion $ resExpn : supExpns)
 
        -- | Return list of super types and list of members of the type.
-       supersAndMembers :: TypeDecl SrcSpan 
-                        -> PiReader ([ClassType SrcSpan], [MemberDecl SrcSpan])
+       supersAndMembers :: TypeDecl 
+                        -> PiReader ([ClassType], [MemberDecl])
        supersAndMembers superTd =
          case superTd of
            ClassTypeDecl classDecl -> return $
@@ -194,11 +194,11 @@ buildMapFromTd mPkgPre td expn = do
              , [ memberDecl | MemberDecl memberDecl <- cbDecls $ cdBody classDecl ]
              )
            InterfaceTypeDecl _intDecl -> 
-             failEC ([],[]) $ unsupportedError "interface types" (ann superTd)
+             failEC ([],[]) $ unsupportedError "interface types" superTd
            
 -- | Resolve the prefix of a name. Each part should be either a type or a
 -- package name.
-resolvePrefix :: Maybe (Name SrcSpan) -> PiReader (Maybe (Name SrcSpan))
+resolvePrefix :: Maybe Name -> PiReader (Maybe Name)
 resolvePrefix Nothing = return Nothing
 resolvePrefix (Just name') = do
   mPre <- resolvePrefix (namePrefix name')
@@ -209,13 +209,12 @@ resolvePrefix (Just name') = do
     PkgOrTypeName -> do isType <- doesTypeExist name
                         isPkg  <- doesPkgExist  name
                         if isType
-                         then do failEC () $ unsupportedError "inner types"
-                                   (nameAnn name)
+                         then do failEC () $ unsupportedError "inner types" name
                                  return (Just $ name { nameType = TypeName })
                          else if isPkg
                            then return (Just $ name { nameType = PkgName })
                            else failEC (Just name) $
-                             invalidPrefix (unparsePrint name) (nameAnn name)
+                             invalidPrefix (unparsePrint name) name
     other         -> panic (thisModule ++ ".resolvePrefix") $
       "Unexpected name " ++ show name ++ " of nametype " ++ show other
 
