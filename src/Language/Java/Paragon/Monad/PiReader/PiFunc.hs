@@ -19,15 +19,14 @@ import Language.Java.Paragon.Interaction
 import Language.Java.Paragon.Monad.PiReader.Helpers
 import Language.Java.Paragon.Monad.PiReader.MonadPR
 import Language.Java.Paragon.Parser (parse)
-import Language.Java.Paragon.SrcPos
-import Language.Java.Paragon.Syntax (ann, Name(..), CompilationUnit, NameType(..))
+import Language.Java.Paragon.Syntax (Name(..), CompilationUnit, NameType(..))
 
 piReaderModule :: String
 piReaderModule = libraryBase ++ ".Monad.PiReader.PiFunc"
 
 -- | Checks if there is a directory corresponding to the given package name
 -- in the pi-path environment.
-doesPkgExist :: MonadPR m => Name a -> m Bool
+doesPkgExist :: MonadPR m => Name -> m Bool
 doesPkgExist pkgName = liftPR $ do
   let path = pkgNameToDir pkgName
   piPath <- getPiPath
@@ -37,7 +36,7 @@ doesPkgExist pkgName = liftPR $ do
 -- in the pi-path environment. If a component of the prefix is a type
 -- (determined by recursive calls) we return False since inner types are not
 -- supported.
-doesTypeExist :: MonadPR m => Name SrcSpan -> m Bool
+doesTypeExist :: MonadPR m => Name -> m Bool
 doesTypeExist typeName = liftPR $ do
   tracePrint $ "Checking if type exists: " ++ unparsePrint typeName
   -- Might be a PkgName due to recursive calls.
@@ -47,7 +46,7 @@ doesTypeExist typeName = liftPR $ do
     case namePrefix typeName of
       Just pre -> do 
         isType <- doesTypeExist pre
-        if isType then failEC False $ unsupportedError "inner types" (ann typeName)
+        if isType then failEC False $ unsupportedError "inner types" typeName
                   else cont
       Nothing  -> cont
     -- Not an inner type:
@@ -68,7 +67,7 @@ doesTypeExist typeName = liftPR $ do
 
 -- | Returns the list of all .pi files in the package, on the top-level.
 -- Note: If more than 1 corresponding directory in path, the first is selected.
-getPkgContents :: MonadPR m => Name a -> m [String]
+getPkgContents :: MonadPR m => Name -> m [String]
 getPkgContents pkgName = liftPR $ do
   let path = pkgNameToDir pkgName
   piPath <- getPiPath
@@ -108,15 +107,15 @@ getPiPathContents = do
                                   go pis (tys++ts,pkgs++ps)
                         else go pis (ts,ps)
 
--- |Find and parse .pi file for given AST name
+-- | Find and parse .pi file for given AST name.
 -- Note: If more than 1 corresponding file in path, the first is selected
-getTypeContents :: MonadPR m => Name a -> m (CompilationUnit SrcSpan)
+getTypeContents :: MonadPR m => Name -> m CompilationUnit
 getTypeContents n = liftPR $ do
   let path = typeNameToFile n
   piPath <- getPiPath
   findFirstPi path piPath
 
-      where findFirstPi :: FilePath -> [FilePath] -> PiReader (CompilationUnit SrcSpan)
+      where findFirstPi :: FilePath -> [FilePath] -> PiReader CompilationUnit
             findFirstPi _ [] = panic (piReaderModule ++ ".getTypeContents")
                                ("No such type exists - doesTypeExist not called successfully: "
                                 ++ unparsePrint n)

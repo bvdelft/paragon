@@ -3,20 +3,20 @@ module Language.Java.Paragon.Parser.Names where
 
 import Control.Applicative ((<$>))
 
+import Language.Java.Paragon.Annotation
 import Language.Java.Paragon.Lexer
 import Language.Java.Paragon.Syntax.Names
-import Language.Java.Paragon.SrcPos
 
 import Language.Java.Paragon.Parser.Separators
 import Language.Java.Paragon.Parser.Helpers
 
-ident :: P (Id SrcSpan)
+ident :: P Id
 ident =
   tokWithSpanTest $ \t sp ->
     case t of
-      IdTok s -> Just $ Id sp s
+      IdTok s -> Just $ Id (emptyAnnotation { annSrcSpan = sp }) s
       _       -> Nothing
 
-name :: ([Id SrcSpan] -> Name SrcSpan) -> P (Name SrcSpan)
+name :: ([Id] -> Name) -> P Name
 name nameFun = nameFun <$> seplist1 ident dot
 

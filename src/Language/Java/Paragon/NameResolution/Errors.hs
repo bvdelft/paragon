@@ -14,7 +14,6 @@ import Data.Maybe (fromMaybe)
 import Language.Java.Paragon.Error
 import Language.Java.Paragon.Error.ErrorLabel
 import Language.Java.Paragon.Interaction (unparsePrint)
-import Language.Java.Paragon.SrcPos
 import Language.Java.Paragon.Syntax
 
 -- | Prefix (qualified part of @Name@) is neither a package nor a type.
@@ -28,7 +27,7 @@ invalidPrefix prefix =
     }
 
 -- | Name is not of expected type.
-unresolvedName :: Name a -> MkError
+unresolvedName :: Name -> MkError
 unresolvedName n =
   mkError $ defaultError 
     { pretty    = "Could not resolve name " ++ (unparsePrint n) ++ 
@@ -38,7 +37,7 @@ unresolvedName n =
 
 -- | When taking the union of expansion maps, types of the same name do not
 -- match.
-ambiguousName :: String -> Maybe (Name SrcSpan) -> Maybe (Name SrcSpan) -> MkError
+ambiguousName :: String -> Maybe Name -> Maybe Name -> MkError
 ambiguousName str t1 t2 =
   mkError $ defaultError 
     { pretty    = str ++ " could refer to both " ++                   
@@ -56,7 +55,7 @@ illegalDeref ty name =
     }
 
 -- | Expression appears with package-prefix.
-exprInPkgError :: String -> Name SrcSpan -> Name SrcSpan -> MkError
+exprInPkgError :: String -> Name -> Name -> MkError
 exprInPkgError descr pkg name =
   mkError $ defaultError
     { pretty    = (unparsePrint name) ++ " is a " ++ descr ++ " and cannot " ++

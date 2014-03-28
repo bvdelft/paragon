@@ -1,3 +1,4 @@
+{-# LANGUAGE Rank2Types #-}
 -- | Module defining the error record and the default instance.
 module Language.Java.Paragon.Error
   (
@@ -11,8 +12,11 @@ module Language.Java.Paragon.Error
    -- * The @ErrorContext@ data type
   , ErrorContext(..)
   , defaultContext
+  , errorAnnotation
   ) where
 
+import Language.Java.Paragon.Annotated
+import Language.Java.Paragon.Annotation
 import Language.Java.Paragon.SrcPos
 import Language.Java.Paragon.Error.ErrorLabel
 
@@ -51,12 +55,30 @@ defaultError = Error
   , labels     = [LBLError]
   }
 
--- | Adds the source code location and error context to the error.
-mkError :: Error -> SrcSpan -> [ErrorContext] -> Error
-mkError err sp ctx = err { location = sp, errContext = ctx }
+data ErrorAnnotation = ErrorAnnotation Annotation
 
--- | Type abbreviation to simplify error-defining source code
-type MkError = SrcSpan -> ContextualError
+instance Annotated ErrorAnnotation where
+  ann (ErrorAnnotation x) = x
+
+-- | When an annotation is not available to provide to an error, this
+-- annotation can be used. It gives the default span as source location.
+errorAnnotation :: ErrorAnnotation
+errorAnnotation = ErrorAnnotation $
+  emptyAnnotation { annSrcSpan = defaultSpan }
+
+-- | Adds the source code location and error context to the error.
+mkError :: Annotated a => Error -> a -> [ErrorContext] -> Error
+mkError err el ctx = err { location   = annSrcSpan $ ann el
+                         , errContext = ctx
+                         }
+
+-- | Type abbreviation to simplify error-defining source code. We
+-- require an annotated object to identify the source location (and not
+-- the source location itself to simplify the call to an error; the
+-- source location is extracted from the error in the @mkError@
+-- function). When no annotated object can be used for this purpose,
+-- @errorAnnotation@ can be used.
+type MkError = Annotated a => a -> ContextualError
 
 -- | For lazy or for handling errors via 'fail'
 undefinedError :: String -> [ErrorContext] -> Error

@@ -68,4 +68,3 @@ combineSrcSpan (SrcSpan fileName startLine1 startColumn1 endLine1 endColumn1)
                (SrcSpan _        startLine2 startColumn2 endLine2 endColumn2) =
   SrcSpan fileName (min startLine1 startLine2) (min startColumn1 startColumn2)
                    (max endLine1   endLine2)   (max endColumn1   endColumn2)
-

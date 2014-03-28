@@ -13,6 +13,7 @@ import Data.Maybe (catMaybes)
 import Text.ParserCombinators.Parsec hiding (parse, runParser)
 import qualified Text.ParserCombinators.Parsec as Parsec (runParser)
 
+import Language.Java.Paragon.Annotation
 import Language.Java.Paragon.Error
 import Language.Java.Paragon.Lexer
 import Language.Java.Paragon.Syntax
@@ -27,7 +28,7 @@ import Language.Java.Paragon.Parser.Separators
 import Language.Java.Paragon.Parser.Helpers
 
 -- | Top-level parsing function. Takes a string to parse and a file name.
-parse :: String -> String -> Either ParseError (AST SrcSpan)
+parse :: String -> String -> Either ParseError AST
 parse = runParser compilationUnit
 
 -- | Runner for different parsers. Takes a parser, a string to parse and a file name.
@@ -43,27 +44,27 @@ parseError pe = mkError $ defaultError { pretty = show pe }
 -- Parser building blocks. They almost follow the syntax tree structure.
 
 -- | Parser for the top-level syntax node.
-compilationUnit :: P (CompilationUnit SrcSpan)
+compilationUnit :: P CompilationUnit
 compilationUnit = do
   startPos <- getStartPos
   pkgDecl <- opt packageDecl
   impDecls <- list importDecl
   typeDecls <- fmap catMaybes (list typeDecl)
   endPos <- getEndPos
-  return $ CompilationUnit (mkSrcSpanFromPos startPos endPos)
+  return $ CompilationUnit (srcSpanToAnn $ mkSrcSpanFromPos startPos endPos)
                            pkgDecl impDecls typeDecls
 
-packageDecl :: P (PackageDecl SrcSpan)
+packageDecl :: P PackageDecl
 packageDecl = do
   startPos <- getStartPos
   keyword KW_Package
   pName <- name pkgName <?> "package name"
   semiColon
   endPos <- getEndPos
-  return $ PackageDecl (mkSrcSpanFromPos startPos endPos) pName
+  return $ PackageDecl (srcSpanToAnn $ mkSrcSpanFromPos startPos endPos) pName
   <?> "package declaration"
 
-importDecl :: P (ImportDecl SrcSpan)
+importDecl :: P ImportDecl
 importDecl = do
     startPos <- getStartPos
     keyword KW_Import
@@ -72,7 +73,7 @@ importDecl = do
     hasStar <- bopt $ dot >> (tok Op_Star <?> "* or identifier")
     semiColon
     endPos <- getEndPos
-    return $ mkImportDecl isStatic hasStar (mkSrcSpanFromPos startPos endPos) pkgTypeName
+    return $ mkImportDecl isStatic hasStar (srcSpanToAnn $ mkSrcSpanFromPos startPos endPos) pkgTypeName
     <?> "import declaration"
   where mkImportDecl False False sp n = SingleTypeImport     sp (qualifiedTypeName $ flattenName n)
         mkImportDecl False True  sp n = TypeImportOnDemand   sp (pkgOrTypeName $ flattenName n)
@@ -86,12 +87,12 @@ importDecl = do
                                                     then Nothing
                                                     else (Just $ typeName initN))
 
-typeDecl :: P (Maybe (TypeDecl SrcSpan))
+typeDecl :: P (Maybe TypeDecl)
 typeDecl = Just <$> classOrInterfaceDecl
        <|> const Nothing <$> semiColon
   <?> "type declaration"
 
-classOrInterfaceDecl :: P (TypeDecl SrcSpan)
+classOrInterfaceDecl :: P TypeDecl
 classOrInterfaceDecl = withModifiers $
   (do cdModsFun <- classDeclModsFun
       return $ \mods -> ClassTypeDecl (cdModsFun mods))
@@ -99,10 +100,10 @@ classOrInterfaceDecl = withModifiers $
   (do intdModsFun <- interfaceDeclModsFun
       return $ \mods -> InterfaceTypeDecl (intdModsFun mods))
 
-classDeclModsFun :: P (ModifiersFun (ClassDecl SrcSpan))
+classDeclModsFun :: P (ModifiersFun ClassDecl)
 classDeclModsFun = normalClassDeclModsFun
 
-normalClassDeclModsFun :: P (ModifiersFun (ClassDecl SrcSpan))
+normalClassDeclModsFun :: P (ModifiersFun ClassDecl)
 normalClassDeclModsFun = do
   startPos <- getStartPos
   keyword KW_Class
@@ -111,9 +112,9 @@ normalClassDeclModsFun = do
   endPos <- getEndPos
   return $ \mods ->
     let startPos' = getModifiersStartPos mods startPos
-    in ClassDecl (mkSrcSpanFromPos startPos' endPos) mods classId [] Nothing [] body
+    in ClassDecl (srcSpanToAnn $ mkSrcSpanFromPos startPos' endPos) mods classId [] Nothing [] body
 
-interfaceDeclModsFun :: P (ModifiersFun (InterfaceDecl SrcSpan))
+interfaceDeclModsFun :: P (ModifiersFun InterfaceDecl)
 interfaceDeclModsFun = do
   startPos <- getStartPos
   keyword KW_Interface
@@ -123,26 +124,26 @@ interfaceDeclModsFun = do
   endPos <- getEndPos
   return $ \mods ->
     let startPos' = getModifiersStartPos mods startPos
-    in InterfaceDecl (mkSrcSpanFromPos startPos' endPos) mods iId [] [] IB
+    in InterfaceDecl (srcSpanToAnn $ mkSrcSpanFromPos startPos' endPos) mods iId [] [] IB
 
-classBody :: P (ClassBody SrcSpan)
+classBody :: P ClassBody
 classBody = do
   startPos <- getStartPos
   decls <- braces classBodyDecls
   endPos <- getEndPos
-  return $ ClassBody (mkSrcSpanFromPos startPos endPos) decls
+  return $ ClassBody (srcSpanToAnn $ mkSrcSpanFromPos startPos endPos) decls
   <?> "class body"
 
-classBodyDecls :: P [ClassBodyDecl SrcSpan]
+classBodyDecls :: P [ClassBodyDecl]
 classBodyDecls = list classBodyDecl
 
-classBodyDecl :: P (ClassBodyDecl SrcSpan)
+classBodyDecl :: P (ClassBodyDecl)
 classBodyDecl = withModifiers (do
   membDeclModsFun <- memberDeclModsFun
   return $ \mods -> MemberDecl (membDeclModsFun mods))
   <?> "class body declaration"
 
-memberDeclModsFun :: P (ModifiersFun (MemberDecl SrcSpan))
+memberDeclModsFun :: P (ModifiersFun MemberDecl)
 memberDeclModsFun = do
   startPos <- getStartPos
   retT <- returnType  -- parse the most general type
@@ -158,15 +159,15 @@ memberDeclModsFun = do
     Nothing -> methodDeclAfterTypeModsFun retT startPos
 
 -- | Continues to parse field declaration after type and first identifier have been parsed.
-fieldDeclAfterTypeIdModsFun :: Type SrcSpan -> SrcPos
-                            -> Id SrcSpan -> SrcPos
-                            -> P (VarDecl SrcSpan)
-                            -> P (ModifiersFun (MemberDecl SrcSpan))
+fieldDeclAfterTypeIdModsFun :: Type -> SrcPos
+                            -> Id -> SrcPos
+                            -> P VarDecl
+                            -> P (ModifiersFun MemberDecl)
 fieldDeclAfterTypeIdModsFun t startPos varId varStartPos varDeclFun = do
   -- continue to parse first VarDecl
   vInit <- opt $ tok Op_Assign >> varInit
   varEndPos <- getEndPos
-  let varD = VarDecl (mkSrcSpanFromPos varStartPos varEndPos) varId vInit
+  let varD = VarDecl (srcSpanToAnn $ mkSrcSpanFromPos varStartPos varEndPos) varId vInit
 
   -- try other VarDecls
   hasComma <- bopt comma
@@ -178,16 +179,16 @@ fieldDeclAfterTypeIdModsFun t startPos varId varStartPos varDeclFun = do
   endPos <- getEndPos
   return $ \mods ->
     let startPos' = getModifiersStartPos mods startPos
-    in FieldDecl (mkSrcSpanFromPos startPos' endPos) mods t (varD:varDs)
+    in FieldDecl (srcSpanToAnn $ mkSrcSpanFromPos startPos' endPos) mods t (varD:varDs)
 
 -- | Continues to parse method declaration after return type has been parsed.
-methodDeclAfterTypeModsFun :: ReturnType SrcSpan -> SrcPos -> P (ModifiersFun (MemberDecl SrcSpan))
+methodDeclAfterTypeModsFun :: ReturnType -> SrcPos -> P (ModifiersFun MemberDecl)
 methodDeclAfterTypeModsFun retT startPos = do
   mId <- ident <?> "method name"
   methodDeclAfterTypeIdModsFun retT startPos mId
 
 -- | Continues to parse method declaration after return type and method identifier have been parsed.
-methodDeclAfterTypeIdModsFun :: ReturnType SrcSpan -> SrcPos -> Id SrcSpan -> P (ModifiersFun (MemberDecl SrcSpan))
+methodDeclAfterTypeIdModsFun :: ReturnType -> SrcPos -> Id -> P (ModifiersFun MemberDecl)
 methodDeclAfterTypeIdModsFun retT startPos mId = do
   openParen
   closeParen
@@ -195,40 +196,40 @@ methodDeclAfterTypeIdModsFun retT startPos mId = do
   endPos <- getEndPos
   return $ \mods ->
     let startPos' = getModifiersStartPos mods startPos
-    in MethodDecl (mkSrcSpanFromPos startPos' endPos) mods [] retT mId [] body
+    in MethodDecl (srcSpanToAnn $ mkSrcSpanFromPos startPos' endPos) mods [] retT mId [] body
 
 -- | Takes 'VarDecl' parser to handle restrictions on field declarations in interfaces
 -- (required presence of initializer).
-varDecls :: P (VarDecl SrcSpan) -> P [VarDecl SrcSpan]
+varDecls :: P VarDecl -> P [VarDecl]
 varDecls varDeclFun = varDeclFun `sepBy1` comma
 
-varDecl :: String -> P (VarDecl SrcSpan)
+varDecl :: String -> P VarDecl
 varDecl desc = do
   startPos <- getStartPos
   varId <- ident <?> desc ++ " name"
   vInit <- opt $ tok Op_Assign >> varInit
   endPos <- getEndPos
-  return $ VarDecl (mkSrcSpanFromPos startPos endPos) varId vInit
+  return $ VarDecl (srcSpanToAnn $ mkSrcSpanFromPos startPos endPos) varId vInit
 
-methodBody :: P (MethodBody SrcSpan)
+methodBody :: P MethodBody
 methodBody = do
   startPos <- getStartPos
   mBlock <- const Nothing <$> semiColon
         <|> Just <$> block
   endPos <- getEndPos
-  return $ MethodBody (mkSrcSpanFromPos startPos endPos) mBlock
+  return $ MethodBody (srcSpanToAnn $ mkSrcSpanFromPos startPos endPos) mBlock
 
-varInit :: P (VarInit SrcSpan)
+varInit :: P VarInit
 varInit = InitExp <$> exp
 
-block :: P (Block SrcSpan)
+block :: P Block
 block = do
   startPos <- getStartPos
   blStmts <- braces $ list blockStmt
   endPos <- getEndPos
-  return $ Block (mkSrcSpanFromPos startPos endPos) blStmts
+  return $ Block (srcSpanToAnn $ mkSrcSpanFromPos startPos endPos) blStmts
 
-blockStmt :: P (BlockStmt SrcSpan)
+blockStmt :: P BlockStmt
 blockStmt = do
   startPos <- getStartPos
   mods <- list modifier <?> "local variable declaration"  -- fixing error message
@@ -238,12 +239,12 @@ blockStmt = do
            <|>
          BlockStmt <$> stmt <?> "statement"
 
-localVarDecl :: SrcPos -> [Modifier SrcSpan] -> P (BlockStmt SrcSpan)
+localVarDecl :: SrcPos -> [Modifier] -> P BlockStmt
 localVarDecl startPos mods = do
   t <- ttype
   varDs <- varDecls (varDecl "variable")
   semiColon
   endPos <- getEndPos            
-  return $ LocalVars (mkSrcSpanFromPos startPos endPos) mods t varDs
+  return $ LocalVars (srcSpanToAnn $ mkSrcSpanFromPos startPos endPos) mods t varDs
   <?> "local variable declaration"
 

@@ -10,6 +10,7 @@ module Language.Java.Paragon.Parser.Modifiers
 import Control.Applicative ((<$>))
 import Text.ParserCombinators.Parsec
 
+import Language.Java.Paragon.Annotation
 import Language.Java.Paragon.Lexer
 import Language.Java.Paragon.Syntax.Modifiers
 import Language.Java.Paragon.SrcPos
@@ -22,7 +23,7 @@ import Language.Java.Paragon.Parser.Helpers
 -- This type synonym is for the nodes that have this gap to be filled in (by 'withModifiers').
 -- When 'ModifiersFun' and 'withModifiers' are used, be careful to deal correctly with the
 -- source span. Look at the example of how to fix it in existing parsing functions.
-type ModifiersFun a = [Modifier SrcSpan] -> a
+type ModifiersFun a = [Modifier] -> a
 
 -- | Takes a parser for an entity that expects modifiers before it.
 -- Parses zero or more modifiers, runs a given parser which results in
@@ -33,7 +34,7 @@ withModifiers pmf = do
   mf <- pmf
   return $ mf mods
 
-modifier :: P (Modifier SrcSpan)
+modifier :: P Modifier
 modifier =
       Public       <$> keywordWithSpan KW_Public
   <|> Protected    <$> keywordWithSpan KW_Protected
@@ -57,18 +58,18 @@ modifier =
           tok Question
           p <- policy
           endPos <- getEndPos
-          return $ Reads (mkSrcSpanFromPos startPos endPos) p)
+          return $ Reads (srcSpanToAnn $ mkSrcSpanFromPos startPos endPos) p)
   <|> (do startPos <- getStartPos
           tok Op_Bang
           p <- policy
           endPos <- getEndPos
-          return $ Writes (mkSrcSpanFromPos startPos endPos) p)
+          return $ Writes (srcSpanToAnn $ mkSrcSpanFromPos startPos endPos) p)
   <?> "modifier"
 
 -- | Takes a list of modifiers annotated with source spans and a default starting position.
 -- If there are no modifiers - returns the default, otherwise - returns the starting 
 -- position of the first modifier.
-getModifiersStartPos :: [Modifier SrcSpan] -> SrcPos -> SrcPos
+getModifiersStartPos :: [Modifier] -> SrcPos -> SrcPos
 getModifiersStartPos []    defaultSrcPos = defaultSrcPos
-getModifiersStartPos (m:_) _             = srcSpanToStartPos (ann m)
+getModifiersStartPos (m:_) _             = srcSpanToStartPos (annSrcSpan $ ann m)
 

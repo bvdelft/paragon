@@ -5,6 +5,7 @@ import Control.Applicative ((<$>))
 
 import Text.ParserCombinators.Parsec
 
+import Language.Java.Paragon.Annotation
 import Language.Java.Paragon.Lexer
 import Language.Java.Paragon.Syntax.Types
 import Language.Java.Paragon.SrcPos
@@ -12,13 +13,13 @@ import Language.Java.Paragon.SrcPos
 import Language.Java.Paragon.Parser.Names
 import Language.Java.Paragon.Parser.Helpers
 
-ttype :: P (Type SrcSpan)
+ttype :: P Type
 ttype =
       PrimType <$> primType
   <|> RefType <$> refType
   <?> "type"
 
-primType :: P (PrimType SrcSpan)
+primType :: P PrimType
 primType =
       BooleanT <$> keywordWithSpan KW_Boolean
   <|> ByteT    <$> keywordWithSpan KW_Byte
@@ -31,17 +32,18 @@ primType =
   -- Paragon specific
   <|> PolicyT  <$> keywordWithSpan KW_P_Policy
 
-refType :: P (RefType SrcSpan)
+refType :: P RefType
 refType = ClassRefType <$> classType
 
-classType :: P (ClassType SrcSpan)
+classType :: P ClassType
 classType = do
   startPos <- getStartPos
   n <- name qualifiedTypeName
   endPos <- getEndPos
-  return $ ClassType (mkSrcSpanFromPos startPos endPos) n []
+  let cAnn = srcSpanToAnn $ mkSrcSpanFromPos startPos endPos
+  return $ ClassType cAnn n []
 
-returnType :: P (ReturnType SrcSpan)
+returnType :: P ReturnType 
 returnType =
       VoidType <$> keywordWithSpan KW_Void
   <|> Type <$> ttype

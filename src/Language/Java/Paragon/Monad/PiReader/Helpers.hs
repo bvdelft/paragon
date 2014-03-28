@@ -40,7 +40,7 @@ filterPkgIdentsM dir files = liftIO $ do
     return [ f | f <- fs, head f /= '.' ]
 
 -- | Convert an AST package name into a file path to the package directory.
-pkgNameToDir :: Name a -> FilePath
+pkgNameToDir :: Name -> FilePath
 pkgNameToDir pkgName =
   case nameType pkgName of
     PkgName   ->
@@ -56,7 +56,7 @@ pkgNameToDir pkgName =
     _         -> panic (prHelperModule ++ ".packNameToDir") (unparsePrint pkgName)
 
 -- | Convert AST type name into a file path to actual @.pi@ file.
-typeNameToFile :: Name a -> FilePath
+typeNameToFile :: Name -> FilePath
 typeNameToFile typeName =
   case nameType typeName of
     TypeName  ->

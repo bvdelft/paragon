@@ -16,18 +16,17 @@ import Control.Monad (ap, liftM)
 import Language.Java.Paragon.Monad.Base
 import Language.Java.Paragon.Monad.PiReader
 import Language.Java.Paragon.NameResolution.Expansion
-import Language.Java.Paragon.SrcPos
 import Language.Java.Paragon.Syntax
 
 data NameResEnv = NameResEnv
-  { nrCurrentName :: Name SrcSpan
+  { nrCurrentName :: Name
   , nrExpansion   :: Expansion
   }
 
 newtype NameRes a = 
   NameRes { runNameRes :: NameResEnv -> PiReader a }
   
-type Resolve ast = ast SrcSpan -> NameRes (ast SrcSpan)
+type Resolve ast = ast -> NameRes ast
 
 instance Monad NameRes where
   return          = liftPR . return
@@ -66,7 +65,7 @@ getExpansion :: NameRes Expansion
 getExpansion = nrExpansion <$> getNameResEnv
 
 -- | Access name of currently handled syntactical unit
-getCurrentName :: NameRes (Name SrcSpan)
+getCurrentName :: NameRes Name
 getCurrentName = nrCurrentName <$> getNameResEnv
 
 -- | Set expansion map for given NameRes computation

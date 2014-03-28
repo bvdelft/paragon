@@ -7,16 +7,15 @@ module Language.Java.Paragon.NameResolution.ExpansionRecord
   , expandAll
   ) where
 
-import Language.Java.Paragon.SrcPos
 import Language.Java.Paragon.Syntax
 import Language.Java.Paragon.NameResolution.Expansion
 
 -- | A record for collecting various types of idents that need to be expanded.
 data ExpansionRecord = ExpansionRecord 
-  { expandTypes   :: [Id SrcSpan]
-  , expandMethods :: [Id SrcSpan]
-  , expandLocks   :: [Id SrcSpan]
-  , expandExps    :: [Id SrcSpan]
+  { expandTypes   :: [Id]
+  , expandMethods :: [Id]
+  , expandLocks   :: [Id]
+  , expandExps    :: [Id]
   }
 
 -- | Empty expansion record.

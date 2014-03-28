@@ -34,6 +34,7 @@ import Data.Maybe (isJust)
 import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Pos (newPos)
 
+import Language.Java.Paragon.Annotation
 import Language.Java.Paragon.Lexer
 import Language.Java.Paragon.SrcPos
 
@@ -55,13 +56,15 @@ tok t = do
   where testT tws = if t == twsTok tws then Just () else Nothing
 
 -- | Matches a given token and returns a source span.
-tokWithSpan :: Token -> P SrcSpan
-tokWithSpan t = tokWithSpanTest (\t' sp -> if t == t' then Just sp else Nothing)
+tokWithSpan :: Token -> P Annotation
+tokWithSpan t = do
+  srcSpan <- tokWithSpanTest (\t' sp -> if t == t' then Just sp else Nothing)
+  return $ srcSpanToAnn srcSpan
 
 -- | Matches a given token and returns a source span.
 -- Uses passed description string when reporting errors.
-tokWithSpanDesc :: String -> Token -> P SrcSpan
-tokWithSpanDesc desc t = tokWithSpanTest (\t' sp -> if t == t' then Just sp else Nothing) <?> desc ++ " " ++ show t
+tokWithSpanDesc :: String -> Token -> P Annotation
+tokWithSpanDesc desc t = tokWithSpan t <?> desc ++ " " ++ show t
 
 -- | Parses a token which is accepted by a given function.
 tokWithSpanTest :: (Token -> SrcSpan -> Maybe a) -> P a
@@ -90,8 +93,9 @@ updateUserState fileName = do
 keyword :: Token -> P ()
 keyword t = tok t <?> "keyword " ++ show t
 
--- | Matches a given keyword and returns a source span for this keyword.
-keywordWithSpan :: Token -> P SrcSpan
+-- | Matches a given keyword and returns a source span for this keyword
+-- as part of the empty annotation.
+keywordWithSpan :: Token -> P Annotation
 keywordWithSpan = tokWithSpanDesc "keyword"
 
 -- | Matches a given operator with better error message in case of failure.
@@ -99,7 +103,7 @@ operator :: Token -> P ()
 operator t = tok t <?> "operator " ++ show t
 
 -- | Matches a given operator and returns a source span for this operator.
-operatorWithSpan :: Token -> P SrcSpan
+operatorWithSpan :: Token -> P Annotation
 operatorWithSpan = tokWithSpanDesc "operator"
 
 -- Source positions

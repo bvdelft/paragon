@@ -26,19 +26,19 @@ compPhaseContext phase =
   defaultContext { context = "During " ++ phase }
 
 -- | While checking the body of the provided class.
-classBodyContext :: ClassDecl a -> ErrorContext
+classBodyContext :: ClassDecl -> ErrorContext
 classBodyContext classDecl =
   let className = idIdent $ cdId classDecl
   in defaultContext { context = "In the body of class " ++ className }
 
 -- | While checking the body of the provided interface.
-interfaceBodyContext :: InterfaceDecl a -> ErrorContext
+interfaceBodyContext :: InterfaceDecl -> ErrorContext
 interfaceBodyContext intDecl =
   let intdName = idIdent $ intdId intDecl
   in defaultContext { context = "In the body of interface " ++ intdName }
 
 -- | While checking the declarations of member(s).
-memberDeclContext :: MemberDecl a -> ErrorContext
+memberDeclContext :: MemberDecl -> ErrorContext
 memberDeclContext fieldDecl@(FieldDecl {}) =
   let fieldNames = map (idIdent . varDeclId) (fieldDeclVarDecls fieldDecl)
   in defaultContext { context = "In the declaration of fields " ++ 

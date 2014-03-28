@@ -6,9 +6,10 @@ module Language.Java.Paragon.Annotation
     -- The @Annotation@ data type
     Annotation(..)
   , emptyAnnotation
+  , srcSpanToAnn
   ) where
 
-import Language.Java.Paragon.Interaction
+import Language.Java.Paragon.Interaction.Panic
 import Language.Java.Paragon.SrcPos
 import Language.Java.Paragon.TypeChecker.Types
 
@@ -34,3 +35,6 @@ emptyAnnotation = Annotation
   }
   where thisFunction = "Language.Java.Paragon.Annotation.defaultAnnotation"
         msg str = "The " ++ str ++ " annotation is not available in this phase."
+
+srcSpanToAnn :: SrcSpan -> Annotation
+srcSpanToAnn s = emptyAnnotation { annSrcSpan = s }
