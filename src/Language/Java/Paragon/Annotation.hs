@@ -29,7 +29,7 @@ data Annotation = Annotation
   , annType     :: Maybe (TcType, Bool)
     -- | Whether the value of this node can be null.
   , annIsNull   :: Bool
-  } deriving (Show, Ord)
+  }
 
 -- | Since every part of an annotation that has not been instantiated
 -- yet (i.e. the phase that instantiates this part has not yet passed)
@@ -45,16 +45,34 @@ instance Eq Annotation where
          panicSafeEq x y = safeEval x == safeEval y
          -- | Guarantees to give a value. Either the intended value, but
          -- if it was an error message then this error message as
-         -- string. Even better would be to have a special data type
-         -- instead of a String, but safe here since none of the
-         -- annotations is a String.
-         safeEval :: Eq a => a -> Either String a
+         -- string.
+         safeEval :: a -> Either String a
          safeEval val = unsafePerformIO $ 
                           catch ( do let !_forceEval = val
                                      return $ Right val ) 
                                 (\err -> return $ Left $ show (err::SomeException))
 
-           
+-- | With the same reasoning, Show:
+instance Show Annotation where
+  show an = "{" ++ "annSrcSpan = " ++ safeShow (annSrcSpan an) ++ ", "
+                ++ "annType = "    ++ safeShow (annType    an) ++ ", "
+                ++ "annIsNull = "  ++ safeShow (annIsNull  an) ++ "}"
+   where safeShow :: Show a => a -> String
+         safeShow val = unsafePerformIO $ 
+                          catch ( do let !_forceEval = val
+                                     return $ show val ) 
+                                ((\_ -> return $ "\"Not available in this phase\"") :: (SomeException -> IO String))
+
+-- | With the same reasoning, Ord:
+instance Ord Annotation where
+  (<=) annA annB =  safeEval (annSrcSpan annA) <= safeEval (annSrcSpan annB)
+                 && safeEval (annType    annA) <= safeEval (annType    annB)
+                 && safeEval (annIsNull  annA) <= safeEval (annIsNull  annB)
+   where safeEval :: a -> Either String a
+         safeEval val = unsafePerformIO $ 
+                          catch ( do let !_forceEval = val
+                                     return $ Right val ) 
+                                (\err -> return $ Left $ show (err::SomeException))
 
 -- | Empty annotation. Any evaluation of an element of this annotation will
 -- result in a panic.
