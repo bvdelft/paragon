@@ -18,7 +18,6 @@ import Language.Java.Paragon.Monad.Base
 import Language.Java.Paragon.Monad.PiReader
 import Language.Java.Paragon.NameResolution
 import Language.Java.Paragon.Parser
-import Language.Java.Paragon.SrcPos
 
 -- | Given the flags and a file to the compiler, run the compilation. 
 parac :: [Flag] -> String -> IO [Error]
@@ -30,7 +29,7 @@ parac flags filePath = do
     let sourcepath = fromMaybe "." (getSourcePath flags)
     content <- liftIO $ readFile $ sourcepath </> filePath
     case parse content filePath of
-      Left e    -> failE (parseError e defaultSpan)
+      Left e    -> failE (parseError e errorAnnotation)
       Right ast -> do
         _resolvedAST <- raiseErrors $ liftToBaseM piPath (resolveNames ast)        
         detailPrint $ "Finished compilation of " ++ filePath ++ "\n"
