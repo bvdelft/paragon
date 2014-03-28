@@ -4,7 +4,7 @@
 module Language.Java.Paragon.Annotation
   (
     -- The @Annotation@ data type
-    Annotation
+    Annotation(..)
   , emptyAnnotation
   ) where
 
@@ -22,7 +22,7 @@ data Annotation = Annotation
   , annType     :: Maybe (TcType, Bool)
     -- | Whether the value of this node can be null.
   , annIsNull   :: Bool
-  }
+  } deriving (Show, Eq, Ord)
 
 -- | Empty annotation. Any evaluation of an element of this annotation will
 -- result in a panic.

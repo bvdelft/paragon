@@ -1,7 +1,3 @@
-{-# LANGUAGE TemplateHaskell
-           , DeriveFunctor
- #-}
-
 -- | Paragon Abstract Syntax Tree.
 module Language.Java.Paragon.Syntax
   (
@@ -23,6 +19,7 @@ import Language.Java.Paragon.Syntax.Expressions
 import Language.Java.Paragon.Syntax.Modifiers
 
 import Language.Java.Paragon.Annotated
+import Language.Java.Paragon.Annotation
 
 syntaxModule :: String
 syntaxModule = libraryBase ++ ".Syntax"
@@ -31,173 +28,201 @@ syntaxModule = libraryBase ++ ".Syntax"
 type AST = CompilationUnit
 
 -- | Compilation unit.
-data CompilationUnit a = CompilationUnit
-  { cuAnn         :: a                      -- ^ Annotation.
-  , cuPkgDecl     :: Maybe (PackageDecl a)  -- ^ Package declaration.
-  , cuImportDecls :: [ImportDecl a]         -- ^ Import declarations.
-  , cuTypeDecls   :: [TypeDecl a]           -- ^ Type declarations.
-  } deriving (Show, Eq, Functor)
+data CompilationUnit = CompilationUnit
+  { cuAnn         :: Annotation         -- ^ Annotation.
+  , cuPkgDecl     :: Maybe PackageDecl  -- ^ Package declaration.
+  , cuImportDecls :: [ImportDecl]       -- ^ Import declarations.
+  , cuTypeDecls   :: [TypeDecl]         -- ^ Type declarations.
+  } deriving (Show, Eq)
 
 -- | Package declaration.
-data PackageDecl a = PackageDecl
-  { pdAnn  :: a       -- ^ Annotation.
-  , pdName :: Name a  -- ^ Package name.
-  } deriving (Show, Eq, Functor)
+data PackageDecl = PackageDecl
+  { pdAnn  :: Annotation  -- ^ Annotation.
+  , pdName :: Name        -- ^ Package name.
+  } deriving (Show, Eq)
 
 -- | Import declaration.
-data ImportDecl a =
+data ImportDecl =
     -- | Import a single type.
     -- Example: import java.util.LinkedList;
-    SingleTypeImport { impdAnn  :: a       -- ^ Annotation.
-                     , impdName :: Name a  -- ^ Type\/package\/member name.
+    SingleTypeImport { impdAnn  :: Annotation  -- ^ Annotation.
+                     , impdName :: Name        -- ^ Type\/package\/member name.
                      }
 
     -- | Import all the types contained in a package.
     -- Example: import java.util.*;
-  | TypeImportOnDemand { impdAnn  :: a
-                       , impdName :: Name a
+  | TypeImportOnDemand { impdAnn  :: Annotation
+                       , impdName :: Name
                        }
 
     -- | Static import of a single type.
     -- Example: import static java.lang.Math.PI;
-  | SingleStaticImport { impdAnn  :: a
-                       , impdName :: Name a
+  | SingleStaticImport { impdAnn  :: Annotation
+                       , impdName :: Name
                        }
 
     -- | Static import of all members.
     -- Example: import static java.lang.Math.*;
-  | StaticImportOnDemand { impdAnn  :: a
-                         , impdName :: Name a
+  | StaticImportOnDemand { impdAnn  :: Annotation
+                         , impdName :: Name
                          }
-  deriving (Show, Eq, Functor)
+  deriving (Show, Eq)
 
 -- | Class or interface declaration.
-data TypeDecl a =
+data TypeDecl =
     -- | Class declaration.
-    ClassTypeDecl (ClassDecl a)
+    ClassTypeDecl ClassDecl
     -- | Interface declaration.
-  | InterfaceTypeDecl (InterfaceDecl a)
-  deriving (Show, Eq, Functor)
+  | InterfaceTypeDecl InterfaceDecl
+  deriving (Show, Eq)
 
 -- | Class declaration.
-data ClassDecl a = ClassDecl
-  { cdAnn        :: a                    -- ^ Annotation.
-  , cdModifiers  :: [Modifier a]         -- ^ Modifiers.
-  , cdId         :: Id a                 -- ^ Class identifier.
-  , cdTypeParams :: [TypeParam a]        -- ^ Type parameters.
-  , cdSuperClass :: Maybe (ClassType a)  -- ^ Super class if the class has one.
-  , cdInterfaces :: [ClassType a]        -- ^ Interfaces it implements.
-  , cdBody       :: ClassBody a          -- ^ Class body.
-  } deriving (Show, Eq, Functor)
+data ClassDecl = ClassDecl
+  { cdAnn        :: Annotation       -- ^ Annotation.
+  , cdModifiers  :: [Modifier]       -- ^ Modifiers.
+  , cdId         :: Id               -- ^ Class identifier.
+  , cdTypeParams :: [TypeParam]      -- ^ Type parameters.
+  , cdSuperClass :: Maybe ClassType  -- ^ Super class if the class has one.
+  , cdInterfaces :: [ClassType]      -- ^ Interfaces it implements.
+  , cdBody       :: ClassBody        -- ^ Class body.
+  } deriving (Show, Eq)
 
 -- | Interface declaration.
-data InterfaceDecl a = InterfaceDecl
-  { intdAnn        :: a                -- ^ Annotation.
-  , intdModifiers  :: [Modifier a]     -- ^ Modifiers.
-  , intdId         :: Id a             -- ^ Interface identifier.
-  , intdTypeParams :: [TypeParam a]    -- ^ Type parameters.
-  , intdInterfaces :: [ClassType a]    -- ^ Interfaces it extends.
-  , intdBody       :: InterfaceBody a  -- ^ Interface body.
-  } deriving (Show, Eq, Functor)
+data InterfaceDecl = InterfaceDecl
+  { intdAnn        :: Annotation     -- ^ Annotation.
+  , intdModifiers  :: [Modifier]     -- ^ Modifiers.
+  , intdId         :: Id             -- ^ Interface identifier.
+  , intdTypeParams :: [TypeParam]    -- ^ Type parameters.
+  , intdInterfaces :: [ClassType]    -- ^ Interfaces it extends.
+  , intdBody       :: InterfaceBody  -- ^ Interface body.
+  } deriving (Show, Eq)
 
-data TypeParam a = TP
-  deriving (Show, Eq, Functor)
+data TypeParam = TP
+  deriving (Show, Eq)
 
 -- | Class body.
-data ClassBody a = ClassBody
-  { cbAnn   :: a                  -- ^ Annotation.
-  , cbDecls :: [ClassBodyDecl a]  -- ^ Declarations.
-  } deriving (Show, Eq, Functor)
+data ClassBody = ClassBody
+  { cbAnn   :: Annotation       -- ^ Annotation.
+  , cbDecls :: [ClassBodyDecl]  -- ^ Declarations.
+  } deriving (Show, Eq)
 
-data InterfaceBody a = IB
-  deriving (Show, Eq, Functor)
+data InterfaceBody = IB
+  deriving (Show, Eq)
 
 -- | Declaration in class body.
-data ClassBodyDecl a =
+data ClassBodyDecl =
     -- | Member declaration.
-    MemberDecl (MemberDecl a)
+    MemberDecl MemberDecl
   -- TODO: InitDecl
-  deriving (Show, Eq, Functor)
+  deriving (Show, Eq)
 
 -- | Member declaration. Unsafe records.
-data MemberDecl a =
+data MemberDecl =
     -- | Field declaration.
-    FieldDecl { membDeclAnn        :: a             -- ^ Annotation.
-              , fieldDeclModifiers :: [Modifier a]  -- ^ Modifiers.
-              , fieldDeclType      :: Type a        -- ^ Field type.
-              , fieldDeclVarDecls  :: [VarDecl a]   -- ^ Variable declarators.
+    FieldDecl { membDeclAnn        :: Annotation  -- ^ Annotation.
+              , fieldDeclModifiers :: [Modifier]  -- ^ Modifiers.
+              , fieldDeclType      :: Type        -- ^ Field type.
+              , fieldDeclVarDecls  :: [VarDecl]   -- ^ Variable declarators.
               }
     -- | Method declaration.
-  | MethodDecl { membDeclAnn            :: a
-               , methodDeclModifiers    :: [Modifier a]     -- ^ Modifiers.
-               , methodDeclTypeParams   :: [TypeParam a]    -- ^ Type parameters of generic method.
-               , methodDeclReturnType   :: ReturnType a     -- ^ Method return type.
-               , methodDeclId           :: Id a             -- ^ Method identifier.
-               , methodDeclFormalParams :: [FormalParam a]  -- ^ Formal parameters.
+  | MethodDecl { membDeclAnn            :: Annotation     -- ^ Annotation.
+               , methodDeclModifiers    :: [Modifier]     -- ^ Modifiers.
+               , methodDeclTypeParams   :: [TypeParam]    -- ^ Type parameters of generic method.
+               , methodDeclReturnType   :: ReturnType     -- ^ Method return type.
+               , methodDeclId           :: Id             -- ^ Method identifier.
+               , methodDeclFormalParams :: [FormalParam]  -- ^ Formal parameters.
                -- TODO: exceptions
-               , methodDeclBody         :: MethodBody a     -- ^ Method body.
+               , methodDeclBody         :: MethodBody     -- ^ Method body.
                }
-  deriving (Show, Eq, Functor)
+  deriving (Show, Eq)
 
 -- | Variable/field declaration with optional initializer.
-data VarDecl a = VarDecl
-  { varDeclAnn  :: a                  -- ^ Annotation.
-  , varDeclId   :: Id a               -- ^ Variable identifier.
-  , varDeclInit :: Maybe (VarInit a)  -- ^ Optional variable initializer.
-  } deriving (Show, Eq, Functor)
+data VarDecl = VarDecl
+  { varDeclAnn  :: Annotation     -- ^ Annotation.
+  , varDeclId   :: Id             -- ^ Variable identifier.
+  , varDeclInit :: Maybe VarInit  -- ^ Optional variable initializer.
+  } deriving (Show, Eq)
 
 -- | Method formal parameter.
-data FormalParam a = FormalParam
-  { formalParamAnn       :: a             -- ^ Annotation.
-  , formalParamModifiers :: [Modifier a]  -- ^ Modifiers.
-  , formalParamType      :: Type a        -- ^ Parameter type.
-  , formalParamVarArity  :: Bool          -- ^ Is it varargs parameter (variable arity).
-  , formalParamId        :: Id a          -- ^ Parameter identifier.
-  } deriving (Show, Eq, Functor)
+data FormalParam = FormalParam
+  { formalParamAnn       :: Annotation  -- ^ Annotation.
+  , formalParamModifiers :: [Modifier]  -- ^ Modifiers.
+  , formalParamType      :: Type        -- ^ Parameter type.
+  , formalParamVarArity  :: Bool        -- ^ Is it varargs parameter (variable arity).
+  , formalParamId        :: Id          -- ^ Parameter identifier.
+  } deriving (Show, Eq)
 
 -- | Method body or the lack of it.
-data MethodBody a = MethodBody
-  { methodBodyAnn   :: a                -- ^ Annotation.
-  , methodBodyBlock :: Maybe (Block a)  -- ^ Optional method body (code block) or semicolon.
-  } deriving (Show, Eq, Functor)
+data MethodBody = MethodBody
+  { methodBodyAnn   :: Annotation   -- ^ Annotation.
+  , methodBodyBlock :: Maybe Block  -- ^ Optional method body (code block) or semicolon.
+  } deriving (Show, Eq)
 
 -- | Explicit initializer for field/variable declaration.
-data VarInit a = InitExp { varInitExp :: Exp a }
-  deriving (Show, Eq, Functor)
+data VarInit = InitExp { varInitExp :: Exp }
+  deriving (Show, Eq)
 
 -- | Code block.
-data Block a = Block
-  { blockAnn      :: a              -- ^ Annotation.
-  , blockAnnStmts :: [BlockStmt a]  -- ^ Block statements.
-  } deriving (Show, Eq, Functor)
+data Block = Block
+  { blockAnn      :: Annotation   -- ^ Annotation.
+  , blockAnnStmts :: [BlockStmt]  -- ^ Block statements.
+  } deriving (Show, Eq)
 
 -- | Block statement. Unsafe records.
-data BlockStmt a =
+data BlockStmt =
     -- | Normal statement.
-    BlockStmt (Stmt a)
+    BlockStmt Stmt
     -- | Local variable declaration.
-  | LocalVars { localVarsAnn       :: a             -- ^ Annotation.
-              , localVarsModifiers :: [Modifier a]  -- ^ Modifiers.
-              , localVarsType      :: Type a        -- ^ Variable declaration type.
-              , localVarsDecls     :: [VarDecl a]   -- ^ Variable declarators.
+  | LocalVars { localVarsAnn       :: Annotation  -- ^ Annotation.
+              , localVarsModifiers :: [Modifier]  -- ^ Modifiers.
+              , localVarsType      :: Type        -- ^ Variable declaration type.
+              , localVarsDecls     :: [VarDecl]   -- ^ Variable declarators.
               }
-  deriving (Show, Eq, Functor)
+  deriving (Show, Eq)
 
-$(deriveAnnotatedMany
-  [ ''CompilationUnit
-  , ''PackageDecl
-  , ''ImportDecl
-  , ''TypeDecl
-  , ''ClassDecl
-  , ''InterfaceDecl
-  , ''ClassBody
-  , ''ClassBodyDecl
-  , ''MemberDecl
-  , ''VarDecl
-  , ''FormalParam
-  , ''MethodBody
-  , ''VarInit
-  , ''Block
-  , ''BlockStmt
-  ])
+instance Annotated CompilationUnit where
+  ann = cuAnn
 
+instance Annotated PackageDecl where
+  ann = pdAnn
+
+instance Annotated ImportDecl where
+  ann = impdAnn
+
+instance Annotated TypeDecl where
+  ann (ClassTypeDecl     x) = ann x
+  ann (InterfaceTypeDecl x) = ann x
+
+instance Annotated ClassDecl where
+  ann = cdAnn
+
+instance Annotated InterfaceDecl where
+  ann = intdAnn
+
+instance Annotated ClassBody where
+  ann = cbAnn
+
+instance Annotated ClassBodyDecl where
+  ann (MemberDecl x) = ann x
+
+instance Annotated MemberDecl where
+  ann = membDeclAnn
+
+instance Annotated VarDecl where
+  ann = varDeclAnn
+
+instance Annotated FormalParam where
+  ann = formalParamAnn
+
+instance Annotated MethodBody where
+  ann = methodBodyAnn
+
+instance Annotated VarInit where
+  ann = ann . varInitExp
+
+instance Annotated Block where
+  ann = blockAnn
+
+instance Annotated BlockStmt where
+  ann (BlockStmt x) = ann x
+  ann x@(LocalVars {}) = localVarsAnn x

@@ -10,26 +10,33 @@ import Text.PrettyPrint
 import Language.Java.Paragon.Interaction (panic, libraryBase, Unparse(..))
 import Language.Java.Paragon.SrcPos
 
+import Language.Java.Paragon.Annotation
 import Language.Java.Paragon.Annotated
 
 namesModule :: String
 namesModule = libraryBase ++ ".Syntax.Names"
 
 -- | Identifier data type.
-data Id a = Id
-  { idAnn   :: a       -- ^ Annotation.
-  , idIdent :: String  -- ^ Identifier's string.
-  } deriving (Show, Eq, Functor, Ord)
+data Id = Id
+  { idAnn   :: Annotation  -- ^ Annotation.
+  , idIdent :: String      -- ^ Identifier's string.
+  } deriving (Show, Eq, Ord)
+
+instance Annotated Id where
+  ann = idAnn
 
 -- | Qualified name. A dot-separated list of identifiers.
-data Name a = Name
-  { nameAnn    :: a               -- ^ Annotation.
-  , nameId     :: Id a            -- ^ Identifier.
-  , nameType   :: NameType        -- ^ Type of the name.
-  , namePrefix :: Maybe (Name a)  -- ^ Possibly, name part before the dot.
-  } deriving (Show, Eq, Functor)
+data Name = Name
+  { nameAnn    :: Annotation  -- ^ Annotation.
+  , nameId     :: Id          -- ^ Identifier.
+  , nameType   :: NameType    -- ^ Type of the name.
+  , namePrefix :: Maybe Name  -- ^ Possibly, name part before the dot.
+  } deriving (Show, Eq)
 
-instance Unparse (Name a) where
+instance Annotated Name where
+  ann = nameAnn
+
+instance Unparse Name where
   unparse name =
     case namePrefix name of
       Nothing  -> text $ idIdent (nameId name)
@@ -47,58 +54,55 @@ data NameType = ExpName           -- ^ Expression name.
               | AmbigName         -- ^ Ambiguous name.
   deriving (Show, Eq, Ord)
 
-$(deriveAnnotatedMany
-  [ ''Id
-  , ''Name
-  ])
-
 -- Name type helpers.
 
 -- | Creates a qualified name from name type and list of identifiers.
 -- Takes a function to combine annotations.
-mkName :: (a -> a -> a) -> NameType -> [Id a] -> Name a
+mkName :: (Annotation -> Annotation -> Annotation) -> NameType -> [Id] -> Name
 mkName combine nameT ids = mkName' (reverse ids)
-  where mkName' [i]    = Name (idAnn i) i nameT Nothing
+  where mkName' [i]    = Name (ann i) i nameT Nothing
         mkName' (i:is) = let pre = mkName' is
-                         in Name (combine (nameAnn pre) (idAnn i)) i nameT (Just pre)
+                         in Name (combine (ann pre) (ann i)) i nameT (Just pre)
         mkName' [] = panic (namesModule ++ ".mkName") "empty list of identifiers"
 
 -- | Transforms a qualified name to list of identifiers.
-flattenName :: Name a -> [Id a]
+flattenName :: Name -> [Id]
 flattenName name = reverse (flattenName' name)
   where flattenName' (Name _ i _ mPre) = i : maybe [] flattenName' mPre
 
 -- Create qualified names of different name types from list of identifiers.
 
-mkNameSrcSpan :: NameType -> [Id SrcSpan] -> Name SrcSpan
-mkNameSrcSpan = mkName combineSrcSpan
+mkNameSrcSpan :: NameType -> [Id] -> Name
+mkNameSrcSpan = mkName (\a -> \b -> 
+  a { annSrcSpan = combineSrcSpan (annSrcSpan a) (annSrcSpan b) })
 
-expName :: [Id SrcSpan] -> Name SrcSpan
+expName :: [Id] -> Name
 expName = mkNameSrcSpan ExpName
 
-typeName :: [Id SrcSpan] -> Name SrcSpan
+typeName :: [Id] -> Name
 typeName = mkNameSrcSpan TypeName
 
-pkgName :: [Id SrcSpan] -> Name SrcSpan
+pkgName :: [Id] -> Name
 pkgName = mkNameSrcSpan PkgName
 
-lockName :: [Id SrcSpan] -> Name SrcSpan
+lockName :: [Id] -> Name
 lockName = mkNameSrcSpan LockName
 
-pkgOrTypeName :: [Id SrcSpan] -> Name SrcSpan
+pkgOrTypeName :: [Id] -> Name
 pkgOrTypeName = mkNameSrcSpan PkgOrTypeName
 
-expOrLockName :: [Id SrcSpan] -> Name SrcSpan
+expOrLockName :: [Id] -> Name
 expOrLockName = mkNameSrcSpan ExpOrLockName
 
-ambigName :: [Id SrcSpan] -> Name SrcSpan
+ambigName :: [Id] -> Name
 ambigName = mkNameSrcSpan AmbigName
 
-qualifiedTypeName :: [Id SrcSpan] -> Name SrcSpan
+qualifiedTypeName :: [Id] -> Name
 qualifiedTypeName [x] = typeName [x]
 qualifiedTypeName ids = 
-  let prefix = pkgOrTypeName (init ids)
-      name   = typeName [last ids]
+  let prefix  = pkgOrTypeName (init ids)
+      name    = typeName [last ids]
+      newSpan = combineSrcSpan (annSrcSpan $ ann name) (annSrcSpan $ ann prefix)
+      newAnn  = emptyAnnotation { annSrcSpan = newSpan }
   in name { namePrefix = Just $ prefix
-          , nameAnn = combineSrcSpan (ann name) (ann prefix) }
-
+          , nameAnn = newAnn }

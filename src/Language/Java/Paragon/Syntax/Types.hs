@@ -1,7 +1,3 @@
-{-# LANGUAGE TemplateHaskell
-           , DeriveFunctor
- #-}
-
 -- | Paragon Abstract Syntax Tree. Types.
 module Language.Java.Paragon.Syntax.Types
   (
@@ -11,71 +7,89 @@ module Language.Java.Paragon.Syntax.Types
 
 import Language.Java.Paragon.Syntax.Names
 
+import Language.Java.Paragon.Annotation
 import Language.Java.Paragon.Annotated
 
 -- | Top-level data type for Paragon types.
-data Type a =
+data Type =
     -- | Primitive type.
-    PrimType (PrimType a)
+    PrimType PrimType
     -- | Reference type.
-  | RefType (RefType a)
-  deriving (Show, Eq, Functor)
+  | RefType RefType
+  deriving (Show, Eq)
 
 -- | Primitive types.
-data PrimType a =
-    BooleanT a
-  | ByteT    a
-  | ShortT   a
-  | IntT     a
-  | LongT    a
-  | CharT    a
-  | FloatT   a
-  | DoubleT  a
+data PrimType =
+    BooleanT Annotation
+  | ByteT    Annotation
+  | ShortT   Annotation
+  | IntT     Annotation
+  | LongT    Annotation
+  | CharT    Annotation
+  | FloatT   Annotation
+  | DoubleT  Annotation
   -- Paragon specific
-  | PolicyT  a
-  deriving (Show, Eq, Functor)
-
+  | PolicyT  Annotation
+  deriving (Show, Eq)
+  
 -- | Reference type.
-data RefType a =
+data RefType =
     -- | Class type.
-    ClassRefType (ClassType a)
+    ClassRefType ClassType
   -- TODO: ArrayType
-  deriving (Show, Eq, Functor)
+  deriving (Show, Eq)
 
 -- | Class or interface type.
-data ClassType a =
+data ClassType =
     -- | Class type.
-    ClassType { ctAnn      :: a 
-              , ctName     :: Name a
-              , ctTypeArgs :: [TypeArgument a]
+    ClassType { ctAnn      :: Annotation
+              , ctName     :: Name
+              , ctTypeArgs :: [TypeArgument]
               }
-  deriving (Show, Eq, Functor)
+  deriving (Show, Eq)
 
 -- | Representation of type arguments of generic types.
-data TypeArgument a = TA
-  deriving (Show, Eq, Functor)
+data TypeArgument = TA
+  deriving (Show, Eq)
 
 -- | Representation of possible return types.
-data ReturnType a =
+data ReturnType =
     -- | void.
-    VoidType a
+    VoidType Annotation
     -- | Lock type.
-  | LockType a
+  | LockType Annotation
     -- | Other types.
-  | Type (Type a)
-  deriving (Show, Eq, Functor)
+  | Type Type
+  deriving (Show, Eq)
 
 -- | If given argument represents void or lock type - returns nothing.
 -- Otherwise - return Just type it represents.
-returnTypeToType :: ReturnType a -> Maybe (Type a)
+returnTypeToType :: ReturnType -> Maybe Type
 returnTypeToType (Type t) = Just t
 returnTypeToType        _ = Nothing
 
-$(deriveAnnotatedMany
-  [ ''Type
-  , ''PrimType
-  , ''RefType
-  , ''ClassType
-  , ''ReturnType
-  ])
+instance Annotated Type where
+  ann (PrimType x) = ann x
+  ann (RefType  x) = ann x
 
+instance Annotated PrimType where
+  ann (BooleanT x) = x
+  ann (ByteT    x) = x
+  ann (ShortT   x) = x
+  ann (IntT     x) = x
+  ann (LongT    x) = x
+  ann (CharT    x) = x
+  ann (FloatT   x) = x
+  ann (DoubleT  x) = x
+  ann (PolicyT  x) = x
+  
+instance Annotated RefType where
+  ann (ClassRefType x) = ann x
+
+instance Annotated ClassType where
+  ann = ctAnn
+
+instance Annotated ReturnType where
+  ann (VoidType x) = x
+  ann (LockType x) = x
+  ann (Type t)     = ann t

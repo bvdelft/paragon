@@ -1,7 +1,3 @@
-{-# LANGUAGE TemplateHaskell
-           , DeriveFunctor
- #-}
-
 -- | Paragon Abstract Syntax Tree. Statements.
 module Language.Java.Paragon.Syntax.Statements
   (
@@ -12,19 +8,18 @@ module Language.Java.Paragon.Syntax.Statements
 import Language.Java.Paragon.Syntax.Expressions
 
 import Language.Java.Paragon.Annotated
+import Language.Java.Paragon.Annotation
 
 -- | Statements. Unsafe records.
-data Stmt a =
+data Stmt =
     -- | Empty statement - semicolon.
-    Empty { stmtAnn :: a }
+    Empty { stmtAnn :: Annotation }
     -- | Expression statement (e.g. assignment, incrementation, decrementation,
     -- method invocation etc.).
-  | ExpStmt { stmtAnn :: a      -- ^ Annotation.
-            , stmtExp :: Exp a  -- ^ Expression.
+  | ExpStmt { stmtAnn :: Annotation  -- ^ Annotation.
+            , stmtExp :: Exp         -- ^ Expression.
             }
-  deriving (Show, Eq, Functor)
+  deriving (Show, Eq)
 
-$(deriveAnnotatedMany
-  [ ''Stmt
-  ])
-
+instance Annotated Stmt where
+  ann = stmtAnn

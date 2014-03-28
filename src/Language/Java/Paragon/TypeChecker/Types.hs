@@ -4,3 +4,4 @@ module Language.Java.Paragon.TypeChecker.Types
   ) where
 
 data TcType = TcPrimT
+  deriving (Show, Eq, Ord)
