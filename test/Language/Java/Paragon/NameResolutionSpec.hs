@@ -8,7 +8,7 @@ module Language.Java.Paragon.NameResolutionSpec
 import Test.Hspec
 
 import Language.Java.Paragon.NameResolution
---import Language.Java.Paragon.NameResolution.Errors
+import Language.Java.Paragon.NameResolution.Errors
 
 import Control.Exception (tryJust)
 import Control.Monad (guard)
@@ -19,9 +19,8 @@ import System.IO.Error (isDoesNotExistError)
 import Language.Java.Paragon.Annotation
 import Language.Java.Paragon.ASTHelpers
 import Language.Java.Paragon.Error
---import Language.Java.Paragon.Error.StandardContexts
---import Language.Java.Paragon.Error.StandardErrors
---import Language.Java.Paragon.Interaction.Flags
+import Language.Java.Paragon.Error.StandardContexts
+import Language.Java.Paragon.Error.StandardErrors
 import Language.Java.Paragon.Monad.Base
 import Language.Java.Paragon.Monad.PiReader
 import Language.Java.Paragon.Syntax
@@ -84,14 +83,14 @@ noAltering :: String -> IO ()
 noAltering fileName = do
   ast <- parseSuccessFile fileName
   successCase ast ast
-{-
+
 failureCase :: String -> [Error] -> IO ()
 failureCase fileName err = do
   ast <- parseFailureFile fileName
   piPath <- getPIPATH
   (Left e) <- runBaseM [] (liftToBaseM piPath (resolveNames ast))
   e `shouldBe` err
--}
+
 -- For debugging when a test fails
 
 getFailing :: String -> IO [Error]
@@ -190,28 +189,28 @@ spec = do
       successCase ast (transform ast)
     
     -- Failure, error should be as expected.
-{-    
+    
     it "cannot resolve an empty program" $ do
       let err = unsupportedError "compilation unit without type definition" 
-                  defaultSpan [nrCtxt]
+                  errorAnnotation [nrCtxt]
       failureCase "Empty.para" [err]
     it "refuses assignments to undefined variables" $ do
       let fileName = "ClassDeclVoidMethodSingleAssignLit.para"
-          vSrcSpan = SrcSpan fileName 3 5 3 5
+          vSrcSpan = makeSrcSpanAnn fileName 3 5 3 5
           vId      = Id vSrcSpan "x"
           vName    = Name vSrcSpan vId ExpName Nothing
           ctxt     = [nrCtxt,defClassBodyContext "C",defMethodContext "f"]
-          err      = unresolvedName vName vSrcSpan ctxt
+          err      = unresolvedName vName vName ctxt
       failureCase fileName [err]
     it "cannot resolve an undefined variable on right-hand side" $ do
       let fileName = "ClassDeclVoidMethodSingleAssignVar.para"
-          vSrcSpan = SrcSpan fileName 4 9 4 9
+          vSrcSpan = makeSrcSpanAnn fileName 4 9 4 9
           vId      = Id vSrcSpan "y"
           vName    = Name vSrcSpan vId ExpOrLockName Nothing
           ctxt     = [nrCtxt,defClassBodyContext "C",defMethodContext "f"]
-          err      = unresolvedName vName vSrcSpan ctxt
+          err      = unresolvedName vName vName ctxt
       failureCase fileName [err]
--}
+
 prefixNameType :: NameType -> Maybe Name -> Maybe Name
 prefixNameType _ Nothing     = Nothing
 prefixNameType t (Just name) = 
@@ -220,8 +219,9 @@ prefixNameType t (Just name) =
 
 defaultAnn :: Annotation
 defaultAnn = emptyAnnotation { annSrcSpan = defaultSpan }
--- Some default error contexts:
-{-
+
+makeSrcSpanAnn :: String -> Int -> Int -> Int -> Int -> Annotation
+makeSrcSpanAnn fileName a b c d = srcSpanToAnn $ SrcSpan fileName a b c d
+
 nrCtxt :: ErrorContext
 nrCtxt = compPhaseContext "Name Resolution"
--}

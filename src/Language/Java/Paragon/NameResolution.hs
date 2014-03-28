@@ -8,6 +8,7 @@ module Language.Java.Paragon.NameResolution
 import Control.Monad (when)
 
 import Language.Java.Paragon.Annotation
+import Language.Java.Paragon.Error
 import Language.Java.Paragon.Error.StandardContexts
 import Language.Java.Paragon.Error.StandardErrors
 import Language.Java.Paragon.Monad.Base (failE, withErrCtxt)
@@ -28,9 +29,9 @@ resolveNames :: CompilationUnit
 resolveNames cu = withErrCtxt (compPhaseContext "Name Resolution") $ do
   -- Check: Only supporting one type per compilation unit:                             
   when (length (cuTypeDecls cu) == 0) $
-    failE $ unsupportedError "compilation unit without type definition" cu
+    failE $ unsupportedError "compilation unit without type definition" errorAnnotation
   when (length (cuTypeDecls cu) /= 1) $
-    failE $ unsupportedError "multiple types per compilation unit" cu
+    failE $ unsupportedError "multiple types per compilation unit" errorAnnotation
   -- 0. The package name 'java' is always in scope.
   let javaExpnMap = mkPkgExpansion "java"
   -- 1. Expand definitions from java.lang.
