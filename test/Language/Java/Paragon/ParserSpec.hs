@@ -11,6 +11,7 @@ import Text.ParserCombinators.Parsec.Error
 import Control.Monad (liftM2)
 import Control.Applicative ((<$>))
 
+import Language.Java.Paragon.Annotation
 import Language.Java.Paragon.Syntax
 import Language.Java.Paragon.Parser
 import Language.Java.Paragon.SrcPos
@@ -45,19 +46,22 @@ spec = do
     it "parses an empty program" $
       let fileName = "Empty.para"
           cuSrcSpan = SrcSpan fileName 1 1 1 1
-      in successCase fileName (CompilationUnit cuSrcSpan Nothing [] [])
+          cuAnnot   = emptyAnnotation { annSrcSpan = cuSrcSpan }
+      in successCase fileName (CompilationUnit cuAnnot Nothing [] [])
 
     it "parses package declaration with single identifier" $
       let fileName = "PkgDeclSingle.para"
           srcSpanFun = SrcSpan fileName
           pdSrcSpan = srcSpanFun 1 1 1 16
+          pdAnnot   = emptyAnnotation { annSrcSpan = pdSrcSpan }
           paragonSrcSpan = srcSpanFun 1 9 1 15
-          paragonId = Id paragonSrcSpan "paragon"
-      in successCase fileName (CompilationUnit pdSrcSpan (Just $ PackageDecl pdSrcSpan (Name paragonSrcSpan paragonId PkgName Nothing)) [] [])
+          paragonAnnot   = emptyAnnotation { annSrcSpan = paragonSrcSpan }
+          paragonId = Id paragonAnnot "paragon"
+      in successCase fileName (CompilationUnit pdAnnot (Just $ PackageDecl pdAnnot (Name paragonAnnot paragonId PkgName Nothing)) [] [])
 
     it "parses package declaration with qualified name" $
       let fileName = "PkgDeclQName.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           pdSrcSpan = srcSpanFun 1 1 1 28
           qIdSrcSpan = srcSpanFun 1 9 1 27
           seSrcSpan = srcSpanFun 1 9 1 10
@@ -70,7 +74,7 @@ spec = do
 
     it "parses single type import declaration" $
       let fileName = "ImportDeclSingle.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           impdSrcSpan = srcSpanFun 1 1 1 22
           qIdSrcSpan = srcSpanFun 1 8 1 21
           policyId = Id (srcSpanFun 1 16 1 21) "Policy"
@@ -81,7 +85,7 @@ spec = do
 
     it "parses import declaration for all the types in a package" $
       let fileName = "ImportDeclTypeOnDemand.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           impdSrcSpan = srcSpanFun 1 1 1 17
           paragonSrcSpan = srcSpanFun 1 8 1 14
           paragonId = Id paragonSrcSpan "paragon"
@@ -89,7 +93,7 @@ spec = do
 
     it "parses static import declaration of a single type" $
       let fileName = "ImportDeclSingleStatic.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           impdSrcSpan = srcSpanFun 1 1 1 27
           qIdSrcSpan = srcSpanFun 1 15 1 26
           piId = Id (srcSpanFun 1 25 1 26) "PI"
@@ -102,7 +106,7 @@ spec = do
 
     it "parses static import declaration for all members" $
       let fileName = "ImportDeclStaticOnDemand.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           impdSrcSpan = srcSpanFun 1 1 1 26
           qIdSrcSpan = srcSpanFun 1 15 1 23
           mathId = Id (srcSpanFun 1 20 1 23) "Math"
@@ -113,12 +117,12 @@ spec = do
 
     it "parses semicolon type declaration" $
       let fileName = "SemiColonDecl.para"
-          cuSrcSpan = SrcSpan fileName 1 1 1 1
+          cuSrcSpan = makeSrcSpanAnn fileName 1 1 1 1
       in successCase fileName (CompilationUnit cuSrcSpan Nothing [] [])
 
     it "parses empty class declaration" $
       let fileName = "ClassDeclEmpty.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 1 10
           cbSrcSpan = srcSpanFun 1 9 1 10
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [])
@@ -127,7 +131,7 @@ spec = do
 
     it "parses empty interface declaration" $
       let fileName = "InterfaceDeclEmpty.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           intdSrcSpan = srcSpanFun 1 1 1 14
           intd = InterfaceDecl intdSrcSpan [] intId [] [] IB
           intId = Id (srcSpanFun 1 11 1 11) "I"
@@ -135,7 +139,7 @@ spec = do
 
     it "parses empty class declaration with modifiers" $
       let fileName = "ClassDeclMod.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 1 17
           pblSrcSpan = srcSpanFun 1 1 1 6
           cbSrcSpan = srcSpanFun 1 16 1 17
@@ -145,7 +149,7 @@ spec = do
 
     it "parses empty interface declaration with modifiers" $
       let fileName = "InterfaceDeclMod.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           intdSrcSpan = srcSpanFun 1 1 1 21
           pblSrcSpan = srcSpanFun 1 1 1 6
           intd = InterfaceDecl intdSrcSpan [Public pblSrcSpan] intId [] [] IB
@@ -154,7 +158,7 @@ spec = do
 
     it "parses class declaration with single field declaration" $
       let fileName = "ClassDeclSingleField.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 3 1
           cbSrcSpan = srcSpanFun 1 9 3 1
           fdSrcSpan = srcSpanFun 2 3 2 12
@@ -170,7 +174,7 @@ spec = do
 
     it "parses class declaration with single field declaration with modifiers" $
       let fileName = "ClassDeclSingleFieldMod.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 3 1
           cbSrcSpan = srcSpanFun 1 9 3 1
           fdSrcSpan = srcSpanFun 2 3 2 32
@@ -187,7 +191,7 @@ spec = do
 
     it "parses class declaration with multiple field declarations with modifiers" $
       let fileName = "ClassDeclMultFields.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 4 1
           cbSrcSpan = srcSpanFun 1 9 4 1
           cbDs = [MemberDecl fieldDecl1, MemberDecl fieldDecl2]
@@ -212,7 +216,7 @@ spec = do
 
     it "parses class declaration with void method with semicolon body" $
       let fileName = "ClassDeclVoidMethodSemiColon.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 3 1
           cbSrcSpan = srcSpanFun 1 9 3 1
           mdSrcSpan = srcSpanFun 2 3 2 11
@@ -226,7 +230,7 @@ spec = do
 
     it "parses class declaration with int method with semicolon body" $
       let fileName = "ClassDeclIntMethodSemiColon.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 3 1
           cbSrcSpan = srcSpanFun 1 9 3 1
           mdSrcSpan = srcSpanFun 2 3 2 10
@@ -242,7 +246,7 @@ spec = do
 
     it "parses class declaration with void method with empty body" $
       let fileName = "ClassDeclVoidMethodEmptyBody.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 3 1
           cbSrcSpan = srcSpanFun 1 9 3 1
           mdSrcSpan = srcSpanFun 2 3 2 13
@@ -257,7 +261,7 @@ spec = do
 
     it "parses class declaration with int method with empty body with modifiers" $
       let fileName = "ClassDeclIntMethodModEmptyBody.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 3 1
           cbSrcSpan = srcSpanFun 1 9 3 1
           mdSrcSpan = srcSpanFun 2 3 2 26
@@ -275,7 +279,7 @@ spec = do
 
     it "parses class declaration with void method with empty statement" $
       let fileName = "ClassDeclVoidMethodSemiColonStmt.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 5 1
           cbSrcSpan = srcSpanFun 1 9 5 1
           mdSrcSpan = srcSpanFun 2 3 4 3
@@ -291,7 +295,7 @@ spec = do
 
     it "parses class declaration with void method with single local variable declaration" $
       let fileName = "ClassDeclVoidMethodSingleLocalVarDecl.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 5 1
           cbSrcSpan = srcSpanFun 1 9 5 1
           mdSrcSpan = srcSpanFun 2 3 4 3
@@ -312,7 +316,7 @@ spec = do
 
     it "parses class declaration with void method with single local variable declaration with modifier" $
       let fileName = "ClassDeclVoidMethodSingleLocalVarDeclMod.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 5 1
           cbSrcSpan = srcSpanFun 1 9 5 1
           mdSrcSpan = srcSpanFun 2 3 4 3
@@ -334,7 +338,7 @@ spec = do
 
     it "parses class declaration with void method with multiple local variable declarations" $
       let fileName = "ClassDeclVoidMethodMultLocalVarDecls.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 6 1
           cbSrcSpan = srcSpanFun 1 9 6 1
           mdSrcSpan = srcSpanFun 2 3 5 3
@@ -365,7 +369,7 @@ spec = do
 
     it "parses class declaration with void method with single assignment expression statement with literal" $
       let fileName = "ClassDeclVoidMethodSingleAssignLit.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 5 1
           cbSrcSpan = srcSpanFun 1 9 5 1
           mdSrcSpan = srcSpanFun 2 3 4 3
@@ -386,7 +390,7 @@ spec = do
 
     it "parses class declaration with void method with single assignment expression statement with variable" $
       let fileName = "ClassDeclVoidMethodSingleAssignVar.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 5 1
           cbSrcSpan = srcSpanFun 1 9 5 1
           mdSrcSpan = srcSpanFun 2 3 4 3
@@ -410,7 +414,7 @@ spec = do
 
     it "parses class declaration with single field declaration with reference type" $
       let fileName = "ClassDeclSingleFieldRefType.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 3 1
           cbSrcSpan = srcSpanFun 1 9 3 1
           fdSrcSpan = srcSpanFun 2 3 2 11
@@ -427,7 +431,7 @@ spec = do
 
     it "parses class declaration with single field declaration of primitive type with literal initializer" $
       let fileName = "ClassDeclSinglePrimFieldInit.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 3 1
           cbSrcSpan = srcSpanFun 1 9 3 1
           fdSrcSpan = srcSpanFun 2 3 2 19
@@ -444,7 +448,7 @@ spec = do
 
     it "parses class declaration with single field declaration of reference type with null initializer" $
       let fileName = "ClassDeclSingleRefFieldInit.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 3 1
           cbSrcSpan = srcSpanFun 1 9 3 1
           fdSrcSpan = srcSpanFun 2 3 2 18
@@ -462,7 +466,7 @@ spec = do
 
     it "parses class declaration with multiple field declarations of primitive types with literal initializers" $
       let fileName = "ClassDeclMultPrimFieldsInit.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 3 1
           cbSrcSpan = srcSpanFun 1 9 3 1
           fdSrcSpan = srcSpanFun 2 3 2 19
@@ -483,7 +487,7 @@ spec = do
 
     it "parses class declaration with void method with single local variable declaration of reference type with null initializer" $
       let fileName = "ClassDeclVoidMethodSingleRefLocalVarInit.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 5 1
           cbSrcSpan = srcSpanFun 1 9 5 1
           mdSrcSpan = srcSpanFun 2 3 4 3
@@ -506,7 +510,7 @@ spec = do
 
     it "parses class declaration with single low policy field" $
       let fileName = "ClassDeclSingleLowPolicyField.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 3 1
           cbSrcSpan = srcSpanFun 1 9 3 1
           fdSrcSpan = srcSpanFun 2 3 2 43
@@ -532,7 +536,7 @@ spec = do
 
     it "parses class declaration with single high policy field" $
       let fileName = "ClassDeclSingleHighPolicyField.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 3 1
           cbSrcSpan = srcSpanFun 1 9 3 1
           fdSrcSpan = srcSpanFun 2 3 2 33
@@ -551,7 +555,7 @@ spec = do
 
     it "parses class declaration with single field with reads policy modifier" $
       let fileName = "ClassDeclSingleFieldReadsMod.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 3 1
           cbSrcSpan = srcSpanFun 1 9 3 1
           fdSrcSpan = srcSpanFun 2 3 2 13
@@ -570,7 +574,7 @@ spec = do
 
     it "parses class declaration with single field with writes policy modifier" $
       let fileName = "ClassDeclSingleFieldWritesMod.para"
-          srcSpanFun = SrcSpan fileName
+          srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 3 1
           cbSrcSpan = srcSpanFun 1 9 3 1
           fdSrcSpan = srcSpanFun 2 3 2 13
@@ -732,9 +736,14 @@ spec = do
       it "given a class declaration with single field with policy modifier with missing specifier symbol" $
         failureCase "ClassDeclSingleFieldPolicyModMissSymbol"
 
+-- Helper
+
+makeSrcSpanAnn :: String -> Int -> Int -> Int -> Int -> Annotation
+makeSrcSpanAnn fileName a b c d = srcSpanToAnn $ SrcSpan fileName a b c d
+
 -- Infrastructure
 
-successCase :: String -> AST SrcSpan -> IO ()
+successCase :: String -> AST -> IO ()
 successCase fileName result = do
   input <- successRead fileName
   parse input fileName `shouldBe` Right result
@@ -756,4 +765,3 @@ failureRead baseName = liftM2 (,) (readFile (failureDir </> baseName <.> "para")
                           in if l == '\n' || l == '\r'
                                then dropNewLine (init str)
                                else str
-
