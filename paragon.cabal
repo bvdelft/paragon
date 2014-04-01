@@ -73,8 +73,6 @@ Library
                         Language.Java.Paragon.Syntax.Statements
                         Language.Java.Paragon.Syntax.Expressions
                         Language.Java.Paragon.Syntax.Modifiers
-                        Language.Java.Paragon.TypeChecker
-                        Language.Java.Paragon.TypeChecker.Types
   hs-source-dirs:       src
   ghc-options:          -Wall -Werror -O2 -rtsopts
 

@@ -7,7 +7,9 @@ module Language.Java.Paragon.Syntax.Names where
 
 import Text.PrettyPrint
 
-import Language.Java.Paragon.Interaction (panic, libraryBase, Unparse(..))
+import Language.Java.Paragon.Interaction.Headers (libraryBase)
+import Language.Java.Paragon.Interaction.Panic (panic)
+import Language.Java.Paragon.Interaction.Unparse (Unparse(..))
 import Language.Java.Paragon.SrcPos
 
 import Language.Java.Paragon.Annotation

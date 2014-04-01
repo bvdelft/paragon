@@ -10,7 +10,7 @@ module Language.Java.Paragon.Syntax
   , module Language.Java.Paragon.Annotated
   ) where
 
-import Language.Java.Paragon.Interaction (libraryBase)
+import Language.Java.Paragon.Interaction.Headers (libraryBase)
 
 import Language.Java.Paragon.Syntax.Names
 import Language.Java.Paragon.Syntax.Types

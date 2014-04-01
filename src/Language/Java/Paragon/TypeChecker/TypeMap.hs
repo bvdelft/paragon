@@ -6,6 +6,11 @@ module Language.Java.Paragon.TypeChecker.TypeMap
     TypeMap
   ) where
 
+import Data.Map (Map)
+import qualified Data.Map as Map
+
+import Language.Java.Paragon.Syntax
+
 import Language.Java.Paragon.TypeChecker.Types
 
 -- | The @TypeMap@ data structure.
@@ -35,7 +40,8 @@ data FieldSignature = FieldSignature
   } deriving (Show)
 
 -- | For method disambiguation, this mapping provides the method signature for
--- each method by number of type parameters, real arguments and ??? (TODO).
+-- each method by number of type parameters, real arguments and whether it has
+-- varargs.
 type MethodMap = Map ([TypeParam], [TcType], Bool) MethodSig
 
 data MethodSig = MethodSig
@@ -48,7 +54,7 @@ data MethodSig = MethodSig
   , msParameterBounds :: [ActorPolicy]  -- ^ Policy read-effect bounds on parameters. TODO: why not paired with params?
   , msLockDelta       :: TcLockDelta    -- ^ Which locks are opened and closed.
   , msExceptions      :: [(TcType, ExceptionSignature)]  -- ^ Signature per exception thrown.
-  , msNNPars          :: [String]  -- TODO: WHAT IS THIS?
+  , msNNPars          :: [String]  -- TODO: WHAT IS THIS? List of parameters that are not null?
   , msIsNative        :: Bool           -- ^ Whether this method is native (to Paragon)
   }
 
@@ -61,7 +67,7 @@ data ExceptionSignature = ExceptionSignature
 -- | For constructor disambiguation, this mapping provides the constructor
 -- signature for each constructor by number of type parameters, real arguments
 -- and ??? (TODO).
-type ConstructorMap = Map ([TypeParam], [TcType], Bool) ConstructorSig
+type ConstructorMap = Map ([TypeParam], [TcType], Bool) ConstructorSignature
 
 data ConstructorSignature = ConstructorSignature
   { csModifiers       :: [Modifier]     -- ^ Constructor modifiers.
@@ -79,7 +85,7 @@ data TypeSignature = TypeSignature
   { tsType         :: TcRefType      -- ^ This reference type.
   , tsIsClass      :: Bool           -- ^ Whether this is a class (or an interface?) TODO
   , tsIsFinal      :: Bool           -- ^ Whether this type is declared final.
-  , tsSuperClasses :: [TcClassType]  -- ^ Super classes, nearest super class first (TODO: check).
+  , tsSuperClasses :: [TcClassType]  -- ^ Super class (possibly multiple for interfaces).
   , tsInterfaces   :: [TcClassType]  -- ^ Interfaces implemented by this type.
   , tsMembers      :: TypeMap        -- ^ Members of this type.
   }

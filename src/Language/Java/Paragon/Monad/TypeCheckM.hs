@@ -21,6 +21,7 @@ import Language.Java.Paragon.Monad.Base
 import Language.Java.Paragon.Monad.PiReader
 import Language.Java.Paragon.Syntax
 
+import Language.Java.Paragon.TypeChecker.TypeMap
 import Language.Java.Paragon.TypeChecker.Types
 
 -- | Type checking environment contains the substitution of the type parameters
