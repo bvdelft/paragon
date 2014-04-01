@@ -41,10 +41,10 @@ instance MonadPR NameRes where
 
 instance MonadBase NameRes where
   liftBase                    = liftPR . liftBase
-  withErrCtxt prf (NameRes f) = NameRes $ (withErrCtxt prf) . f
+  withErrCtxt erC (NameRes f) = NameRes $ (withErrCtxt erC) . f
   tryM (NameRes f)            = NameRes $ tryM . f
-  failE                       = liftBase . failE
-  failEC x                    = liftBase . failEC x
+  failE                       = liftPR . failE
+  failEC x                    = liftPR . failEC x
 
 instance MonadIO NameRes where
   liftIO = liftPR . liftIO
