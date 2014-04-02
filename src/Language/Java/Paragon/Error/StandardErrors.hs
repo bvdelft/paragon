@@ -1,3 +1,4 @@
+{-# LANGUAGE Rank2Types #-}
 -- | Standard errors to be used only for very general problems (i.e. unsupported
 -- features, unimplemented functionality, etc.)
 module Language.Java.Paragon.Error.StandardErrors

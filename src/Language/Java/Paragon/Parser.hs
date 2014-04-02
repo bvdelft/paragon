@@ -1,3 +1,4 @@
+{-# LANGUAGE Rank2Types #-}
 -- | Paragon parsing module. Parser is written using Parsec.
 module Language.Java.Paragon.Parser
   (

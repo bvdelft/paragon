@@ -1,3 +1,4 @@
+{-# LANGUAGE Rank2Types #-}
 -- | Errors that may occur in the name resolution stage of the compiler.
 module Language.Java.Paragon.NameResolution.Errors
   (

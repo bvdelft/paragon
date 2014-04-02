@@ -1,3 +1,4 @@
+{-# LANGUAGE Rank2Types #-}
 -- | Example of how new errors should be created. Each phase that might generate
 -- errors can define its own PhaseErrors.hs file that lists the errors
 -- originating from that phase.
