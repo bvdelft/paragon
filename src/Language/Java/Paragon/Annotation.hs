@@ -1,4 +1,4 @@
-{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE BangPatterns, CPP #-}
 
 -- | Annotation data structure. Paragon uses the same annotation through-out the
 -- entire compilation. Elements of the annotation are gradually filled by each
@@ -11,9 +11,14 @@ module Language.Java.Paragon.Annotation
   , srcSpanToAnn
   ) where
 
+
+#if MIN_VERSION_base(4,6,0)
 import Control.Exception (catch, SomeException)
-import System.IO.Unsafe (unsafePerformIO)
+#else
 import Prelude hiding (catch)
+import Control.Exception (catch, SomeException)
+#endif
+import System.IO.Unsafe (unsafePerformIO)
 
 import Language.Java.Paragon.Interaction.Panic
 import Language.Java.Paragon.SrcPos
