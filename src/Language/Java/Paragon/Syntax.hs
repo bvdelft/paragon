@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 -- | Paragon Abstract Syntax Tree.
 module Language.Java.Paragon.Syntax
   (
@@ -9,6 +10,8 @@ module Language.Java.Paragon.Syntax
   , module Language.Java.Paragon.Syntax.Modifiers
   , module Language.Java.Paragon.Annotated
   ) where
+
+import Data.Data
 
 import Language.Java.Paragon.Interaction.Headers (libraryBase)
 
@@ -98,7 +101,7 @@ data InterfaceDecl = InterfaceDecl
   } deriving (Show, Eq)
 
 data TypeParam = TP
-  deriving (Show, Eq)
+  deriving (Data, Typeable, Show, Eq, Ord)
 
 -- | Class body.
 data ClassBody = ClassBody

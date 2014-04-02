@@ -1,9 +1,12 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 -- | Paragon Abstract Syntax Tree. Modifiers.
 module Language.Java.Paragon.Syntax.Modifiers
   (
     module Language.Java.Paragon.Syntax.Modifiers
   , module Language.Java.Paragon.Syntax.Expressions
   ) where
+
+import Data.Data
 
 import Language.Java.Paragon.Syntax.Expressions
 
@@ -36,7 +39,7 @@ data Modifier
   | Writes     Annotation Policy  -- ^ !
 
   -- TODO: more Paragon modifiers
-  deriving (Show, Eq)
+  deriving (Data, Typeable, Show, Eq)
 
 instance Annotated Modifier where
   ann (Public       x) = x

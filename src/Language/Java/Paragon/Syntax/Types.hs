@@ -1,9 +1,12 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 -- | Paragon Abstract Syntax Tree. Types.
 module Language.Java.Paragon.Syntax.Types
   (
     module Language.Java.Paragon.Syntax.Types
   , module Language.Java.Paragon.Syntax.Names
   ) where
+
+import Data.Data
 
 import Language.Java.Paragon.Syntax.Names
 
@@ -16,7 +19,7 @@ data Type =
     PrimType PrimType
     -- | Reference type.
   | RefType RefType
-  deriving (Show, Eq)
+  deriving (Data, Typeable, Ord, Show, Eq)
 
 -- | Primitive types.
 data PrimType =
@@ -30,14 +33,14 @@ data PrimType =
   | DoubleT  Annotation
   -- Paragon specific
   | PolicyT  Annotation
-  deriving (Show, Eq)
+  deriving (Data, Typeable, Show, Eq, Ord)
   
 -- | Reference type.
 data RefType =
     -- | Class type.
     ClassRefType ClassType
   -- TODO: ArrayType
-  deriving (Show, Eq)
+  deriving (Data, Typeable, Ord, Show, Eq)
 
 -- | Class or interface type.
 data ClassType =
@@ -46,11 +49,11 @@ data ClassType =
               , ctName     :: Name
               , ctTypeArgs :: [TypeArgument]
               }
-  deriving (Show, Eq)
+  deriving (Data, Typeable, Ord, Show, Eq)
 
 -- | Representation of type arguments of generic types.
 data TypeArgument = TA
-  deriving (Show, Eq)
+  deriving (Data, Typeable, Ord, Show, Eq)
 
 -- | Representation of possible return types.
 data ReturnType =
@@ -60,7 +63,7 @@ data ReturnType =
   | LockType Annotation
     -- | Other types.
   | Type Type
-  deriving (Show, Eq)
+  deriving (Data, Typeable, Ord, Show, Eq)
 
 -- | If given argument represents void or lock type - returns nothing.
 -- Otherwise - return Just type it represents.

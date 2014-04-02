@@ -1,9 +1,12 @@
 {-# LANGUAGE TemplateHaskell
            , DeriveFunctor
+           , DeriveDataTypeable
  #-}
 
 -- | Paragon Abstract Syntax Tree. Names.
 module Language.Java.Paragon.Syntax.Names where
+
+import Data.Data
 
 import Text.PrettyPrint
 
@@ -22,7 +25,7 @@ namesModule = libraryBase ++ ".Syntax.Names"
 data Id = Id
   { idAnn   :: Annotation  -- ^ Annotation.
   , idIdent :: String      -- ^ Identifier's string.
-  } deriving (Show, Eq, Ord)
+  } deriving (Data, Typeable, Show, Eq, Ord)
 
 instance Annotated Id where
   ann = idAnn
@@ -33,7 +36,7 @@ data Name = Name
   , nameId     :: Id          -- ^ Identifier.
   , nameType   :: NameType    -- ^ Type of the name.
   , namePrefix :: Maybe Name  -- ^ Possibly, name part before the dot.
-  } deriving (Show, Eq)
+  } deriving (Data, Typeable, Show, Eq, Ord)
 
 instance Annotated Name where
   ann = nameAnn
@@ -54,7 +57,7 @@ data NameType = ExpName           -- ^ Expression name.
               | MethodOrLockName  -- ^ Method or lock name.
               | ExpOrLockName     -- ^ Expression or lock name.
               | AmbigName         -- ^ Ambiguous name.
-  deriving (Show, Eq, Ord)
+  deriving (Typeable, Data, Show, Eq, Ord)
 
 -- Name type helpers.
 

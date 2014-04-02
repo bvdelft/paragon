@@ -1,4 +1,7 @@
-{-# LANGUAGE BangPatterns, CPP #-}
+{-# LANGUAGE BangPatterns
+           , CPP
+           , DeriveDataTypeable
+ #-}
 
 -- | Annotation data structure. Paragon uses the same annotation through-out the
 -- entire compilation. Elements of the annotation are gradually filled by each
@@ -12,12 +15,15 @@ module Language.Java.Paragon.Annotation
   ) where
 
 
+import Data.Data
+
 #if MIN_VERSION_base(4,6,0)
 import Control.Exception (catch, SomeException)
 #else
 import Prelude hiding (catch)
 import Control.Exception (catch, SomeException)
 #endif
+
 import System.IO.Unsafe (unsafePerformIO)
 
 import Language.Java.Paragon.Interaction.Panic
@@ -34,7 +40,7 @@ data Annotation = Annotation
   , annType     :: Maybe ((), Bool)
     -- | Whether the value of this node can be null.
   , annIsNull   :: Bool
-  }
+  } deriving (Data, Typeable)
 
 -- | Since every part of an annotation that has not been instantiated
 -- yet (i.e. the phase that instantiates this part has not yet passed)

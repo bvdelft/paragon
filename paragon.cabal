@@ -20,7 +20,8 @@ Library
     build-depends:      transformers -any, bytestring -any, directory -any,
                         filepath -any, array >= 0.1, parsec >= 2.1 && < 3,
                         base >= 4 && < 5, syb, pretty,
-                        template-haskell, containers >= 0.5
+                        template-haskell, containers >= 0.5,
+                        flowlocks-framework
     cpp-options:        -DBASE4
     exposed-modules:    Language.Java.Paragon.Annotated
                         Language.Java.Paragon.Annotation
@@ -66,6 +67,9 @@ Library
                         Language.Java.Paragon.Parser.Modifiers
                         Language.Java.Paragon.Parser.Separators
                         Language.Java.Paragon.Parser.Helpers
+                        Language.Java.Paragon.PolicyLang
+                        Language.Java.Paragon.PolicyLang.ActorSet
+                        Language.Java.Paragon.PolicyLang.Policy
                         Language.Java.Paragon.SrcPos
                         Language.Java.Paragon.Syntax
                         Language.Java.Paragon.Syntax.Names
@@ -73,6 +77,10 @@ Library
                         Language.Java.Paragon.Syntax.Statements
                         Language.Java.Paragon.Syntax.Expressions
                         Language.Java.Paragon.Syntax.Modifiers
+                        Language.Java.Paragon.TypeChecker.Monad.TcSignatureM
+                        Language.Java.Paragon.TypeChecker.Types
+                        Language.Java.Paragon.TypeChecker.TypeMap
+                        Language.Java.Paragon.TypeChecker.PkgMap
   hs-source-dirs:       src
   ghc-options:          -Wall -Werror -O2 -rtsopts
 

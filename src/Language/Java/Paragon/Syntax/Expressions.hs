@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 -- | Paragon Abstract Syntax Tree. Expressions.
 module Language.Java.Paragon.Syntax.Expressions
   (
@@ -5,6 +6,8 @@ module Language.Java.Paragon.Syntax.Expressions
   , module Language.Java.Paragon.Syntax.Names
   , module Language.Java.Paragon.Syntax.Types
   ) where
+
+import Data.Data
 
 import Language.Java.Paragon.Syntax.Names
 import Language.Java.Paragon.Syntax.Types
@@ -26,7 +29,7 @@ data Exp =
            }
     -- | Policy expression.
   | PolicyExp PolicyExp
-  deriving (Show, Eq)
+  deriving (Data, Typeable, Ord, Show, Eq)
 
 -- | Types of literals. Unsafe records.
 data Literal =
@@ -52,18 +55,18 @@ data Literal =
             , boolLitVal :: Bool        -- ^ Value of boolean literal.
             }
   | Null { litAnn :: Annotation }
-  deriving (Show, Eq)
+  deriving (Data, Typeable, Ord, Show, Eq)
   
 -- | Left-hand side of an assignment expression.
 data Lhs =
   -- | Variable.
   NameLhs { lhsName :: Name }
-  deriving (Show, Eq)
+  deriving (Data, Typeable, Ord, Show, Eq)
 
 -- | Different assignment operators.
 data AssignOp =
   EqualA Annotation  -- ^ =
-  deriving (Show, Eq)
+  deriving (Data, Typeable, Ord, Show, Eq)
 
 -- | A policy is a conjunction (set) of clauses, represented as a list.
 data PolicyExp =
@@ -71,7 +74,7 @@ data PolicyExp =
     PolicyLit { policyAnn     :: Annotation  -- ^ Annotation.
               , policyClauses :: [Clause]    -- ^ Set of clauses.
               }
-  deriving (Show, Eq)
+  deriving (Data, Typeable, Ord, Show, Eq)
 
 -- | A clause of the form Sigma => a, where a is an actor and Sigma a set of 
 -- locks/atomic predicates that must be open/true.
@@ -80,20 +83,20 @@ data Clause = Clause
   , clauseVarDecls :: [ClauseVarDecl]  -- ^ Clause variable declarations.
   , clauseHead     :: ClauseHead       -- ^ Head of the clause.
   , clauseAtoms    :: [Atom]           -- ^ Clause atoms.
-  } deriving (Show, Eq)
+  } deriving (Data, Typeable, Ord, Show, Eq)
 
 -- | Clause variable declaration.
 data ClauseVarDecl = ClauseVarDecl
   { clauseVarDeclAnn  :: Annotation  -- ^ Annotation.
   , clauseVarDeclType :: RefType     -- ^ Type of clause variable.
   , clauseVarDeclId   :: Id          -- ^ Variable identifier.
-  } deriving (Show, Eq)
+  } deriving (Data, Typeable, Ord, Show, Eq)
 
 -- | Head of the clause.
 data ClauseHead =
     ClauseDeclHead ClauseVarDecl
   | ClauseVarHead Actor
-  deriving (Show, Eq)
+  deriving (Data, Typeable, Ord, Show, Eq)
 
 -- | Actor variable.
 data Actor =
@@ -101,7 +104,7 @@ data Actor =
     Actor ActorName
     -- | Forall quantified actor variable within the current clause.
   | Var Id
-  deriving (Show, Eq)
+  deriving (Data, Typeable, Ord, Show, Eq)
   
 -- | Representation of actor names. Unsafe records.
 data ActorName =
@@ -112,13 +115,13 @@ data ActorName =
                  , actorTypeVarType :: RefType     -- ^ Type of actor type variable.
                  , actorTypeVarId   :: Id          -- ^ Actor type variable identifier.
                  }
-  deriving (Show, Eq)
+  deriving (Data, Typeable, Ord, Show, Eq)
 
 data Atom = Atom
   { atomAnn    :: Annotation  -- ^ Annotation.
   , atomName   :: Name        -- ^ Atom name.
   , atomActors :: [Actor]     -- ^ Atom actors.
-  } deriving (Show, Eq)
+  } deriving (Data, Typeable, Ord, Show, Eq)
  
 -- | Policy representation.
 type Policy = Exp

@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 -- | This module provides a representation of source code positions. The 
 -- positions reported by the parsers should be converted to this format to
 -- ensure that the rest of the code base does not need to be changed when the
@@ -15,6 +16,8 @@ module Language.Java.Paragon.SrcPos
   , srcSpanToEndPos
   , combineSrcSpan
   ) where
+
+import Data.Data
 
 -- | Paragon representation of source positions.
 data SrcPos = SrcPos
@@ -39,7 +42,7 @@ data SrcSpan = SrcSpan
   , srcSpanStartColumn :: Int     -- ^ Column number of the beginning of the span.
   , srcSpanEndLine     :: Int     -- ^ Line number of the end of the span.
   , srcSpanEndColumn   :: Int     -- ^ Column number of the end of the span.
-  } deriving (Show, Eq, Ord)
+  } deriving (Data, Typeable, Show, Eq, Ord)
 
 -- | Construct source span from two source positions (start, end).
 -- File name is taken from the start position.
