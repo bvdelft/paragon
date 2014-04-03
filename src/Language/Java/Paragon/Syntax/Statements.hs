@@ -1,9 +1,12 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 -- | Paragon Abstract Syntax Tree. Statements.
 module Language.Java.Paragon.Syntax.Statements
   (
     module Language.Java.Paragon.Syntax.Statements
   , module Language.Java.Paragon.Syntax.Expressions
   ) where
+
+import Data.Data
 
 import Language.Java.Paragon.Syntax.Expressions
 
@@ -19,7 +22,7 @@ data Stmt =
   | ExpStmt { stmtAnn :: Annotation  -- ^ Annotation.
             , stmtExp :: Exp         -- ^ Expression.
             }
-  deriving (Show, Eq)
+  deriving (Typeable, Data, Ord, Show, Eq)
 
 instance Annotated Stmt where
   ann = stmtAnn

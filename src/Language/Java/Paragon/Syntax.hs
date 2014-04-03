@@ -36,13 +36,13 @@ data CompilationUnit = CompilationUnit
   , cuPkgDecl     :: Maybe PackageDecl  -- ^ Package declaration.
   , cuImportDecls :: [ImportDecl]       -- ^ Import declarations.
   , cuTypeDecls   :: [TypeDecl]         -- ^ Type declarations.
-  } deriving (Show, Eq)
+  } deriving (Typeable, Data, Ord, Show, Eq)
 
 -- | Package declaration.
 data PackageDecl = PackageDecl
   { pdAnn  :: Annotation  -- ^ Annotation.
   , pdName :: Name        -- ^ Package name.
-  } deriving (Show, Eq)
+  } deriving (Typeable, Data, Ord, Show, Eq)
 
 -- | Import declaration.
 data ImportDecl =
@@ -69,7 +69,7 @@ data ImportDecl =
   | StaticImportOnDemand { impdAnn  :: Annotation
                          , impdName :: Name
                          }
-  deriving (Show, Eq)
+  deriving (Typeable, Data, Ord, Show, Eq)
 
 -- | Class or interface declaration.
 data TypeDecl =
@@ -77,7 +77,7 @@ data TypeDecl =
     ClassTypeDecl ClassDecl
     -- | Interface declaration.
   | InterfaceTypeDecl InterfaceDecl
-  deriving (Show, Eq)
+  deriving (Typeable, Data, Ord, Show, Eq)
 
 -- | Class declaration.
 data ClassDecl = ClassDecl
@@ -88,7 +88,7 @@ data ClassDecl = ClassDecl
   , cdSuperClass :: Maybe ClassType  -- ^ Super class if the class has one.
   , cdInterfaces :: [ClassType]      -- ^ Interfaces it implements.
   , cdBody       :: ClassBody        -- ^ Class body.
-  } deriving (Show, Eq)
+  } deriving (Typeable, Data, Ord, Show, Eq)
 
 -- | Interface declaration.
 data InterfaceDecl = InterfaceDecl
@@ -98,7 +98,7 @@ data InterfaceDecl = InterfaceDecl
   , intdTypeParams :: [TypeParam]    -- ^ Type parameters.
   , intdInterfaces :: [ClassType]    -- ^ Interfaces it extends.
   , intdBody       :: InterfaceBody  -- ^ Interface body.
-  } deriving (Show, Eq)
+  } deriving (Typeable, Data, Ord, Show, Eq)
 
 data TypeParam = TP
   deriving (Data, Typeable, Show, Eq, Ord)
@@ -107,17 +107,17 @@ data TypeParam = TP
 data ClassBody = ClassBody
   { cbAnn   :: Annotation       -- ^ Annotation.
   , cbDecls :: [ClassBodyDecl]  -- ^ Declarations.
-  } deriving (Show, Eq)
+  } deriving (Typeable, Data, Ord, Show, Eq)
 
 data InterfaceBody = IB
-  deriving (Show, Eq)
+  deriving (Typeable, Data, Ord, Show, Eq)
 
 -- | Declaration in class body.
 data ClassBodyDecl =
     -- | Member declaration.
     MemberDecl MemberDecl
   -- TODO: InitDecl
-  deriving (Show, Eq)
+  deriving (Typeable, Data, Ord, Show, Eq)
 
 -- | Member declaration. Unsafe records.
 data MemberDecl =
@@ -137,14 +137,14 @@ data MemberDecl =
                -- TODO: exceptions
                , methodDeclBody         :: MethodBody     -- ^ Method body.
                }
-  deriving (Show, Eq)
+  deriving (Typeable, Data, Ord, Show, Eq)
 
 -- | Variable/field declaration with optional initializer.
 data VarDecl = VarDecl
   { varDeclAnn  :: Annotation     -- ^ Annotation.
   , varDeclId   :: Id             -- ^ Variable identifier.
   , varDeclInit :: Maybe VarInit  -- ^ Optional variable initializer.
-  } deriving (Show, Eq)
+  } deriving (Typeable, Data, Ord, Show, Eq)
 
 -- | Method formal parameter.
 data FormalParam = FormalParam
@@ -153,23 +153,23 @@ data FormalParam = FormalParam
   , formalParamType      :: Type        -- ^ Parameter type.
   , formalParamVarArity  :: Bool        -- ^ Is it varargs parameter (variable arity).
   , formalParamId        :: Id          -- ^ Parameter identifier.
-  } deriving (Show, Eq)
+  } deriving (Typeable, Data, Ord, Show, Eq)
 
 -- | Method body or the lack of it.
 data MethodBody = MethodBody
   { methodBodyAnn   :: Annotation   -- ^ Annotation.
   , methodBodyBlock :: Maybe Block  -- ^ Optional method body (code block) or semicolon.
-  } deriving (Show, Eq)
+  } deriving (Typeable, Data, Ord, Show, Eq)
 
 -- | Explicit initializer for field/variable declaration.
 data VarInit = InitExp { varInitExp :: Exp }
-  deriving (Show, Eq)
+  deriving (Typeable, Data, Ord, Show, Eq)
 
 -- | Code block.
 data Block = Block
   { blockAnn      :: Annotation   -- ^ Annotation.
   , blockAnnStmts :: [BlockStmt]  -- ^ Block statements.
-  } deriving (Show, Eq)
+  } deriving (Typeable, Data, Ord, Show, Eq)
 
 -- | Block statement. Unsafe records.
 data BlockStmt =
@@ -181,7 +181,7 @@ data BlockStmt =
               , localVarsType      :: Type        -- ^ Variable declaration type.
               , localVarsDecls     :: [VarDecl]   -- ^ Variable declarators.
               }
-  deriving (Show, Eq)
+  deriving (Typeable, Data, Ord, Show, Eq)
 
 instance Annotated CompilationUnit where
   ann = cuAnn

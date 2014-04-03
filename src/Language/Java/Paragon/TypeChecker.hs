@@ -11,6 +11,7 @@ import Language.Java.Paragon.Monad.Base
 import Language.Java.Paragon.Monad.PiReader
 import Language.Java.Paragon.Syntax
 
+import Language.Java.Paragon.TypeChecker.Instantiate
 import Language.Java.Paragon.TypeChecker.Monad.TcSignatureM
 import Language.Java.Paragon.TypeChecker.Types
 
@@ -32,8 +33,8 @@ typeCheck piPath baseName ast = do
   -- 1. Create skolem types for the type parameters (generics).
   let typeParamSubst = createSkolemSubst typeDecl
   -- 2. Apply the skolemisation on the type declaration.
-  -- let skolemTypeDecl = instantiate typeParamSubst typeDecl
-  liftToBaseM piPath $ runTcSignatureM typeDecl $ do
+  let skolemTypeDecl = instantiate typeParamSubst typeDecl
+  liftToBaseM piPath $ runTcSignatureM skolemTypeDecl $ do
     -- 2. Get the package name.
     let maybePkgDecl = fmap pdName (cuPkgDecl ast)
     -- 3. Type check type declaration.
@@ -47,11 +48,12 @@ typeCheck piPath baseName ast = do
                  , cuTypeDecls   = [tcTypeDecl]
                  }
 
+typeCheckTypeDecl :: String -> Maybe Name -> TcSignature TypeDecl
 typeCheckTypeDecl = undefined
 
 -- | Create a mapping from type parameter to skolemised type to be used in type
 -- checking.
-createSkolemSubst :: TypeDecl -> [(TypeParam, TcType)]
+createSkolemSubst :: TypeDecl -> [(TypeParam, TcTypeParam)]
 createSkolemSubst (ClassTypeDecl classDecl) =
   let typeParams = cdTypeParams classDecl
   in zip typeParams (map skolemiseParam typeParams)
@@ -60,6 +62,6 @@ createSkolemSubst (InterfaceTypeDecl interfaceDecl) =
   in zip typeParams (map skolemiseParam typeParams)
 
 -- | Create a skolem type for the provided type parameter.
-skolemiseParam :: TypeParam -> TcType
+skolemiseParam :: TypeParam -> TcTypeParam
 skolemiseParam _ = panic (thisModule ++ ".skolemiseParam") $
   "This function is not implemented yet."

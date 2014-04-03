@@ -39,7 +39,7 @@ data Modifier
   | Writes     Annotation Policy  -- ^ !
 
   -- TODO: more Paragon modifiers
-  deriving (Data, Typeable, Show, Eq)
+  deriving (Data, Typeable, Ord, Show, Eq)
 
 instance Annotated Modifier where
   ann (Public       x) = x
