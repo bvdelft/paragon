@@ -5,11 +5,14 @@ module Language.Java.Paragon.TypeChecker
 
 import Control.Monad (when)
 
+import Language.Java.Paragon.Annotation
 import Language.Java.Paragon.Interaction
 import Language.Java.Paragon.Monad.Base
 import Language.Java.Paragon.Monad.PiReader
-import Language.Java.Paragon.Monad.TypeCheckM
 import Language.Java.Paragon.Syntax
+
+import Language.Java.Paragon.TypeChecker.Monad.TcSignatureM
+import Language.Java.Paragon.TypeChecker.Types
 
 thisModule :: String
 thisModule = "Language.Java.Paragon.TypeChecker"
@@ -22,13 +25,15 @@ typeCheck :: PiPath     -- ^ Directories where .pi files can be found.
           -> AST        -- ^ AST from previous phase.
           -> BaseM AST  -- ^ AST after type checking phase.
 typeCheck piPath baseName ast = do
-  when length (cuTypeDecls ast) /= 1 $
-    panic (thisModule ++ ".typeCheck") $ "Encountered multiple / zero type"
+  when ((length $ cuTypeDecls ast) /= 1) $
+    panic (thisModule ++ ".typeCheck") $ "Encountered multiple / zero type " ++
       "declarations in one file. This should not occur in this phase."
   let [typeDecl] = cuTypeDecls ast  
   -- 1. Create skolem types for the type parameters (generics).
   let typeParamSubst = createSkolemSubst typeDecl
-  liftToBaseM piPath $ runTypeCheckM typeParamSubst typeDecl $ do
+  -- 2. Apply the skolemisation on the type declaration.
+  -- let skolemTypeDecl = instantiate typeParamSubst typeDecl
+  liftToBaseM piPath $ runTcSignatureM typeDecl $ do
     -- 2. Get the package name.
     let maybePkgDecl = fmap pdName (cuPkgDecl ast)
     -- 3. Type check type declaration.
@@ -41,6 +46,8 @@ typeCheck piPath baseName ast = do
                  , cuImportDecls = tcImpDecls
                  , cuTypeDecls   = [tcTypeDecl]
                  }
+
+typeCheckTypeDecl = undefined
 
 -- | Create a mapping from type parameter to skolemised type to be used in type
 -- checking.

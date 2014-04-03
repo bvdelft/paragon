@@ -28,7 +28,7 @@ import System.IO.Unsafe (unsafePerformIO)
 
 import Language.Java.Paragon.Interaction.Panic
 import Language.Java.Paragon.SrcPos
---import Language.Java.Paragon.TypeChecker.Types
+import {-# SOURCE #-} Language.Java.Paragon.TypeChecker.Types
 
 -- | Annotation resulting from type checking.
 data Annotation = Annotation
@@ -37,7 +37,7 @@ data Annotation = Annotation
     -- | The type of the node if it has one, and whether this type is native for
     -- Paragon (i.e. is written in Java and compilation should not transform
     -- Paragon attributes for this type).
-  , annType     :: Maybe ((), Bool)
+  , annType     :: Maybe (TcType, Bool)
     -- | Whether the value of this node can be null.
   , annIsNull   :: Bool
   } deriving (Data, Typeable)
