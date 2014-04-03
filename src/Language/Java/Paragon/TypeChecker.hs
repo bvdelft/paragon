@@ -31,18 +31,18 @@ typeCheck piPath baseName ast = do
       "declarations in one file. This should not occur in this phase."
   let [typeDecl] = cuTypeDecls ast  
   -- 1. Create skolem types for the type parameters (generics).
-  let typeParamSubst = createSkolemSubst typeDecl
+  let (typeParamSubst, skClassType) = createSkolemSubst typeDecl
   -- 2. Apply the skolemisation on the type declaration.
   let skolemTypeDecl = instantiate typeParamSubst typeDecl
-  liftToBaseM piPath $ runTcSignatureM skolemTypeDecl $ do
-    -- 2. Get the package name.
+  liftToBaseM piPath $ runTcSignatureM skClassType $ do
+    -- 3. Get the package name.
     let maybePkgDecl = fmap pdName (cuPkgDecl ast)
-    -- 3. Type check type declaration.
-    tcTypeDecl <- typeCheckTypeDecl baseName maybePkgDecl typeDecl
-    -- 4. Packages and import declarations have no type.
+    -- 4. Type check type declaration.
+    tcTypeDecl <- typeCheckTypeDecl baseName maybePkgDecl skolemTypeDecl
+    -- 5. Packages and import declarations have no type.
     let tcPkgDecl = fmap (\x -> x { pdAnn = (pdAnn x) { annType = Nothing } } ) (cuPkgDecl ast)
     let tcImpDecls = map (\x -> x { impdAnn = (impdAnn x) { annType = Nothing } } ) (cuImportDecls ast)
-    -- 5. Return updated AST.
+    -- 6. Return updated AST.
     return $ ast { cuPkgDecl     = tcPkgDecl
                  , cuImportDecls = tcImpDecls
                  , cuTypeDecls   = [tcTypeDecl]
@@ -53,13 +53,19 @@ typeCheckTypeDecl = undefined
 
 -- | Create a mapping from type parameter to skolemised type to be used in type
 -- checking.
-createSkolemSubst :: TypeDecl -> [(TypeParam, TcTypeParam)]
+createSkolemSubst :: TypeDecl -> ([(TypeParam, TcTypeParam)], TcClassType)
 createSkolemSubst (ClassTypeDecl classDecl) =
-  let typeParams = cdTypeParams classDecl
-  in zip typeParams (map skolemiseParam typeParams)
+  let typeParams   = cdTypeParams classDecl
+      skTypeParams = map skolemiseParam typeParams
+      skSubst      = zip typeParams skTypeParams
+      skClassType  = TcClassType (typeName [cdId classDecl]) skTypeParams
+  in (skSubst, skClassType)
 createSkolemSubst (InterfaceTypeDecl interfaceDecl) =
-  let typeParams = intdTypeParams interfaceDecl
-  in zip typeParams (map skolemiseParam typeParams)
+  let typeParams   = intdTypeParams interfaceDecl
+      skTypeParams = map skolemiseParam typeParams
+      skSubst      = zip typeParams skTypeParams
+      skClassType  = TcClassType (typeName [intdId interfaceDecl]) skTypeParams
+  in (skSubst, skClassType)
 
 -- | Create a skolem type for the provided type parameter.
 skolemiseParam :: TypeParam -> TcTypeParam

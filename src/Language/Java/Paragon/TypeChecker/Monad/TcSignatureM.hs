@@ -21,15 +21,15 @@ import Control.Monad (ap, liftM)
 
 import Language.Java.Paragon.Monad.Base
 import Language.Java.Paragon.Monad.PiReader
-import Language.Java.Paragon.Syntax
 
+import Language.Java.Paragon.TypeChecker.Types
 import Language.Java.Paragon.TypeChecker.TypeMap
 import Language.Java.Paragon.TypeChecker.PkgMap
 
 -- | Signature type checking environment.
 data TcSignatureEnv = TcSignatureEnv
-  { tcsThisDecl :: TypeDecl  -- ^ Declaration for which we build the @TypeMap@.
-  , tcsTypeMap  :: TypeMap   -- ^ Signatures for current declaration.
+  { tcsThisType :: TcClassType  -- ^ Type for which we build the @TypeMap@.
+  , tcsTypeMap  :: TypeMap      -- ^ Signatures for current declaration.
   }
 
 type TcSignatureState = PkgMap
@@ -44,11 +44,11 @@ newtype TcSignatureM a = TcSignatureM
 type TcSignature ast = ast -> TcSignatureM ast
 
 -- | Run a @TcSignatureM@ computation.
-runTcSignatureM :: TypeDecl        -- ^ The declaration that is to be checked.
+runTcSignatureM :: TcClassType     -- ^ The type of the declaration under check.
                 -> TcSignatureM a  -- ^ The computation checking signatures.
                 -> PiReader a      -- ^ Result of signature computation.
-runTcSignatureM thisDecl (TcSignatureM comp) = do
-  let env = TcSignatureEnv { tcsThisDecl = thisDecl
+runTcSignatureM thisType (TcSignatureM comp) = do
+  let env = TcSignatureEnv { tcsThisType = thisType
                            , tcsTypeMap  = emptyTypeMap }
   fst <$> comp env emptyPkgMap
 
@@ -96,8 +96,8 @@ getTcSignatureEnv :: TcSignatureM TcSignatureEnv
 getTcSignatureEnv = TcSignatureM $ \e s -> return (e, s)
 
 -- | Access the type declaration under current check.
-getThisType :: TcSignatureM TypeDecl
-getThisType = tcsThisDecl <$> getTcSignatureEnv
+getThisType :: TcSignatureM TcClassType
+getThisType = tcsThisType <$> getTcSignatureEnv
 
 -- | Access the current type map.
 getTypeMap :: TcSignatureM TypeMap
