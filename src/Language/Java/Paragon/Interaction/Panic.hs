@@ -4,6 +4,7 @@ module Language.Java.Paragon.Interaction.Panic
   (
     -- * Generic panic.
     panic
+  , notImplemented
   ) where
 
 import Language.Java.Paragon.Interaction.Headers (issueTracker)
@@ -20,3 +21,7 @@ panic cause extra = error $ "Panic! " ++ cause ++ " caused the impossible,\
                             then "\nExtra information: " ++ extra
                             else ""
 
+-- | Predefined panic for unimplemented functions.
+notImplemented :: String  -- ^ Name of the unimplemented function.
+               -> a
+notImplemented f = panic f "This function is not yet implemented."

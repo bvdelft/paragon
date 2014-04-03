@@ -10,17 +10,14 @@ import Test.Hspec
 import Language.Java.Paragon.NameResolution
 import Language.Java.Paragon.NameResolution.Errors
 
-import Control.Exception (tryJust)
-import Control.Monad (guard)
-import System.Environment (getEnv)
-import System.FilePath ((</>), splitSearchPath)
-import System.IO.Error (isDoesNotExistError)
+import System.FilePath ((</>))
 
 import Language.Java.Paragon.Annotation
 import Language.Java.Paragon.ASTHelpers
 import Language.Java.Paragon.Error
 import Language.Java.Paragon.Error.StandardContexts
 import Language.Java.Paragon.Error.StandardErrors
+import Language.Java.Paragon.Interaction.IO
 import Language.Java.Paragon.Monad.Base
 import Language.Java.Paragon.Monad.PiReader
 import Language.Java.Paragon.Syntax
@@ -32,17 +29,6 @@ main :: IO ()
 main = hspec spec
 
 -- Configuration
-
-getPIPATH :: IO [String]
-getPIPATH = do
-  -- guard indicates that the only expected exception is isDoesNotExistError
-  -- returns an Either type, left exception, right path
-  ePpStr <- tryJust (guard . isDoesNotExistError) $ getEnv "PIPATH"
-  -- splitSearchPath comes from System.FilePath, splitting String into filepaths
-  -- In case the PIPATH variable did not exist, the empty list is used.
-  -- (either takes two functions, const makes a function ignoring the other
-  -- argument, i.e. the exception is ignored).
-  return $ splitSearchPath $ either (const []) id ePpStr
 
 testDir :: FilePath
 testDir = "test" </> "namerestests"
@@ -219,9 +205,6 @@ prefixNameType t (Just name) =
 
 defaultAnn :: Annotation
 defaultAnn = emptyAnnotation { annSrcSpan = defaultSpan }
-
-makeSrcSpanAnn :: String -> Int -> Int -> Int -> Int -> Annotation
-makeSrcSpanAnn fileName a b c d = srcSpanToAnn $ SrcSpan fileName a b c d
 
 nrCtxt :: ErrorContext
 nrCtxt = compPhaseContext "Name Resolution"

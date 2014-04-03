@@ -35,6 +35,7 @@ Library
                         Language.Java.Paragon.Interaction.Debugging
                         Language.Java.Paragon.Interaction.Flags
                         Language.Java.Paragon.Interaction.Headers
+                        Language.Java.Paragon.Interaction.IO
                         Language.Java.Paragon.Interaction.Panic
                         Language.Java.Paragon.Interaction.Pretty
                         Language.Java.Paragon.Interaction.Unparse
@@ -78,6 +79,7 @@ Library
                         Language.Java.Paragon.Syntax.Expressions
                         Language.Java.Paragon.Syntax.Modifiers
                         Language.Java.Paragon.TypeChecker
+                        Language.Java.Paragon.TypeChecker.Errors
                         Language.Java.Paragon.TypeChecker.Monad.TcSignatureM
                         Language.Java.Paragon.TypeChecker.Types
                         Language.Java.Paragon.TypeChecker.TypeMap

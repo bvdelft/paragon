@@ -6,11 +6,7 @@ module Language.Java.Paragon.Parac
 
 import Data.Maybe (fromMaybe)
 
-import Control.Exception (tryJust)
-import Control.Monad (guard)
-import System.Environment (getEnv)
 import System.FilePath ((</>), splitSearchPath, splitFileName)
-import System.IO.Error (isDoesNotExistError)
 
 import Language.Java.Paragon.Error
 import Language.Java.Paragon.Interaction hiding (pretty)
@@ -54,14 +50,3 @@ buildPiPath flags filePath = do
   let pDirsSpec = concat [ splitSearchPath dir | PiPath dir <- flags ] ++ pp
       pDirs = if null pDirsSpec then ["./"] else pDirsSpec
   return pDirs
-
-getPIPATH :: IO [String]
-getPIPATH = do
-  -- guard indicates that the only expected exception is isDoesNotExistError
-  -- returns an Either type, left exception, right path
-  ePpStr <- tryJust (guard . isDoesNotExistError) $ getEnv "PIPATH"
-  -- splitSearchPath comes from System.FilePath, splitting String into filepaths
-  -- In case the PIPATH variable did not exist, the empty list is used.
-  -- (either takes two functions, const makes a function ignoring the other
-  -- argument, i.e. the exception is ignored).
-  return $ splitSearchPath $ either (const []) id ePpStr

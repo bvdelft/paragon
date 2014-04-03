@@ -3,14 +3,17 @@ module Language.Java.Paragon.TypeChecker
     typeCheck
   ) where
 
+import Control.Applicative ((<$>))
 import Control.Monad (when)
 
 import Language.Java.Paragon.Annotation
+import Language.Java.Paragon.Error.StandardContexts
 import Language.Java.Paragon.Interaction
 import Language.Java.Paragon.Monad.Base
 import Language.Java.Paragon.Monad.PiReader
 import Language.Java.Paragon.Syntax
 
+import Language.Java.Paragon.TypeChecker.Errors
 import Language.Java.Paragon.TypeChecker.Instantiate
 import Language.Java.Paragon.TypeChecker.Monad.TcSignatureM
 import Language.Java.Paragon.TypeChecker.Types
@@ -25,7 +28,7 @@ typeCheck :: PiPath     -- ^ Directories where .pi files can be found.
           -> String     -- ^ Base name of the file.
           -> AST        -- ^ AST from previous phase.
           -> BaseM AST  -- ^ AST after type checking phase.
-typeCheck piPath baseName ast = do
+typeCheck piPath baseName ast = withErrCtxt (compPhaseContext "Type Checking") $ do
   when ((length $ cuTypeDecls ast) /= 1) $
     panic (thisModule ++ ".typeCheck") $ "Encountered multiple / zero type " ++
       "declarations in one file. This should not occur in this phase."
@@ -48,9 +51,6 @@ typeCheck piPath baseName ast = do
                  , cuTypeDecls   = [tcTypeDecl]
                  }
 
-typeCheckTypeDecl :: String -> Maybe Name -> TcSignature TypeDecl
-typeCheckTypeDecl = undefined
-
 -- | Create a mapping from type parameter to skolemised type to be used in type
 -- checking.
 createSkolemSubst :: TypeDecl -> ([(TypeParam, TcTypeParam)], TcClassType)
@@ -69,5 +69,26 @@ createSkolemSubst (InterfaceTypeDecl interfaceDecl) =
 
 -- | Create a skolem type for the provided type parameter.
 skolemiseParam :: TypeParam -> TcTypeParam
-skolemiseParam _ = panic (thisModule ++ ".skolemiseParam") $
-  "This function is not implemented yet."
+skolemiseParam _ = notImplemented (thisModule ++ ".skolemiseParam")
+
+-- Type checking functions.
+
+-- | Type checking type declaration.
+typeCheckTypeDecl :: String -> Maybe Name -> TcSignature TypeDecl
+typeCheckTypeDecl baseName mPkg (ClassTypeDecl classDecl) =
+  ClassTypeDecl <$> typeCheckClassDecl baseName mPkg classDecl
+typeCheckTypeDecl baseName mPkg (InterfaceTypeDecl interfaceDecl) =
+  InterfaceTypeDecl <$> typeCheckInterfaceDecl baseName mPkg interfaceDecl
+
+-- | Type checking interface declaration. Not implemented yet.
+typeCheckInterfaceDecl :: String -> Maybe Name -> TcSignature InterfaceDecl
+typeCheckInterfaceDecl _ _ _ = notImplemented (thisModule ++ ".typeCheckInterfaceDecl")
+
+-- Type checking class declaration.
+typeCheckClassDecl :: String -> Maybe Name -> TcSignature ClassDecl
+typeCheckClassDecl baseName _mPkg classDecl = do
+  finePrint $ "Entering: " ++ thisModule ++ ".typeCheckClassDecl"
+  withErrCtxt (classBodyContext classDecl) $ do
+    check ((idIdent $ cdId classDecl) == baseName) $
+      fileNameMismatch baseName classDecl (cdId classDecl)
+    return classDecl

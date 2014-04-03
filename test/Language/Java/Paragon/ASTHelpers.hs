@@ -6,19 +6,17 @@ import Language.Java.Paragon.Error.StandardContexts
 import Language.Java.Paragon.Annotation
 import Language.Java.Paragon.Error
 import Language.Java.Paragon.Interaction
+import Language.Java.Paragon.SrcPos
 import Language.Java.Paragon.Syntax
+
+makeSrcSpanAnn :: String -> Int -> Int -> Int -> Int -> Annotation
+makeSrcSpanAnn fileName a b c d = srcSpanToAnn $ SrcSpan fileName a b c d
 
 -- Some short-hands for creating error contexts, with undefined/panic messages
 -- for locations that the error context is assumed not to address.
 
 defClassBodyContext :: String -> ErrorContext
-defClassBodyContext name =
-  let cId   = Id emptyAnnotation name
-      u     = panic ("Language.Java.Paragon.ASTHelpers.defClassBodyContext") $
-               "Error context created during testing did not provide a " ++
-               "required attribute"
-      cDecl = ClassDecl u u cId u u u u
-  in classBodyContext cDecl
+defClassBodyContext name = classBodyContext $ defClassDecl name
 
 defMethodContext :: String -> ErrorContext
 defMethodContext name =
@@ -28,6 +26,16 @@ defMethodContext name =
                "required attribute"
       mDecl = MethodDecl u u u u mId u u
   in memberDeclContext mDecl
+  
+-- Helpers for building empty AST nodes.
+
+defClassDecl :: String -> ClassDecl
+defClassDecl name = 
+  let cId   = Id emptyAnnotation name
+      u     = panic ("Language.Java.Paragon.ASTHelpers.defClassDecl") $
+               "Class declaration created during testing did not provide a " ++
+               "required attribute"
+  in ClassDecl u u cId u u u u
 
 -- Helpers for modifying AST. Some assumption here, e.g. only altering RefType,
 -- not PrimType.
