@@ -1,7 +1,10 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 module Language.Java.Paragon.TypeChecker.TcTypes 
   (
-    TcType(..)
+    -- * Default for type-less nodes
+    noTypeAnn
+    -- * Type checked types
+  , TcType(..)
   , TcRefType(..)
   , TcClassType(..)
   , TcTypeParam
@@ -9,8 +12,15 @@ module Language.Java.Paragon.TypeChecker.TcTypes
 
 import Data.Data
 
+import Language.Java.Paragon.Annotation
+import Language.Java.Paragon.Annotated
 import Language.Java.Paragon.PolicyLang
 import Language.Java.Paragon.Syntax
+
+-- | For those elements in the AST where a type is not relevant the annotation
+-- can be set to @Nothing@ using this function.
+noTypeAnn :: Annotated ast => ast -> ast
+noTypeAnn node = modifyAnn (\a -> a { annType = Nothing }) node
 
 -- | Type checked types.
 data TcType =

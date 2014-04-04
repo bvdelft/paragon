@@ -129,13 +129,13 @@ buildMapFromTd mPkgPre td expn = do
   (pos, i, _tps, supers) <- 
       case td of
         ClassTypeDecl classDecl ->
-          return ( ann classDecl
+          return ( getAnn classDecl
                  , cdId classDecl
                  , cdTypeParams classDecl
                  , maybe [] (:[]) (cdSuperClass classDecl)
                  )
         InterfaceTypeDecl intDecl ->
-          return ( ann intDecl
+          return ( getAnn intDecl
                  , intdId intDecl
                  , intdTypeParams intDecl
                  , intdInterfaces intDecl

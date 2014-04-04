@@ -58,7 +58,8 @@ defaultError = Error
 data ErrorAnnotation = ErrorAnnotation Annotation
 
 instance Annotated ErrorAnnotation where
-  ann (ErrorAnnotation x) = x
+  getAnn (ErrorAnnotation x) = x
+  setAnn a _ = ErrorAnnotation a
 
 -- | When an annotation is not available to provide to an error, this
 -- annotation can be used. It gives the default span as source location.
@@ -68,7 +69,7 @@ errorAnnotation = ErrorAnnotation $
 
 -- | Adds the source code location and error context to the error.
 mkError :: Annotated a => Error -> a -> [ErrorContext] -> Error
-mkError err el ctx = err { location   = annSrcSpan $ ann el
+mkError err el ctx = err { location   = annSrcSpan $ getAnn el
                          , errContext = ctx
                          }
 

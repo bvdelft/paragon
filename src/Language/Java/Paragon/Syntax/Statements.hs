@@ -25,4 +25,5 @@ data Stmt =
   deriving (Typeable, Data, Ord, Show, Eq)
 
 instance Annotated Stmt where
-  ann = stmtAnn
+  getAnn = stmtAnn
+  setAnn a x = x { stmtAnn = a }

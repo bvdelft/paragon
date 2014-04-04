@@ -184,48 +184,65 @@ data BlockStmt =
   deriving (Typeable, Data, Ord, Show, Eq)
 
 instance Annotated CompilationUnit where
-  ann = cuAnn
+  getAnn = cuAnn
+  setAnn a x = x {cuAnn = a}
 
 instance Annotated PackageDecl where
-  ann = pdAnn
+  getAnn = pdAnn
+  setAnn a x = x {pdAnn = a}
 
 instance Annotated ImportDecl where
-  ann = impdAnn
+  getAnn = impdAnn
+  setAnn a x = x {impdAnn = a}
 
 instance Annotated TypeDecl where
-  ann (ClassTypeDecl     x) = ann x
-  ann (InterfaceTypeDecl x) = ann x
+  getAnn (ClassTypeDecl     x) = getAnn x
+  getAnn (InterfaceTypeDecl x) = getAnn x
+  setAnn a (ClassTypeDecl     x) = ClassTypeDecl     $ setAnn a x
+  setAnn a (InterfaceTypeDecl x) = InterfaceTypeDecl $ setAnn a x
 
 instance Annotated ClassDecl where
-  ann = cdAnn
+  getAnn = cdAnn
+  setAnn a x = x {cdAnn = a}
 
 instance Annotated InterfaceDecl where
-  ann = intdAnn
+  getAnn = intdAnn
+  setAnn a x = x {intdAnn = a}
 
 instance Annotated ClassBody where
-  ann = cbAnn
+  getAnn = cbAnn
+  setAnn a x = x {cbAnn = a}
 
 instance Annotated ClassBodyDecl where
-  ann (MemberDecl x) = ann x
+  getAnn (MemberDecl x) = getAnn x
+  setAnn a (MemberDecl x) = MemberDecl $ setAnn a x
 
 instance Annotated MemberDecl where
-  ann = membDeclAnn
+  getAnn = membDeclAnn
+  setAnn a x = x {membDeclAnn = a}
 
 instance Annotated VarDecl where
-  ann = varDeclAnn
+  getAnn = varDeclAnn
+  setAnn a x = x {varDeclAnn = a}
 
 instance Annotated FormalParam where
-  ann = formalParamAnn
+  getAnn = formalParamAnn
+  setAnn a x = x {formalParamAnn = a}
 
 instance Annotated MethodBody where
-  ann = methodBodyAnn
+  getAnn = methodBodyAnn
+  setAnn a x = x {methodBodyAnn = a}
 
 instance Annotated VarInit where
-  ann = ann . varInitExp
+  getAnn = getAnn . varInitExp
+  setAnn a x = x { varInitExp = setAnn a (varInitExp x) }
 
 instance Annotated Block where
-  ann = blockAnn
+  getAnn = blockAnn
+  setAnn a x = x {blockAnn = a}
 
 instance Annotated BlockStmt where
-  ann (BlockStmt x) = ann x
-  ann x@(LocalVars {}) = localVarsAnn x
+  getAnn (BlockStmt x) = getAnn x
+  getAnn x@(LocalVars {}) = localVarsAnn x
+  setAnn a (BlockStmt x) = BlockStmt $ setAnn a x
+  setAnn a x@(LocalVars {}) = x { localVarsAnn = a }

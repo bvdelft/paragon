@@ -72,27 +72,43 @@ returnTypeToType (Type t) = Just t
 returnTypeToType        _ = Nothing
 
 instance Annotated Type where
-  ann (PrimType x) = ann x
-  ann (RefType  x) = ann x
+  getAnn (PrimType x) = getAnn x
+  getAnn (RefType  x) = getAnn x
+  setAnn a (PrimType x) = PrimType $ setAnn a x
+  setAnn a (RefType  x) = RefType  $ setAnn a x
 
 instance Annotated PrimType where
-  ann (BooleanT x) = x
-  ann (ByteT    x) = x
-  ann (ShortT   x) = x
-  ann (IntT     x) = x
-  ann (LongT    x) = x
-  ann (CharT    x) = x
-  ann (FloatT   x) = x
-  ann (DoubleT  x) = x
-  ann (PolicyT  x) = x
+  getAnn (BooleanT x) = x
+  getAnn (ByteT    x) = x
+  getAnn (ShortT   x) = x
+  getAnn (IntT     x) = x
+  getAnn (LongT    x) = x
+  getAnn (CharT    x) = x
+  getAnn (FloatT   x) = x
+  getAnn (DoubleT  x) = x
+  getAnn (PolicyT  x) = x
+  setAnn a (BooleanT _) = BooleanT a
+  setAnn a (ByteT    _) = ByteT    a
+  setAnn a (ShortT   _) = ShortT   a
+  setAnn a (IntT     _) = IntT     a
+  setAnn a (LongT    _) = LongT    a
+  setAnn a (CharT    _) = CharT    a
+  setAnn a (FloatT   _) = FloatT   a
+  setAnn a (DoubleT  _) = DoubleT  a
+  setAnn a (PolicyT  _) = PolicyT  a
   
 instance Annotated RefType where
-  ann (ClassRefType x) = ann x
+  getAnn (ClassRefType x) = getAnn x
+  setAnn a (ClassRefType x) = ClassRefType $ setAnn a x
 
 instance Annotated ClassType where
-  ann = ctAnn
+  getAnn = ctAnn
+  setAnn a x = x { ctAnn = a }
 
 instance Annotated ReturnType where
-  ann (VoidType x) = x
-  ann (LockType x) = x
-  ann (Type t)     = ann t
+  getAnn (VoidType x) = x
+  getAnn (LockType x) = x
+  getAnn (Type t)     = getAnn t
+  setAnn a (VoidType _) = VoidType a
+  setAnn a (LockType _) = LockType a
+  setAnn a (Type t)     = Type $ setAnn a t

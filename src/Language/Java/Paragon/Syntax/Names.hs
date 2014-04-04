@@ -28,7 +28,8 @@ data Id = Id
   } deriving (Data, Typeable, Show, Eq, Ord)
 
 instance Annotated Id where
-  ann = idAnn
+  getAnn = idAnn
+  setAnn a x = x { idAnn = a }
 
 -- | Qualified name. A dot-separated list of identifiers.
 data Name = Name
@@ -39,7 +40,8 @@ data Name = Name
   } deriving (Data, Typeable, Show, Eq, Ord)
 
 instance Annotated Name where
-  ann = nameAnn
+  getAnn = nameAnn
+  setAnn a x = x { nameAnn = a }
 
 instance Unparse Name where
   unparse name =
@@ -65,9 +67,9 @@ data NameType = ExpName           -- ^ Expression name.
 -- Takes a function to combine annotations.
 mkName :: (Annotation -> Annotation -> Annotation) -> NameType -> [Id] -> Name
 mkName combine nameT ids = mkName' (reverse ids)
-  where mkName' [i]    = Name (ann i) i nameT Nothing
+  where mkName' [i]    = Name (getAnn i) i nameT Nothing
         mkName' (i:is) = let pre = mkName' is
-                         in Name (combine (ann pre) (ann i)) i nameT (Just pre)
+                         in Name (combine (getAnn pre) (getAnn i)) i nameT (Just pre)
         mkName' [] = panic (namesModule ++ ".mkName") "empty list of identifiers"
 
 -- | Transforms a qualified name to list of identifiers.
@@ -118,6 +120,6 @@ combineNames names = combineNames' (reverse names)
         combineNames' [n]    = n
         combineNames' (n:ns) = 
           let pre = combineNames' ns
-              newSpan = combineSrcSpan (annSrcSpan $ ann n) (annSrcSpan $ ann pre)
+              newSpan = combineSrcSpan (annSrcSpan $ getAnn n) (annSrcSpan $ getAnn pre)
               newAnn  = emptyAnnotation { annSrcSpan = newSpan }
           in n { namePrefix = Just pre, nameAnn = newAnn }

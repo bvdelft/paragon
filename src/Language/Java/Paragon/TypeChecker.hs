@@ -94,8 +94,8 @@ typeCheckClassDecl baseName mPkg classDecl = do
   withErrCtxt (classBodyContext classDecl) $ do
     check ((idIdent $ cdId classDecl) == baseName) $
       fileNameMismatch baseName classDecl (cdId classDecl)
-    let _memberDecls = [ m | MemberDecl m <- cbDecls $ cdBody classDecl ]
-        idFunc     = map (Id (srcSpanToAnn defaultSpan))
+    -- 1. Register this type declaration's signature in the package map.
+    let idFunc     = map (Id (srcSpanToAnn defaultSpan))
         objectName = combineNames [ pkgName $ idFunc ["java", "lang"]
                                   , typeName $ idFunc ["Object"] ]
         objectType = ClassType { ctAnn      = srcSpanToAnn defaultSpan
@@ -104,7 +104,20 @@ typeCheckClassDecl baseName mPkg classDecl = do
                                }
         superTypes  = maybe [objectType] (:[]) (cdSuperClass classDecl)
     registerThisType mPkg (cdId classDecl) superTypes
-    return classDecl
+    -- 2. Check the signatures of the members of this type declaration.
+    debugPrint "Starting type checking of signatures."
+    let memberDecls = [ m | MemberDecl m <- cbDecls $ cdBody classDecl ]
+    -- typeCheckSignatures memberDecls $ do
+    -- registerThisTypeSigs mpkg i tps supers -- TODO: Difference with registerThisType ??
+    tcMemberDecls <- typeCheckMemberDecls memberDecls
+    let newBody = (cdBody classDecl) { cbDecls = map MemberDecl tcMemberDecls } 
+    return $ noTypeAnn $
+      classDecl { cdModifiers  = map noTypeAnn (cdModifiers classDecl)
+                , cdId         = noTypeAnn (cdId classDecl)
+                , cdSuperClass = fmap noTypeAnn (cdSuperClass classDecl) 
+                , cdInterfaces = map noTypeAnn (cdInterfaces classDecl)
+                , cdBody       = noTypeAnn newBody                   
+                }
 
 -- | Add this type to the global package map.
 registerThisType :: Maybe Name   -- ^ Optional package name.
@@ -112,10 +125,7 @@ registerThisType :: Maybe Name   -- ^ Optional package name.
                  -> [ClassType]  -- ^ Super types (incl. interfaces).
                  -> TcSignatureM ()
 registerThisType mPkg tdId superTypes = do
-    let tcSuperTypes = map 
-          (\c -> TcClassType (ctName c) 
-                             (panic (typeCheckerBase ++ ".registerThisType") $ "Type parameters not supported yet.")) 
-          superTypes
+    let tcSuperTypes = map (\c -> TcClassType (ctName c) []) superTypes
     -- TODO: evaluate super types and add their members to this declaration's
     -- type map.
     let fullN = Name { nameAnn  = srcSpanToAnn defaultSpan
@@ -132,3 +142,6 @@ registerThisType mPkg tdId superTypes = do
                                 , tsMembers      = emptyTypeMap 
                                 }
     modifyPkgMap $ insertPkgMapType fullN thisSig
+
+typeCheckMemberDecls :: TcSignature [MemberDecl]
+typeCheckMemberDecls = notImplemented (thisModule ++ ".typeCheckMemberDecls")

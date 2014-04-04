@@ -3,12 +3,17 @@
 module Language.Java.Paragon.Annotated
   ( -- * The @Annotated@ class
     Annotated(..)
+  , modifyAnn
   ) where
   
 import Language.Java.Paragon.Annotation
 
 -- | Annotated type class.
 class Annotated ast where
-  -- | Extracts the annotation field which should be the first one.
-  ann :: ast -> Annotation
+  -- | Extracts the annotation field.
+  getAnn :: ast -> Annotation
+  -- | Modify the annotation.
+  setAnn :: Annotation -> ast -> ast
 
+modifyAnn :: Annotated ast => (Annotation -> Annotation) -> ast -> ast
+modifyAnn f x = setAnn (f $ getAnn x) x

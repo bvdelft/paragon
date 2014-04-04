@@ -71,5 +71,5 @@ modifier =
 -- position of the first modifier.
 getModifiersStartPos :: [Modifier] -> SrcPos -> SrcPos
 getModifiersStartPos []    defaultSrcPos = defaultSrcPos
-getModifiersStartPos (m:_) _             = srcSpanToStartPos (annSrcSpan $ ann m)
+getModifiersStartPos (m:_) _             = srcSpanToStartPos (annSrcSpan $ getAnn m)
 

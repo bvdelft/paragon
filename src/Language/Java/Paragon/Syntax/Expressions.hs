@@ -127,40 +127,57 @@ data Atom = Atom
 type Policy = Exp
 
 instance Annotated Exp where
-  ann (Lit       x) = ann x
-  ann (NameExp   x) = ann x
-  ann a@(Assign {}) = assignAnn a
-  ann (PolicyExp x) = ann x
+  getAnn (Lit       x) = getAnn x
+  getAnn (NameExp   x) = getAnn x
+  getAnn a@(Assign {}) = assignAnn a
+  getAnn (PolicyExp x) = getAnn x
+  setAnn a (Lit       x) = Lit       $ setAnn a x
+  setAnn a (NameExp   x) = NameExp   $ setAnn a x
+  setAnn a x@(Assign {}) = x { assignAnn = a }
+  setAnn a (PolicyExp x) = PolicyExp $ setAnn a x
 
 instance Annotated Literal where
-  ann = litAnn
+  getAnn = litAnn
+  setAnn a x = x {litAnn = a}
 
 instance Annotated Lhs where
-  ann = ann . lhsName
+  getAnn = getAnn . lhsName
+  setAnn a x = x { lhsName = setAnn a (lhsName x) }
 
 instance Annotated AssignOp where
-  ann (EqualA x) = x
+  getAnn (EqualA x) = x
+  setAnn a (EqualA _) = EqualA a
 
 instance Annotated PolicyExp where
-  ann p@(PolicyLit {}) = policyAnn p
+  getAnn p@(PolicyLit {}) = policyAnn p
+  setAnn a x@(PolicyLit {}) = x { policyAnn = a }
 
 instance Annotated Clause where
-  ann = clauseAnn
+  getAnn = clauseAnn
+  setAnn a x = x {clauseAnn = a}
 
 instance Annotated ClauseVarDecl where
-  ann = clauseVarDeclAnn
+  getAnn = clauseVarDeclAnn
+  setAnn a x = x {clauseVarDeclAnn = a}
 
 instance Annotated ClauseHead where
-  ann (ClauseDeclHead x) = ann x
-  ann (ClauseVarHead  x) = ann x
+  getAnn (ClauseDeclHead x) = getAnn x
+  getAnn (ClauseVarHead  x) = getAnn x
+  setAnn a (ClauseDeclHead x) = ClauseDeclHead $ setAnn a x
+  setAnn a (ClauseVarHead  x) = ClauseVarHead  $ setAnn a x
 
 instance Annotated Actor where
-  ann (Actor x) = ann x
-  ann (Var   x) = ann x
+  getAnn (Actor x) = getAnn x
+  getAnn (Var   x) = getAnn x
+  setAnn a (Actor x) = Actor $ setAnn a x
+  setAnn a (Var   x) = Var   $ setAnn a x
 
 instance Annotated ActorName where
-  ann (ActorName x) = ann x
-  ann a@(ActorTypeVar {}) = actorTypeVarAnn a
+  getAnn (ActorName x) = getAnn x
+  getAnn a@(ActorTypeVar {}) = actorTypeVarAnn a
+  setAnn a (ActorName x) = ActorName $ setAnn a x
+  setAnn a x@(ActorTypeVar {}) = x { actorTypeVarAnn = a }
 
 instance Annotated Atom where
-  ann = atomAnn
+  getAnn = atomAnn
+  setAnn a x = x {atomAnn = a}
