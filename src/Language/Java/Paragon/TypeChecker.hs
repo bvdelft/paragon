@@ -11,12 +11,15 @@ import Language.Java.Paragon.Error.StandardContexts
 import Language.Java.Paragon.Interaction
 import Language.Java.Paragon.Monad.Base
 import Language.Java.Paragon.Monad.PiReader
+import Language.Java.Paragon.SrcPos
 import Language.Java.Paragon.Syntax
 
 import Language.Java.Paragon.TypeChecker.Errors
 import Language.Java.Paragon.TypeChecker.Instantiate
 import Language.Java.Paragon.TypeChecker.Monad.TcSignatureM
-import Language.Java.Paragon.TypeChecker.Types
+import Language.Java.Paragon.TypeChecker.PkgMap
+import Language.Java.Paragon.TypeChecker.TcTypes
+import Language.Java.Paragon.TypeChecker.TypeMap
 
 thisModule :: String
 thisModule = "Language.Java.Paragon.TypeChecker"
@@ -86,9 +89,46 @@ typeCheckInterfaceDecl _ _ _ = notImplemented (thisModule ++ ".typeCheckInterfac
 
 -- Type checking class declaration.
 typeCheckClassDecl :: String -> Maybe Name -> TcSignature ClassDecl
-typeCheckClassDecl baseName _mPkg classDecl = do
+typeCheckClassDecl baseName mPkg classDecl = do
   finePrint $ "Entering: " ++ thisModule ++ ".typeCheckClassDecl"
   withErrCtxt (classBodyContext classDecl) $ do
     check ((idIdent $ cdId classDecl) == baseName) $
       fileNameMismatch baseName classDecl (cdId classDecl)
+    let _memberDecls = [ m | MemberDecl m <- cbDecls $ cdBody classDecl ]
+        idFunc     = map (Id (srcSpanToAnn defaultSpan))
+        objectName = combineNames [ pkgName $ idFunc ["java", "lang"]
+                                  , typeName $ idFunc ["Object"] ]
+        objectType = ClassType { ctAnn      = srcSpanToAnn defaultSpan
+                               , ctName     = objectName
+                               , ctTypeArgs = []
+                               }
+        superTypes  = maybe [objectType] (:[]) (cdSuperClass classDecl)
+    registerThisType mPkg (cdId classDecl) superTypes
     return classDecl
+
+-- | Add this type to the global package map.
+registerThisType :: Maybe Name   -- ^ Optional package name.
+                 -> Id           -- ^ Type declaration's identifier.
+                 -> [ClassType]  -- ^ Super types (incl. interfaces).
+                 -> TcSignatureM ()
+registerThisType mPkg tdId superTypes = do
+    let tcSuperTypes = map 
+          (\c -> TcClassType (ctName c) 
+                             (panic (typeCheckerBase ++ ".registerThisType") $ "Type parameters not supported yet.")) 
+          superTypes
+    -- TODO: evaluate super types and add their members to this declaration's
+    -- type map.
+    let fullN = Name { nameAnn  = srcSpanToAnn defaultSpan
+                     , nameId   = tdId
+                     , nameType = TypeName
+                     , namePrefix = mPkg 
+                     }
+        thisSig = TypeSignature { tsType         = TcClassRefType $ TcClassType fullN []
+                                , tsIsClass      = True
+                                , tsIsFinal      = False
+                                , tsSuperClasses = tcSuperTypes
+                                , tsInterfaces   = []
+                                -- Members not yet needed at this-registration:
+                                , tsMembers      = emptyTypeMap 
+                                }
+    modifyPkgMap $ insertPkgMapType fullN thisSig

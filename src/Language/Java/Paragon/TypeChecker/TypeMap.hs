@@ -13,7 +13,7 @@ import Data.Map (Map, empty)
 import Language.Java.Paragon.PolicyLang
 import Language.Java.Paragon.Syntax
 
-import Language.Java.Paragon.TypeChecker.Types
+import Language.Java.Paragon.TypeChecker.TcTypes
 
 -- | The @TypeMap@ data structure.
 -- For methods and constructors, which might share the same name, we store an

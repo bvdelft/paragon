@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-module Language.Java.Paragon.TypeChecker.Types 
+module Language.Java.Paragon.TypeChecker.TcTypes 
   (
     TcType(..)
   , TcRefType(..)

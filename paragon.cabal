@@ -81,7 +81,7 @@ Library
                         Language.Java.Paragon.TypeChecker
                         Language.Java.Paragon.TypeChecker.Errors
                         Language.Java.Paragon.TypeChecker.Monad.TcSignatureM
-                        Language.Java.Paragon.TypeChecker.Types
+                        Language.Java.Paragon.TypeChecker.TcTypes
                         Language.Java.Paragon.TypeChecker.TypeMap
                         Language.Java.Paragon.TypeChecker.PkgMap
   hs-source-dirs:       src

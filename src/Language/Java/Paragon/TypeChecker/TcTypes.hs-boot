@@ -1,4 +1,4 @@
-module Language.Java.Paragon.TypeChecker.Types where
+module Language.Java.Paragon.TypeChecker.TcTypes where
 
 import Data.Data
 

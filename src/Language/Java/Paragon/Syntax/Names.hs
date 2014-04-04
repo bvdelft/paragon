@@ -102,12 +102,22 @@ expOrLockName = mkNameSrcSpan ExpOrLockName
 ambigName :: [Id] -> Name
 ambigName = mkNameSrcSpan AmbigName
 
+-- | Assumes a non-empty list. The last element of the list is labelled to be a
+-- TypeName, the preceding elements are PkgOrTypeNames.
 qualifiedTypeName :: [Id] -> Name
 qualifiedTypeName [x] = typeName [x]
-qualifiedTypeName ids = 
-  let prefix  = pkgOrTypeName (init ids)
-      name    = typeName [last ids]
-      newSpan = combineSrcSpan (annSrcSpan $ ann name) (annSrcSpan $ ann prefix)
-      newAnn  = emptyAnnotation { annSrcSpan = newSpan }
-  in name { namePrefix = Just $ prefix
-          , nameAnn = newAnn }
+qualifiedTypeName ids = combineNames [ pkgOrTypeName (init ids)
+                                     , typeName [last ids]
+                                     ]
+
+-- | Combines names, making each preceding element a prefix of the next. Expects
+--  a non-empty list of names.
+combineNames :: [Name] -> Name
+combineNames names = combineNames' (reverse names)
+  where combineNames' []     = panic (namesModule ++ ".combineNames") $ "Empty list provided."
+        combineNames' [n]    = n
+        combineNames' (n:ns) = 
+          let pre = combineNames' ns
+              newSpan = combineSrcSpan (annSrcSpan $ ann n) (annSrcSpan $ ann pre)
+              newAnn  = emptyAnnotation { annSrcSpan = newSpan }
+          in n { namePrefix = Just pre, nameAnn = newAnn }

@@ -22,7 +22,7 @@ import Control.Monad (ap, liftM)
 import Language.Java.Paragon.Monad.Base
 import Language.Java.Paragon.Monad.PiReader
 
-import Language.Java.Paragon.TypeChecker.Types
+import Language.Java.Paragon.TypeChecker.TcTypes
 import Language.Java.Paragon.TypeChecker.TypeMap
 import Language.Java.Paragon.TypeChecker.PkgMap
 

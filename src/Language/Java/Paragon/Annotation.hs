@@ -28,7 +28,7 @@ import System.IO.Unsafe (unsafePerformIO)
 
 import Language.Java.Paragon.Interaction.Panic
 import Language.Java.Paragon.SrcPos
-import {-# SOURCE #-} Language.Java.Paragon.TypeChecker.Types
+import {-# SOURCE #-} Language.Java.Paragon.TypeChecker.TcTypes
 
 -- | Annotation resulting from type checking.
 data Annotation = Annotation
