@@ -98,22 +98,22 @@ getFailing file = do
   ast <- parseFailureFile file
   piPath <- getPIPATH
   (Left err) <- runBaseM [] (liftToBaseM piPath (resolveNames ast))
-  return err  
+  return err
 
 -- | Main specification function. Relies on successful parsing.
 spec :: Spec
 spec = do
   describe "resolveNames" $ do
-  
+
     -- Success, resolving does not alter AST
-    
-    it "resolves empty class declaration" $ 
+
+    it "resolves empty class declaration" $
       noAltering "ClassDeclEmpty.para"
     it "resolves empty class declaration with modifiers" $
       noAltering "ClassDeclMod.para"
     it "resolves class declaration with single field declaration" $
       noAltering "ClassDeclSingleField.para"
-    it "resolves class declaration with single field declaration with modifiers" $ 
+    it "resolves class declaration with single field declaration with modifiers" $
       noAltering "ClassDeclSingleFieldMod.para"
     it "resolves class declaration with multiple field declarations with modifiers" $
       noAltering "ClassDeclMultFields.para"
@@ -141,19 +141,19 @@ spec = do
       noAltering "ClassDeclSingleFieldReadsMod.para"
     it "parses class declaration with single field with writes policy modifier" $
       noAltering "ClassDeclSingleFieldWritesMod.para"
-          
+
     -- Success, resolving does alter AST
-    
+
     it "resolves class declaration with single field declaration with reference type" $ do
       ast <- parseSuccessFile "ClassDeclSingleFieldRefType.para"
       let newPrefix = mkName const PkgName [Id defaultAnn "java", Id defaultAnn "lang"]
-      let transform = modifyBodyDecl 0 $ modifyFieldDeclType $ 
+      let transform = modifyBodyDecl 0 $ modifyFieldDeclType $
                         modifyRefTypePrefix (const $ Just newPrefix)
       successCase ast (transform ast)
     it "resolves class declaration with single field declaration of reference type with null initializer" $ do
       ast <- parseSuccessFile "ClassDeclSingleRefFieldInit.para"
       let newPrefix = mkName const PkgName [Id defaultAnn "java", Id defaultAnn "lang"]
-      let transform = modifyBodyDecl 0 $ modifyFieldDeclType $ 
+      let transform = modifyBodyDecl 0 $ modifyFieldDeclType $
                         modifyRefTypePrefix (const $ Just newPrefix)
       successCase ast (transform ast)
     it "resolves class declaration with void method with single local variable declaration of reference type with null initializer" $ do
@@ -171,7 +171,7 @@ spec = do
       successCase ast (transform ast)
     it "parses class declaration with shadowing reference type - reference type" $ do
       ast <- parseSuccessFile "ClassDeclShadowingRefRef.para"
-      let t1 = modifyBodyDecl 0 $ modifyFieldDeclType $ 
+      let t1 = modifyBodyDecl 0 $ modifyFieldDeclType $
                  modifyRefTypePrefix $ prefixNameType PkgName
       let t2 = modifyBodyDecl 1 $ modifyFieldDeclInitExp 0 $ modifyPolicyClause 0 $
                  modifyDeclHeadRef $ modifyRefTypePrefix $ prefixNameType PkgName
@@ -187,11 +187,11 @@ spec = do
                  modifyRefTypePrefix $ prefixNameType PkgName
       let transform = t3 . t2
       successCase ast (transform ast)
-    
+
     -- Failure, error should be as expected.
-    
+
     it "cannot resolve an empty program" $ do
-      let err = unsupportedError "compilation unit without type definition" 
+      let err = unsupportedError "compilation unit without type definition"
                   errorAnnotation [nrCtxt]
       failureCase "Empty.para" [err]
     it "refuses assignments to undefined variables" $ do
@@ -213,7 +213,7 @@ spec = do
 
 prefixNameType :: NameType -> Maybe Name -> Maybe Name
 prefixNameType _ Nothing     = Nothing
-prefixNameType t (Just name) = 
+prefixNameType t (Just name) =
   Just $ name { nameType   = t
               , namePrefix = prefixNameType t (namePrefix name) }
 
