@@ -44,23 +44,26 @@ spec = do
   describe "parse" $ do
     -- Success
     it "parses an empty program" $
-      let fileName = "Empty.para"
+      let baseName = "Empty"
+          fileName = mkFileName baseName
           cuSrcSpan = SrcSpan fileName 1 1 1 1
           cuAnnot   = emptyAnnotation { annSrcSpan = cuSrcSpan }
-      in successCase fileName (CompilationUnit cuAnnot Nothing [] [])
+      in successCase baseName (CompilationUnit cuAnnot Nothing [] [])
 
     it "parses package declaration with single identifier" $
-      let fileName = "PkgDeclSingle.para"
+      let baseName = "PkgDeclSingle"
+          fileName = mkFileName baseName
           srcSpanFun = SrcSpan fileName
           pdSrcSpan = srcSpanFun 1 1 1 16
           pdAnnot   = emptyAnnotation { annSrcSpan = pdSrcSpan }
           paragonSrcSpan = srcSpanFun 1 9 1 15
           paragonAnnot   = emptyAnnotation { annSrcSpan = paragonSrcSpan }
           paragonId = Id paragonAnnot "paragon"
-      in successCase fileName (CompilationUnit pdAnnot (Just $ PackageDecl pdAnnot (Name paragonAnnot paragonId PkgName Nothing)) [] [])
+      in successCase baseName (CompilationUnit pdAnnot (Just $ PackageDecl pdAnnot (Name paragonAnnot paragonId PkgName Nothing)) [] [])
 
     it "parses package declaration with qualified name" $
-      let fileName = "PkgDeclQName.para"
+      let baseName = "PkgDeclQName"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           pdSrcSpan = srcSpanFun 1 1 1 28
           qIdSrcSpan = srcSpanFun 1 9 1 27
@@ -70,10 +73,11 @@ spec = do
           chalmersId = Id (srcSpanFun 1 12 1 19) "chalmers"
           chalmersName = Name (srcSpanFun 1 9 1 19) chalmersId PkgName (Just seName)
           paragonId = Id (srcSpanFun 1 21 1 27) "paragon"
-      in successCase fileName (CompilationUnit pdSrcSpan (Just $ PackageDecl pdSrcSpan (Name qIdSrcSpan paragonId PkgName (Just chalmersName))) [] [])
+      in successCase baseName (CompilationUnit pdSrcSpan (Just $ PackageDecl pdSrcSpan (Name qIdSrcSpan paragonId PkgName (Just chalmersName))) [] [])
 
     it "parses single type import declaration" $
-      let fileName = "ImportDeclSingle.para"
+      let baseName = "ImportDeclSingle"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           impdSrcSpan = srcSpanFun 1 1 1 22
           qIdSrcSpan = srcSpanFun 1 8 1 21
@@ -81,18 +85,20 @@ spec = do
           paragonSrcSpan = srcSpanFun 1 8 1 14
           paragonId = Id paragonSrcSpan "paragon"
           paragonName = Name paragonSrcSpan paragonId PkgOrTypeName Nothing
-      in successCase fileName (CompilationUnit impdSrcSpan Nothing [SingleTypeImport impdSrcSpan (Name qIdSrcSpan policyId TypeName (Just paragonName))] [])
+      in successCase baseName (CompilationUnit impdSrcSpan Nothing [SingleTypeImport impdSrcSpan (Name qIdSrcSpan policyId TypeName (Just paragonName))] [])
 
     it "parses import declaration for all the types in a package" $
-      let fileName = "ImportDeclTypeOnDemand.para"
+      let baseName = "ImportDeclTypeOnDemand"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           impdSrcSpan = srcSpanFun 1 1 1 17
           paragonSrcSpan = srcSpanFun 1 8 1 14
           paragonId = Id paragonSrcSpan "paragon"
-      in successCase fileName (CompilationUnit impdSrcSpan Nothing [TypeImportOnDemand impdSrcSpan (Name paragonSrcSpan paragonId PkgOrTypeName Nothing)] [])
+      in successCase baseName (CompilationUnit impdSrcSpan Nothing [TypeImportOnDemand impdSrcSpan (Name paragonSrcSpan paragonId PkgOrTypeName Nothing)] [])
 
     it "parses static import declaration of a single type" $
-      let fileName = "ImportDeclSingleStatic.para"
+      let baseName = "ImportDeclSingleStatic"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           impdSrcSpan = srcSpanFun 1 1 1 27
           qIdSrcSpan = srcSpanFun 1 15 1 26
@@ -102,10 +108,11 @@ spec = do
           langSrcSpan = srcSpanFun 1 15 1 18
           langName = Name langSrcSpan langId TypeName Nothing
           langId = Id langSrcSpan "lang"
-      in successCase fileName (CompilationUnit impdSrcSpan Nothing [SingleStaticImport impdSrcSpan (Name qIdSrcSpan piId AmbigName (Just mathName))] [])
+      in successCase baseName (CompilationUnit impdSrcSpan Nothing [SingleStaticImport impdSrcSpan (Name qIdSrcSpan piId AmbigName (Just mathName))] [])
 
     it "parses static import declaration for all members" $
-      let fileName = "ImportDeclStaticOnDemand.para"
+      let baseName = "ImportDeclStaticOnDemand"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           impdSrcSpan = srcSpanFun 1 1 1 26
           qIdSrcSpan = srcSpanFun 1 15 1 23
@@ -113,51 +120,57 @@ spec = do
           langSrcSpan = srcSpanFun 1 15 1 18
           langName = Name langSrcSpan langId PkgOrTypeName Nothing
           langId = Id langSrcSpan "lang"
-      in successCase fileName (CompilationUnit impdSrcSpan Nothing [StaticImportOnDemand impdSrcSpan (Name qIdSrcSpan mathId TypeName (Just langName))] [])
+      in successCase baseName (CompilationUnit impdSrcSpan Nothing [StaticImportOnDemand impdSrcSpan (Name qIdSrcSpan mathId TypeName (Just langName))] [])
 
     it "parses semicolon type declaration" $
-      let fileName = "SemiColonDecl.para"
+      let baseName = "SemiColonDecl"
+          fileName = mkFileName baseName
           cuSrcSpan = makeSrcSpanAnn fileName 1 1 1 1
-      in successCase fileName (CompilationUnit cuSrcSpan Nothing [] [])
+      in successCase baseName (CompilationUnit cuSrcSpan Nothing [] [])
 
     it "parses empty class declaration" $
-      let fileName = "ClassDeclEmpty.para"
+      let baseName = "ClassDeclEmpty"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 1 10
           cbSrcSpan = srcSpanFun 1 9 1 10
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [])
           cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+      in successCase baseName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
 
     it "parses empty interface declaration" $
-      let fileName = "InterfaceDeclEmpty.para"
+      let baseName = "InterfaceDeclEmpty"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           intdSrcSpan = srcSpanFun 1 1 1 14
           intd = InterfaceDecl intdSrcSpan [] intId [] [] IB
           intId = Id (srcSpanFun 1 11 1 11) "I"
-      in successCase fileName (CompilationUnit intdSrcSpan Nothing [] [InterfaceTypeDecl intd])
+      in successCase baseName (CompilationUnit intdSrcSpan Nothing [] [InterfaceTypeDecl intd])
 
     it "parses empty class declaration with modifiers" $
-      let fileName = "ClassDeclMod.para"
+      let baseName = "ClassDeclMod"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 1 17
           pblSrcSpan = srcSpanFun 1 1 1 6
           cbSrcSpan = srcSpanFun 1 16 1 17
           cd = ClassDecl cdSrcSpan [Public pblSrcSpan] cId [] Nothing [] (ClassBody cbSrcSpan [])
           cId = Id (srcSpanFun 1 14 1 14) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+      in successCase baseName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
 
     it "parses empty interface declaration with modifiers" $
-      let fileName = "InterfaceDeclMod.para"
+      let baseName = "InterfaceDeclMod"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           intdSrcSpan = srcSpanFun 1 1 1 21
           pblSrcSpan = srcSpanFun 1 1 1 6
           intd = InterfaceDecl intdSrcSpan [Public pblSrcSpan] intId [] [] IB
           intId = Id (srcSpanFun 1 18 1 18) "I"
-      in successCase fileName (CompilationUnit intdSrcSpan Nothing [] [InterfaceTypeDecl intd])
+      in successCase baseName (CompilationUnit intdSrcSpan Nothing [] [InterfaceTypeDecl intd])
 
     it "parses class declaration with single field declaration" $
-      let fileName = "ClassDeclSingleField.para"
+      let baseName = "ClassDeclSingleField"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 3 1
           cbSrcSpan = srcSpanFun 1 9 3 1
@@ -170,10 +183,11 @@ spec = do
           varDecl = VarDecl varSrcSpan varId Nothing
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
           cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+      in successCase baseName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
 
     it "parses class declaration with single field declaration with modifiers" $
-      let fileName = "ClassDeclSingleFieldMod.para"
+      let baseName = "ClassDeclSingleFieldMod"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 3 1
           cbSrcSpan = srcSpanFun 1 9 3 1
@@ -187,10 +201,11 @@ spec = do
           varDecl = VarDecl varSrcSpan varId Nothing
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
           cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+      in successCase baseName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
 
     it "parses class declaration with multiple field declarations with modifiers" $
-      let fileName = "ClassDeclMultFields.para"
+      let baseName = "ClassDeclMultFields"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 4 1
           cbSrcSpan = srcSpanFun 1 9 4 1
@@ -212,10 +227,11 @@ spec = do
           varDecl3 = VarDecl varSrcSpan3 varId3 Nothing
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan cbDs)
           cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+      in successCase baseName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
 
     it "parses class declaration with void method with semicolon body" $
-      let fileName = "ClassDeclVoidMethodSemiColon.para"
+      let baseName = "ClassDeclVoidMethodSemiColon"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 3 1
           cbSrcSpan = srcSpanFun 1 9 3 1
@@ -226,10 +242,11 @@ spec = do
           methodDecl = MethodDecl mdSrcSpan [] [] (VoidType (srcSpanFun 2 3 2 6)) mId [] body
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
           cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+      in successCase baseName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
 
     it "parses class declaration with int method with semicolon body" $
-      let fileName = "ClassDeclIntMethodSemiColon.para"
+      let baseName = "ClassDeclIntMethodSemiColon"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 3 1
           cbSrcSpan = srcSpanFun 1 9 3 1
@@ -242,10 +259,11 @@ spec = do
           methodDecl = MethodDecl mdSrcSpan [] [] (Type intT) mId [] body
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
           cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+      in successCase baseName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
 
     it "parses class declaration with void method with empty body" $
-      let fileName = "ClassDeclVoidMethodEmptyBody.para"
+      let baseName = "ClassDeclVoidMethodEmptyBody"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 3 1
           cbSrcSpan = srcSpanFun 1 9 3 1
@@ -257,10 +275,11 @@ spec = do
           methodDecl = MethodDecl mdSrcSpan [] [] (VoidType (srcSpanFun 2 3 2 6)) mId [] body
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
           cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+      in successCase baseName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
 
     it "parses class declaration with int method with empty body with modifiers" $
-      let fileName = "ClassDeclIntMethodModEmptyBody.para"
+      let baseName = "ClassDeclIntMethodModEmptyBody"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 3 1
           cbSrcSpan = srcSpanFun 1 9 3 1
@@ -275,10 +294,11 @@ spec = do
           methodDecl = MethodDecl mdSrcSpan mods [] (Type intT) mId [] body
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
           cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+      in successCase baseName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
 
     it "parses class declaration with void method with empty statement" $
-      let fileName = "ClassDeclVoidMethodSemiColonStmt.para"
+      let baseName = "ClassDeclVoidMethodSemiColonStmt"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 5 1
           cbSrcSpan = srcSpanFun 1 9 5 1
@@ -291,10 +311,11 @@ spec = do
           methodDecl = MethodDecl mdSrcSpan [] [] (VoidType (srcSpanFun 2 3 2 6)) mId [] body
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
           cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+      in successCase baseName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
 
     it "parses class declaration with void method with single local variable declaration" $
-      let fileName = "ClassDeclVoidMethodSingleLocalVarDecl.para"
+      let baseName = "ClassDeclVoidMethodSingleLocalVarDecl"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 5 1
           cbSrcSpan = srcSpanFun 1 9 5 1
@@ -312,10 +333,11 @@ spec = do
           methodDecl = MethodDecl mdSrcSpan [] [] (VoidType (srcSpanFun 2 3 2 6)) mId [] body
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
           cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+      in successCase baseName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
 
     it "parses class declaration with void method with single local variable declaration with modifier" $
-      let fileName = "ClassDeclVoidMethodSingleLocalVarDeclMod.para"
+      let baseName = "ClassDeclVoidMethodSingleLocalVarDeclMod"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 5 1
           cbSrcSpan = srcSpanFun 1 9 5 1
@@ -334,10 +356,11 @@ spec = do
           methodDecl = MethodDecl mdSrcSpan [] [] (VoidType (srcSpanFun 2 3 2 6)) mId [] body
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
           cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+      in successCase baseName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
 
     it "parses class declaration with void method with multiple local variable declarations" $
-      let fileName = "ClassDeclVoidMethodMultLocalVarDecls.para"
+      let baseName = "ClassDeclVoidMethodMultLocalVarDecls"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 6 1
           cbSrcSpan = srcSpanFun 1 9 6 1
@@ -365,10 +388,11 @@ spec = do
           methodDecl = MethodDecl mdSrcSpan [] [] (VoidType (srcSpanFun 2 3 2 6)) mId [] body
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
           cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+      in successCase baseName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
 
     it "parses class declaration with void method with single assignment expression statement with literal" $
-      let fileName = "ClassDeclVoidMethodSingleAssignLit.para"
+      let baseName = "ClassDeclVoidMethodSingleAssignLit"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 5 1
           cbSrcSpan = srcSpanFun 1 9 5 1
@@ -386,10 +410,11 @@ spec = do
           methodDecl = MethodDecl mdSrcSpan [] [] (VoidType (srcSpanFun 2 3 2 6)) mId [] body
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
           cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+      in successCase baseName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
 
     it "parses class declaration with void method with single assignment expression statement with variable" $
-      let fileName = "ClassDeclVoidMethodSingleAssignVar.para"
+      let baseName = "ClassDeclVoidMethodSingleAssignVar"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 5 1
           cbSrcSpan = srcSpanFun 1 9 5 1
@@ -410,10 +435,11 @@ spec = do
           methodDecl = MethodDecl mdSrcSpan [] [] (VoidType (srcSpanFun 2 3 2 6)) mId [] body
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
           cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+      in successCase baseName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
 
     it "parses class declaration with single field declaration with reference type" $
-      let fileName = "ClassDeclSingleFieldRefType.para"
+      let baseName = "ClassDeclSingleFieldRefType"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 3 1
           cbSrcSpan = srcSpanFun 1 9 3 1
@@ -427,10 +453,11 @@ spec = do
           fieldDecl = FieldDecl fdSrcSpan [] (RefType (ClassRefType (ClassType tSrcSpan tName []))) [varDecl]
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
           cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+      in successCase baseName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
 
     it "parses class declaration with single field declaration of primitive type with literal initializer" $
-      let fileName = "ClassDeclSinglePrimFieldInit.para"
+      let baseName = "ClassDeclSinglePrimFieldInit"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 3 1
           cbSrcSpan = srcSpanFun 1 9 3 1
@@ -444,10 +471,11 @@ spec = do
           varDecl = VarDecl (srcSpanFun 2 11 2 18) varId (Just $ InitExp (Lit (Boolean eSrcSpan True)))
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
           cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+      in successCase baseName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
 
     it "parses class declaration with single field declaration of reference type with null initializer" $
-      let fileName = "ClassDeclSingleRefFieldInit.para"
+      let baseName = "ClassDeclSingleRefFieldInit"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 3 1
           cbSrcSpan = srcSpanFun 1 9 3 1
@@ -462,10 +490,11 @@ spec = do
           varDecl = VarDecl (srcSpanFun 2 10 2 17) varId (Just $ InitExp (Lit (Null eSrcSpan)))
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
           cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+      in successCase baseName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
 
     it "parses class declaration with multiple field declarations of primitive types with literal initializers" $
-      let fileName = "ClassDeclMultPrimFieldsInit.para"
+      let baseName = "ClassDeclMultPrimFieldsInit"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 3 1
           cbSrcSpan = srcSpanFun 1 9 3 1
@@ -483,10 +512,11 @@ spec = do
           varDecl2 = VarDecl (srcSpanFun 2 14 2 18) varId2 (Just $ InitExp (Lit (Int eSrcSpan2 2)))
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
           cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+      in successCase baseName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
 
     it "parses class declaration with void method with single local variable declaration of reference type with null initializer" $
-      let fileName = "ClassDeclVoidMethodSingleRefLocalVarInit.para"
+      let baseName = "ClassDeclVoidMethodSingleRefLocalVarInit"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 5 1
           cbSrcSpan = srcSpanFun 1 9 5 1
@@ -506,10 +536,11 @@ spec = do
           methodDecl = MethodDecl mdSrcSpan [] [] (VoidType (srcSpanFun 2 3 2 6)) mId [] body
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
           cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+      in successCase baseName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
 
     it "parses class declaration with single low policy field" $
-      let fileName = "ClassDeclSingleLowPolicyField.para"
+      let baseName = "ClassDeclSingleLowPolicyField"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 3 1
           cbSrcSpan = srcSpanFun 1 9 3 1
@@ -532,10 +563,11 @@ spec = do
           varDecl = VarDecl (srcSpanFun 2 23 2 42) varId (Just $ InitExp policyE)
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
           cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+      in successCase baseName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
 
     it "parses class declaration with single high policy field" $
-      let fileName = "ClassDeclSingleHighPolicyField.para"
+      let baseName = "ClassDeclSingleHighPolicyField"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 3 1
           cbSrcSpan = srcSpanFun 1 9 3 1
@@ -551,10 +583,11 @@ spec = do
           varDecl = VarDecl (srcSpanFun 2 23 2 32) varId (Just $ InitExp policyE)
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
           cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+      in successCase baseName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
 
     it "parses class declaration with single field with reads policy modifier" $
-      let fileName = "ClassDeclSingleFieldReadsMod.para"
+      let baseName = "ClassDeclSingleFieldReadsMod"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 3 1
           cbSrcSpan = srcSpanFun 1 9 3 1
@@ -570,10 +603,11 @@ spec = do
           varDecl = VarDecl varSrcSpan varId Nothing
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
           cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+      in successCase baseName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
 
     it "parses class declaration with single field with writes policy modifier" $
-      let fileName = "ClassDeclSingleFieldWritesMod.para"
+      let baseName = "ClassDeclSingleFieldWritesMod"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           cdSrcSpan = srcSpanFun 1 1 3 1
           cbSrcSpan = srcSpanFun 1 9 3 1
@@ -589,10 +623,11 @@ spec = do
           varDecl = VarDecl varSrcSpan varId Nothing
           cd = ClassDecl cdSrcSpan [] cId [] Nothing [] (ClassBody cbSrcSpan [cbDecl])
           cId = Id (srcSpanFun 1 7 1 7) "C"
-      in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
+      in successCase baseName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
 
     it "parses class declaration with single method with one parameter" $
-      let fileName = "ClassDeclSingleMethodOneParam.para"
+      let baseName = "ClassDeclSingleMethodOneParam"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           ast = CompilationUnit (srcSpanFun 1 1 4 1)
                   Nothing
@@ -618,10 +653,11 @@ spec = do
                                     (Id (srcSpanFun 2 14 2 14) "x")]
                                  (MethodBody (srcSpanFun 2 17 3 3)
                                     (Just $ Block (srcSpanFun 2 17 3 3) [])))]))]
-      in successCase fileName ast
+      in successCase baseName ast
 
     it "parses class declaration with single method with two parameters" $
-      let fileName = "ClassDeclSingleMethodTwoParams.para"
+      let baseName = "ClassDeclSingleMethodTwoParams"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           ast = CompilationUnit (srcSpanFun 1 1 4 1)
                   Nothing
@@ -652,10 +688,11 @@ spec = do
                                      (Id (srcSpanFun 2 24 2 24) "y")]
                                  (MethodBody (srcSpanFun 2 27 3 3)
                                     (Just $ Block (srcSpanFun 2 27 3 3) [])))]))]
-      in successCase fileName ast
+      in successCase baseName ast
 
     it "parses class declaration with single method with varargs param" $
-      let fileName = "ClassDeclSingleMethodVarArgsParam.para"
+      let baseName = "ClassDeclSingleMethodVarArgsParam"
+          fileName = mkFileName baseName
           srcSpanFun = makeSrcSpanAnn fileName
           ast = CompilationUnit (srcSpanFun 1 1 4 1)
                   Nothing
@@ -693,7 +730,7 @@ spec = do
                                      (Id (srcSpanFun 2 27 2 30) "objs")]
                                  (MethodBody (srcSpanFun 2 33 3 3)
                                     (Just $ Block (srcSpanFun 2 33 3 3) [])))]))]
-      in successCase fileName ast
+      in successCase baseName ast
 
     -- Failure
     describe "gives an error message when" $ do
@@ -860,24 +897,28 @@ makeSrcSpanAnn fileName a b c d = srcSpanToAnn $ SrcSpan fileName a b c d
 -- Infrastructure
 
 successCase :: String -> AST -> IO ()
-successCase fileName result = do
-  input <- successRead fileName
-  parse input fileName `shouldBe` Right result
+successCase baseName result = do
+  input <- successRead baseName
+  parse input (mkFileName baseName) `shouldBe` Right result
 
 successRead :: String -> IO String
-successRead fileName = readFile (successDir </> fileName)
+successRead baseName = readFile (successDir </> mkFileName baseName)
 
 failureCase :: String -> IO ()
 failureCase baseName = do
   (input, errMsg) <- failureRead baseName
-  let Left err = parse input (baseName <.> "para")
+  let Left err = parse input (mkFileName baseName)
   show err `shouldBe` errMsg
 
 failureRead :: String -> IO (String, String)
-failureRead baseName = liftM2 (,) (readFile (failureDir </> baseName <.> "para"))
+failureRead baseName = liftM2 (,) (readFile (failureDir </> mkFileName baseName))
                                   (dropNewLine <$> readFile (failureDir </> baseName <.> "err"))
   where dropNewLine ""  = ""
         dropNewLine str = let l = last str
                           in if l == '\n' || l == '\r'
                                then dropNewLine (init str)
                                else str
+
+mkFileName :: String -> String
+mkFileName baseName = baseName <.> "para"
+
