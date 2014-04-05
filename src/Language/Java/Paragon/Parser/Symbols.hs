@@ -36,3 +36,6 @@ dot = tok Dot <?> show Dot
 colon :: P ()
 colon = tok Colon <?> show Colon
 
+ellipsis :: P ()
+ellipsis = tok Ellipsis <?> show Ellipsis
+

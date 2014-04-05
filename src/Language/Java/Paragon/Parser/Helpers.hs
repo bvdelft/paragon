@@ -17,6 +17,7 @@ module Language.Java.Paragon.Parser.Helpers
     -- * Source positions
   , getStartPos
   , getEndPos
+  , srcPosToParsec
     -- * Parser combinators
   , opt
   , bopt

@@ -1,0 +1,4 @@
+class C {
+  void f(Object... objs, int x) {
+  }
+}

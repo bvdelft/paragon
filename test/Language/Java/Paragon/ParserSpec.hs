@@ -591,6 +591,110 @@ spec = do
           cId = Id (srcSpanFun 1 7 1 7) "C"
       in successCase fileName (CompilationUnit cdSrcSpan Nothing [] [ClassTypeDecl cd])
 
+    it "parses class declaration with single method with one parameter" $
+      let fileName = "ClassDeclSingleMethodOneParam.para"
+          srcSpanFun = makeSrcSpanAnn fileName
+          ast = CompilationUnit (srcSpanFun 1 1 4 1)
+                  Nothing
+                  []
+                  [ClassTypeDecl
+                     (ClassDecl (srcSpanFun 1 1 4 1)
+                        []
+                        (Id (srcSpanFun 1 7 1 7) "C")
+                        []
+                        Nothing
+                        []
+                        (ClassBody (srcSpanFun 1 9 4 1)
+                           [MemberDecl
+                              (MethodDecl (srcSpanFun 2 3 3 3)
+                                 []
+                                 []
+                                 (VoidType $ srcSpanFun 2 3 2 6)
+                                 (Id (srcSpanFun 2 8 2 8) "f")
+                                 [FormalParam (srcSpanFun 2 10 2 14)
+                                    []
+                                    (PrimType $ IntT $ srcSpanFun 2 10 2 12)
+                                    False
+                                    (Id (srcSpanFun 2 14 2 14) "x")]
+                                 (MethodBody (srcSpanFun 2 17 3 3)
+                                    (Just $ Block (srcSpanFun 2 17 3 3) [])))]))]
+      in successCase fileName ast
+
+    it "parses class declaration with single method with two parameters" $
+      let fileName = "ClassDeclSingleMethodTwoParams.para"
+          srcSpanFun = makeSrcSpanAnn fileName
+          ast = CompilationUnit (srcSpanFun 1 1 4 1)
+                  Nothing
+                  []
+                  [ClassTypeDecl
+                     (ClassDecl (srcSpanFun 1 1 4 1)
+                        []
+                        (Id (srcSpanFun 1 7 1 7) "C")
+                        []
+                        Nothing
+                        []
+                        (ClassBody (srcSpanFun 1 9 4 1)
+                           [MemberDecl
+                              (MethodDecl (srcSpanFun 2 3 3 3)
+                                 []
+                                 []
+                                 (VoidType $ srcSpanFun 2 3 2 6)
+                                 (Id (srcSpanFun 2 8 2 8) "f")
+                                 [ FormalParam (srcSpanFun 2 10 2 14)
+                                     []
+                                     (PrimType $ IntT $ srcSpanFun 2 10 2 12)
+                                     False
+                                     (Id (srcSpanFun 2 14 2 14) "x")
+                                 , FormalParam (srcSpanFun 2 17 2 24)
+                                     []
+                                     (PrimType $ DoubleT $ srcSpanFun 2 17 2 22)
+                                     False
+                                     (Id (srcSpanFun 2 24 2 24) "y")]
+                                 (MethodBody (srcSpanFun 2 27 3 3)
+                                    (Just $ Block (srcSpanFun 2 27 3 3) [])))]))]
+      in successCase fileName ast
+
+    it "parses class declaration with single method with varargs param" $
+      let fileName = "ClassDeclSingleMethodVarArgsParam.para"
+          srcSpanFun = makeSrcSpanAnn fileName
+          ast = CompilationUnit (srcSpanFun 1 1 4 1)
+                  Nothing
+                  []
+                  [ClassTypeDecl
+                     (ClassDecl (srcSpanFun 1 1 4 1)
+                        []
+                        (Id (srcSpanFun 1 7 1 7) "C")
+                        []
+                        Nothing
+                        []
+                        (ClassBody (srcSpanFun 1 9 4 1)
+                           [MemberDecl
+                              (MethodDecl (srcSpanFun 2 3 3 3)
+                                 []
+                                 []
+                                 (VoidType $ srcSpanFun 2 3 2 6)
+                                 (Id (srcSpanFun 2 8 2 8) "f")
+                                 [ FormalParam (srcSpanFun 2 10 2 14)
+                                     []
+                                     (PrimType $ IntT $ srcSpanFun 2 10 2 12)
+                                     False
+                                     (Id (srcSpanFun 2 14 2 14) "x")
+                                 , FormalParam (srcSpanFun 2 17 2 30)
+                                     []
+                                     (RefType
+                                        (ClassRefType
+                                           (ClassType (srcSpanFun 2 17 2 22)
+                                              (Name (srcSpanFun 2 17 2 22)
+                                                 (Id (srcSpanFun 2 17 2 22) "Object")
+                                                 TypeName
+                                                 Nothing)
+                                              [])))
+                                     True
+                                     (Id (srcSpanFun 2 27 2 30) "objs")]
+                                 (MethodBody (srcSpanFun 2 33 3 3)
+                                    (Just $ Block (srcSpanFun 2 33 3 3) [])))]))]
+      in successCase fileName ast
+
     -- Failure
     describe "gives an error message when" $ do
 
@@ -735,6 +839,18 @@ spec = do
 
       it "given a class declaration with single field with policy modifier with missing specifier symbol" $
         failureCase "ClassDeclSingleFieldPolicyModMissSymbol"
+
+      it "given a class declaration with single method with parameter with missing type" $
+        failureCase "ClassDeclSingleMethodParamMissType"
+
+      it "given a class declaration with single method with parameter with missing name" $
+        failureCase "ClassDeclSingleMethodParamMissName"
+
+      it "given a class declaration with single method with two parameters with missing comma" $
+        failureCase "ClassDeclSingleMethodTwoParamsMissComma"
+
+      it "given a class declaration with single method with varargs param not at the last position" $
+        failureCase "ClassDeclSingleMethodNotLastVarArgsParam"
 
 -- Helper
 
