@@ -8,7 +8,7 @@ import Language.Java.Paragon.Syntax.Statements hiding (stmtExp)
 import Language.Java.Paragon.SrcPos
 
 import Language.Java.Paragon.Parser.Expressions
-import Language.Java.Paragon.Parser.Separators
+import Language.Java.Paragon.Parser.Symbols
 import Language.Java.Paragon.Parser.Helpers
 
 stmt :: P Stmt

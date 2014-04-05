@@ -25,7 +25,7 @@ import Language.Java.Paragon.Parser.Types
 import Language.Java.Paragon.Parser.Statements
 import Language.Java.Paragon.Parser.Expressions
 import Language.Java.Paragon.Parser.Modifiers
-import Language.Java.Paragon.Parser.Separators
+import Language.Java.Paragon.Parser.Symbols
 import Language.Java.Paragon.Parser.Helpers
 
 -- | Top-level parsing function. Takes a string to parse and a file name.

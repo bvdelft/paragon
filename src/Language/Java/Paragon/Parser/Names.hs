@@ -7,7 +7,7 @@ import Language.Java.Paragon.Annotation
 import Language.Java.Paragon.Lexer
 import Language.Java.Paragon.Syntax.Names
 
-import Language.Java.Paragon.Parser.Separators
+import Language.Java.Paragon.Parser.Symbols
 import Language.Java.Paragon.Parser.Helpers
 
 ident :: P Id
