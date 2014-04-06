@@ -21,13 +21,6 @@ import Language.Java.Paragon.ASTHelpers
 main :: IO ()
 main = hspec spec
 
-instance Eq ParseError where
-  a == b = errorPos a == errorPos b &&
-           errorMessages a == errorMessages b
-
-instance Eq Message where
-  (==) = messageEq
-
 -- Configuration
 
 testDir :: FilePath
@@ -824,4 +817,11 @@ failureRead baseName = liftM2 (,) (readFile (failureDir </> mkFileName baseName)
 
 mkFileName :: String -> String
 mkFileName baseName = baseName <.> "para"
+
+instance Eq ParseError where
+  a == b = errorPos a == errorPos b &&
+           errorMessages a == errorMessages b
+
+instance Eq Message where
+  (==) = messageEq
 
