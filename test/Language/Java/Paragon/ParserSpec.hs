@@ -16,6 +16,7 @@ import Language.Java.Paragon.Syntax
 import Language.Java.Paragon.Parser
 import Language.Java.Paragon.SrcPos
 import Language.Java.Paragon.ASTHelpers
+import Language.Java.Paragon.Interaction
 
 -- | To be able to run this module from GHCi.
 main :: IO ()
@@ -40,16 +41,16 @@ spec = do
     it "parses an empty program" $
       let baseName = "Empty"
           fileName = mkFileName baseName
-          cuSrcSpan = makeSrcSpanAnn fileName 1 1 1 1
+          cuSrcSpan = makeSrcSpanAnn2 fileName [1, 1]
       in successCase baseName (simpleCompilationUnit cuSrcSpan [])
 
     it "parses package declaration with single identifier" $
       let baseName = "PkgDeclSingle"
           fileName = mkFileName baseName
-          srcSpanFun = makeSrcSpanAnn fileName
-          ast = CompilationUnit (srcSpanFun 1 1 1 16)
-                  (Just $ PackageDecl (srcSpanFun 1 1 1 16)
-                     (simpleName (srcSpanFun 1 9 1 15) "paragon" PkgName))
+          srcSpanFun = makeSrcSpanAnn2 fileName
+          ast = CompilationUnit (srcSpanFun [1, 1, 16])
+                  (Just $ PackageDecl (srcSpanFun [1, 1, 16])
+                     (simpleName (srcSpanFun [1, 9, 15]) "paragon" PkgName))
                   []
                   []
       in successCase baseName ast
@@ -57,17 +58,17 @@ spec = do
     it "parses package declaration with qualified name" $
       let baseName = "PkgDeclQName"
           fileName = mkFileName baseName
-          srcSpanFun = makeSrcSpanAnn fileName
-          pdSrcSpan = srcSpanFun 1 1 1 28
+          srcSpanFun = makeSrcSpanAnn2 fileName
+          pdSrcSpan = srcSpanFun [1, 1, 28]
           ast = CompilationUnit pdSrcSpan
                   (Just $ PackageDecl pdSrcSpan
-                     (Name (srcSpanFun 1 9 1 27)
-                        (Id (srcSpanFun 1 21 1 27) "paragon")
+                     (Name (srcSpanFun [1, 9, 27])
+                        (Id (srcSpanFun [1, 21, 27]) "paragon")
                         PkgName
-                        (Just $ Name (srcSpanFun 1 9 1 19)
-                                  (Id (srcSpanFun 1 12 1 19) "chalmers")
+                        (Just $ Name (srcSpanFun [1, 9, 19])
+                                  (Id (srcSpanFun [1, 12, 19]) "chalmers")
                                   PkgName
-                                  (Just $ simpleName (srcSpanFun 1 9 1 10)
+                                  (Just $ simpleName (srcSpanFun [1, 9, 10])
                                             "se"
                                             PkgName))))
                 []
@@ -789,6 +790,18 @@ spec = do
 
 makeSrcSpanAnn :: String -> Int -> Int -> Int -> Int -> Annotation
 makeSrcSpanAnn fileName a b c d = srcSpanToAnn $ SrcSpan fileName a b c d
+
+-- | Takes a file name and a list of integers:
+-- 2 elements - line and column (one character span)
+-- 3 elements - line, start column and end column (one line span)
+-- 4 elements - start line, start column, end line, end column (general span)
+-- anything else - panic
+-- This is not really type safe, but we use it in testing so this code will be run anyway.
+makeSrcSpanAnn2 :: String -> [Int] -> Annotation
+makeSrcSpanAnn2 fileName [l, c] = srcSpanToAnn $ SrcSpan fileName l c l c
+makeSrcSpanAnn2 fileName [l, sc, ec] = srcSpanToAnn $ SrcSpan fileName l sc l ec
+makeSrcSpanAnn2 fileName [sl, sc, el, ec] = srcSpanToAnn $ SrcSpan fileName sl sc el ec
+makeSrcSpanAnn2 _ _ = panic "Language.Java.Paragon.ParserSpec" "Wrong source span"
 
 -- Infrastructure
 
