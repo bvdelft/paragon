@@ -224,8 +224,8 @@ varDecl desc = do
 
 -- | Parses formal parameters and returns them as a list together with validity
 -- indicator (whether parameter of variable arity is the last one). This is
--- done in this way (returning a flag and not failing right here for better
--- error message).
+-- done in this way (returning a flag and not failing right here) for better
+-- error message.
 formalParams :: P ([FormalParam], Bool)
 formalParams = do
     formalPs <- seplist formalParam comma
