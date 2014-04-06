@@ -96,3 +96,85 @@ modifyDeclHeadRef f clause =
   let (ClauseDeclHead hd) = clauseHead clause
       nt = f (clauseVarDeclType hd)
   in clause { clauseHead = ClauseDeclHead hd { clauseVarDeclType = nt } }
+
+-- AST constructors. Provide common default values and construction patterns.
+
+simpleCompilationUnit :: Annotation -> [TypeDecl] -> CompilationUnit
+simpleCompilationUnit cuAnnot typeDecls =
+  CompilationUnit cuAnnot
+    Nothing
+    []
+    typeDecls
+
+simpleClassDeclCompUnit :: Annotation -> Id -> ClassBody -> CompilationUnit
+simpleClassDeclCompUnit classAnn classId classBody =
+  CompilationUnit classAnn
+    Nothing
+    []
+    [ClassTypeDecl
+       (ClassDecl classAnn
+          []
+          classId
+          []
+          Nothing
+          []
+          classBody)]
+
+simpleClassTypeDecl :: Annotation -> Id -> ClassBody -> TypeDecl
+simpleClassTypeDecl cdAnnot classId classBody =
+  ClassTypeDecl
+    (ClassDecl cdAnnot
+       []
+       classId
+       []
+       Nothing
+       []
+       classBody)
+
+simpleFieldDecl :: Annotation -> Type -> [VarDecl] -> ClassBodyDecl
+simpleFieldDecl fdAnn fieldType varDecls = MemberDecl $
+  FieldDecl fdAnn
+    []
+    fieldType
+    varDecls
+
+simpleMethodDecl :: Annotation -> ReturnType -> Id -> [FormalParam] -> MethodBody -> ClassBodyDecl
+simpleMethodDecl mdAnn retType mId formalParams mBody = MemberDecl $
+  MethodDecl mdAnn
+    []
+    []
+    retType
+    mId
+    formalParams
+    mBody
+
+simpleVarDecl :: Annotation -> String -> VarDecl
+simpleVarDecl varAnn varName =
+  VarDecl varAnn
+    (Id varAnn varName)
+    Nothing
+
+simpleVarDeclInit :: Annotation -> Id -> Exp -> VarDecl
+simpleVarDeclInit varAnn varId initExp =
+  VarDecl varAnn
+    varId
+    (Just $ InitExp initExp)
+
+simpleMethodBody :: Annotation -> [BlockStmt] -> MethodBody
+simpleMethodBody mbAnn stmts = MethodBody mbAnn (Just $ Block mbAnn stmts)
+
+primRetType :: PrimType -> ReturnType
+primRetType = Type . PrimType
+
+simpleFormalParam :: Annotation -> Type -> Id -> FormalParam
+simpleFormalParam fpAnn t paramId = FormalParam fpAnn [] t False paramId
+
+simpleRefType :: Annotation -> String -> Type
+simpleRefType rtAnn rtName =
+  RefType $ ClassRefType $ ClassType rtAnn
+    (simpleName rtAnn rtName TypeName) []
+
+simpleName :: Annotation -> String -> NameType -> Name
+simpleName nameAnnot name nameT =
+  Name nameAnnot (Id nameAnnot name) nameT Nothing
+
