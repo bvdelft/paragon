@@ -9,6 +9,7 @@ module Language.Java.Paragon.Monad.PiReader.MonadPR
   , getPiPath
   ) where
 
+import Control.Applicative
 import Control.Monad (liftM)
 
 import Language.Java.Paragon.Monad.Base
@@ -19,6 +20,13 @@ type PiPath = [FilePath]
 
 -- | Monad that adding the PiPath environment to the base monad
 newtype PiReader a = PiReader ( PiPath -> BaseM a )
+
+instance Applicative (PiReader) where
+  pure = return
+  PiReader f <*> PiReader x = PiReader $ \ppath -> do 
+                                a <- x ppath
+                                g <- f ppath
+                                return $ g a
 
 -- | Standard reader monad behavior.
 instance Monad (PiReader) where

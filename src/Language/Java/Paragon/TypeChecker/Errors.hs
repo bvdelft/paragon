@@ -1,3 +1,5 @@
+{-# LANGUAGE Rank2Types #-}
+
 module Language.Java.Paragon.TypeChecker.Errors
   ( -- * Type checking errors
     fileNameMismatch
