@@ -46,8 +46,8 @@ typeCheck piPath baseName ast = withErrCtxt (compPhaseContext "Type Checking") $
     -- 4. Type check type declaration.
     tcTypeDecl <- typeCheckTypeDecl baseName maybePkgDecl skolemTypeDecl
     -- 5. Packages and import declarations have no type.
-    let tcPkgDecl = fmap (\x -> x { pdAnn = (pdAnn x) { annType = Nothing } } ) (cuPkgDecl ast)
-    let tcImpDecls = map (\x -> x { impdAnn = (impdAnn x) { annType = Nothing } } ) (cuImportDecls ast)
+    let tcPkgDecl = fmap noTypeAnn (cuPkgDecl ast)
+    let tcImpDecls = map noTypeAnn (cuImportDecls ast)
     -- 6. Return updated AST.
     return $ ast { cuPkgDecl     = tcPkgDecl
                  , cuImportDecls = tcImpDecls
@@ -107,8 +107,9 @@ typeCheckClassDecl baseName mPkg classDecl = do
     -- 2. Check the signatures of the members of this type declaration.
     debugPrint "Starting type checking of signatures."
     let memberDecls = [ m | MemberDecl m <- cbDecls $ cdBody classDecl ]
-    -- typeCheckSignatures memberDecls $ do
+    -- typeCheckSignatures memberDecls $ \constrWPol -> do
     -- registerThisTypeSigs mpkg i tps supers -- TODO: Difference with registerThisType ??
+    -- 3. Check members' content.
     tcMemberDecls <- typeCheckMemberDecls memberDecls
     let newBody = (cdBody classDecl) { cbDecls = map MemberDecl tcMemberDecls } 
     return $ noTypeAnn $
