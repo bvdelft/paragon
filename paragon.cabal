@@ -66,7 +66,7 @@ Library
                         Language.Java.Paragon.Parser.Statements
                         Language.Java.Paragon.Parser.Expressions
                         Language.Java.Paragon.Parser.Modifiers
-                        Language.Java.Paragon.Parser.Separators
+                        Language.Java.Paragon.Parser.Symbols
                         Language.Java.Paragon.Parser.Helpers
                         Language.Java.Paragon.PolicyLang
                         Language.Java.Paragon.PolicyLang.ActorSet

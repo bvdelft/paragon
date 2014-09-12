@@ -13,7 +13,7 @@ import Language.Java.Paragon.SrcPos
 
 import Language.Java.Paragon.Parser.Names
 import Language.Java.Paragon.Parser.Types
-import Language.Java.Paragon.Parser.Separators
+import Language.Java.Paragon.Parser.Symbols
 import Language.Java.Paragon.Parser.Helpers
 
 stmtExp :: P Exp

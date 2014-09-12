@@ -1,0 +1,4 @@
+class C {
+  void f(int x, double y) {
+  }
+}

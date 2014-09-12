@@ -9,7 +9,9 @@ module Language.Java.Paragon.Parser
 
 import Prelude hiding (exp)
 import Control.Applicative ((<$>))
-import Data.Maybe (catMaybes)
+import Control.Monad (when, void)
+import Data.Maybe (catMaybes, fromJust)
+import Data.List (find)
 
 import Text.ParserCombinators.Parsec hiding (parse, runParser)
 import qualified Text.ParserCombinators.Parsec as Parsec (runParser)
@@ -25,7 +27,7 @@ import Language.Java.Paragon.Parser.Types
 import Language.Java.Paragon.Parser.Statements
 import Language.Java.Paragon.Parser.Expressions
 import Language.Java.Paragon.Parser.Modifiers
-import Language.Java.Paragon.Parser.Separators
+import Language.Java.Paragon.Parser.Symbols
 import Language.Java.Paragon.Parser.Helpers
 
 -- | Top-level parsing function. Takes a string to parse and a file name.
@@ -191,13 +193,21 @@ methodDeclAfterTypeModsFun retT startPos = do
 -- | Continues to parse method declaration after return type and method identifier have been parsed.
 methodDeclAfterTypeIdModsFun :: ReturnType -> SrcPos -> Id -> P (ModifiersFun MemberDecl)
 methodDeclAfterTypeIdModsFun retT startPos mId = do
-  openParen
-  closeParen
+  (formalPs, isValid) <- parens $ formalParams
+  -- See comment on formalParams about failing
+  when (not isValid) $ do
+    -- Very, very, very ugly hack to get the desired position in the error message
+    -- See http://haskell.1045720.n5.nabble.com/Parsec-Custom-Fail-td3131949.html
+    setPosition (srcPosToParsec $ srcSpanToStartPos $
+                 annSrcSpan $ ann $
+                 fromJust $ find formalParamVarArity formalPs)  -- should not fail
+    void anyToken
+    fail "Only the last formal parameter may be of variable arity"
   body <- methodBody
   endPos <- getEndPos
   return $ \mods ->
     let startPos' = getModifiersStartPos mods startPos
-    in MethodDecl (srcSpanToAnn $ mkSrcSpanFromPos startPos' endPos) mods [] retT mId [] body
+    in MethodDecl (srcSpanToAnn $ mkSrcSpanFromPos startPos' endPos) mods [] retT mId formalPs body
 
 -- | Takes 'VarDecl' parser to handle restrictions on field declarations in interfaces
 -- (required presence of initializer).
@@ -211,6 +221,32 @@ varDecl desc = do
   vInit <- opt $ tok Op_Assign >> varInit
   endPos <- getEndPos
   return $ VarDecl (srcSpanToAnn $ mkSrcSpanFromPos startPos endPos) varId vInit
+
+-- | Parses formal parameters and returns them as a list together with validity
+-- indicator (whether parameter of variable arity is the last one). This is
+-- done in this way (returning a flag and not failing right here) for better
+-- error message.
+formalParams :: P ([FormalParam], Bool)
+formalParams = do
+    formalPs <- seplist formalParam comma
+    return (formalPs, validateFormalParams formalPs)
+  where validateFormalParams :: [FormalParam] -> Bool
+        validateFormalParams []  = True
+        validateFormalParams [_] = True
+        validateFormalParams (FormalParam { formalParamVarArity = varArity } : fps) =
+          not varArity && validateFormalParams fps
+
+formalParam :: P (FormalParam)
+formalParam = withModifiers (do
+  startPos <- getStartPos
+  paramType <- ttype <?> "formal parameter type"
+  varArity <- bopt ellipsis
+  paramId <- ident <?> "formal parameter name"
+  endPos <- getEndPos
+  return $ \mods ->
+    let startPos' = getModifiersStartPos mods startPos
+    in FormalParam (srcSpanToAnn $ mkSrcSpanFromPos startPos' endPos) [] paramType varArity paramId)
+  <?> "formal parameter"
 
 methodBody :: P MethodBody
 methodBody = do

@@ -1,5 +1,5 @@
--- | Paragon Parser. Separators.
-module Language.Java.Paragon.Parser.Separators where
+-- | Paragon Parser. Symbols and separators.
+module Language.Java.Paragon.Parser.Symbols where
 
 import Text.ParserCombinators.Parsec
 
@@ -35,4 +35,7 @@ dot = tok Dot <?> show Dot
 
 colon :: P ()
 colon = tok Colon <?> show Colon
+
+ellipsis :: P ()
+ellipsis = tok Ellipsis <?> show Ellipsis
 

@@ -1,0 +1,3 @@
+"ClassDeclSingleMethodTwoParamsMissComma.para" (line 2, column 16):
+unexpected int
+expecting comma or )

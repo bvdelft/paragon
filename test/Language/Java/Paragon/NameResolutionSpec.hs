@@ -10,7 +10,11 @@ import Test.Hspec
 import Language.Java.Paragon.NameResolution
 import Language.Java.Paragon.NameResolution.Errors
 
-import System.FilePath ((</>))
+import Control.Exception (tryJust)
+import Control.Monad (guard)
+import System.Environment (getEnv)
+import System.FilePath ((</>), (<.>), splitSearchPath)
+import System.IO.Error (isDoesNotExistError)
 
 import Language.Java.Paragon.Annotation
 import Language.Java.Paragon.ASTHelpers
@@ -42,10 +46,10 @@ failureDir = testDir </> "failure"
 -- Helpers for creating AST and checking
 
 successRead :: String -> IO String
-successRead fileName = readFile (successDir </> fileName)
+successRead baseName = readFile (successDir </> mkFileName baseName)
 
 failureRead :: String -> IO String
-failureRead fileName = readFile (failureDir </> fileName)
+failureRead baseName = readFile (failureDir </> mkFileName baseName)
 
 successCase :: AST -> AST -> IO ()
 successCase ast result = do
@@ -54,28 +58,31 @@ successCase ast result = do
   nrAst `shouldBe` result
 
 parseSuccessFile :: String -> IO AST
-parseSuccessFile fileName = do
-  input <- successRead fileName
-  let (Right ast) = parse input fileName
+parseSuccessFile baseName = do
+  input <- successRead baseName
+  let (Right ast) = parse input (mkFileName baseName)
   return ast
 
 parseFailureFile :: String -> IO AST
-parseFailureFile fileName = do
-  input <- failureRead fileName
-  let (Right ast) = parse input fileName
+parseFailureFile baseName = do
+  input <- failureRead baseName
+  let (Right ast) = parse input (mkFileName baseName)
   return ast
 
 noAltering :: String -> IO ()
-noAltering fileName = do
-  ast <- parseSuccessFile fileName
+noAltering baseName = do
+  ast <- parseSuccessFile baseName
   successCase ast ast
 
 failureCase :: String -> [Error] -> IO ()
-failureCase fileName err = do
-  ast <- parseFailureFile fileName
+failureCase baseName err = do
+  ast <- parseFailureFile baseName
   piPath <- getPIPATH
   (Left e) <- runBaseM [] (liftToBaseM piPath (resolveNames ast))
   e `shouldBe` err
+
+mkFileName :: String -> String
+mkFileName baseName = baseName <.> "para"
 
 -- For debugging when a test fails
 
@@ -84,80 +91,80 @@ getFailing file = do
   ast <- parseFailureFile file
   piPath <- getPIPATH
   (Left err) <- runBaseM [] (liftToBaseM piPath (resolveNames ast))
-  return err  
+  return err
 
 -- | Main specification function. Relies on successful parsing.
 spec :: Spec
 spec = do
   describe "resolveNames" $ do
-  
+
     -- Success, resolving does not alter AST
-    
-    it "resolves empty class declaration" $ 
-      noAltering "ClassDeclEmpty.para"
+
+    it "resolves empty class declaration" $
+      noAltering "ClassDeclEmpty"
     it "resolves empty class declaration with modifiers" $
-      noAltering "ClassDeclMod.para"
+      noAltering "ClassDeclMod"
     it "resolves class declaration with single field declaration" $
-      noAltering "ClassDeclSingleField.para"
-    it "resolves class declaration with single field declaration with modifiers" $ 
-      noAltering "ClassDeclSingleFieldMod.para"
+      noAltering "ClassDeclSingleField"
+    it "resolves class declaration with single field declaration with modifiers" $
+      noAltering "ClassDeclSingleFieldMod"
     it "resolves class declaration with multiple field declarations with modifiers" $
-      noAltering "ClassDeclMultFields.para"
+      noAltering "ClassDeclMultFields"
     it "resolves class declaration with void method with semicolon body" $
-      noAltering "ClassDeclVoidMethodSemiColon.para"
+      noAltering "ClassDeclVoidMethodSemiColon"
     it "resolves class declaration with int method with semicolon body" $
-      noAltering "ClassDeclIntMethodSemiColon.para"
+      noAltering "ClassDeclIntMethodSemiColon"
     it "resolves class declaration with void method with empty body" $
-      noAltering "ClassDeclVoidMethodEmptyBody.para"
+      noAltering "ClassDeclVoidMethodEmptyBody"
     it "resolves class declaration with int method with empty body with modifiers" $
-      noAltering "ClassDeclIntMethodModEmptyBody.para"
+      noAltering "ClassDeclIntMethodModEmptyBody"
     it "resolves class declaration with void method with empty statement" $
-      noAltering "ClassDeclVoidMethodSemiColonStmt.para"
+      noAltering "ClassDeclVoidMethodSemiColonStmt"
     it "resolves class declaration with void method with single local variable declaration with modifier" $
-      noAltering "ClassDeclVoidMethodSingleLocalVarDeclMod.para"
+      noAltering "ClassDeclVoidMethodSingleLocalVarDeclMod"
     it "resolves class declaration with void method with multiple local variable declarations" $
-      noAltering "ClassDeclVoidMethodMultLocalVarDecls.para"
+      noAltering "ClassDeclVoidMethodMultLocalVarDecls"
     it "resolves class declaration with single field declaration of primitive type with literal initializer" $
-      noAltering "ClassDeclSinglePrimFieldInit.para"
+      noAltering "ClassDeclSinglePrimFieldInit"
     it "resolves class declaration with multiple field declarations of primitive types with literal initializers" $
-      noAltering "ClassDeclMultPrimFieldsInit.para"
+      noAltering "ClassDeclMultPrimFieldsInit"
     it "parses class declaration with single high policy field" $
-      noAltering "ClassDeclSingleHighPolicyField.para"
+      noAltering "ClassDeclSingleHighPolicyField"
     it "parses class declaration with single field with reads policy modifier" $
-      noAltering "ClassDeclSingleFieldReadsMod.para"
+      noAltering "ClassDeclSingleFieldReadsMod"
     it "parses class declaration with single field with writes policy modifier" $
-      noAltering "ClassDeclSingleFieldWritesMod.para"
-          
+      noAltering "ClassDeclSingleFieldWritesMod"
+
     -- Success, resolving does alter AST
-    
+
     it "resolves class declaration with single field declaration with reference type" $ do
-      ast <- parseSuccessFile "ClassDeclSingleFieldRefType.para"
+      ast <- parseSuccessFile "ClassDeclSingleFieldRefType"
       let newPrefix = mkName const PkgName [Id defaultAnn "java", Id defaultAnn "lang"]
-      let transform = modifyBodyDecl 0 $ modifyFieldDeclType $ 
+      let transform = modifyBodyDecl 0 $ modifyFieldDeclType $
                         modifyRefTypePrefix (const $ Just newPrefix)
       successCase ast (transform ast)
     it "resolves class declaration with single field declaration of reference type with null initializer" $ do
-      ast <- parseSuccessFile "ClassDeclSingleRefFieldInit.para"
+      ast <- parseSuccessFile "ClassDeclSingleRefFieldInit"
       let newPrefix = mkName const PkgName [Id defaultAnn "java", Id defaultAnn "lang"]
-      let transform = modifyBodyDecl 0 $ modifyFieldDeclType $ 
+      let transform = modifyBodyDecl 0 $ modifyFieldDeclType $
                         modifyRefTypePrefix (const $ Just newPrefix)
       successCase ast (transform ast)
     it "resolves class declaration with void method with single local variable declaration of reference type with null initializer" $ do
-      ast <- parseSuccessFile "ClassDeclVoidMethodSingleRefLocalVarInit.para"
+      ast <- parseSuccessFile "ClassDeclVoidMethodSingleRefLocalVarInit"
       let newPrefix = mkName const PkgName [Id defaultAnn "java", Id defaultAnn "lang"]
       let transform = modifyBodyDecl 0 $ modifyMethodBlockStmt 0 $
                         modifyLocalVarsType $ modifyRefTypePrefix (const $ Just newPrefix)
       successCase ast (transform ast)
     it "resolves class declaration with single low policy field" $ do
-      ast <- parseSuccessFile "ClassDeclSingleLowPolicyField.para"
+      ast <- parseSuccessFile "ClassDeclSingleLowPolicyField"
       let newPrefix = mkName const PkgName [Id defaultAnn "java", Id defaultAnn "lang"]
       let transform = modifyBodyDecl 0 $ modifyFieldDeclInitExp 0 $
                         modifyPolicyClause 0 $ modifyDeclHeadRef $
                           modifyRefTypePrefix (const $ Just newPrefix)
       successCase ast (transform ast)
     it "parses class declaration with shadowing reference type - reference type" $ do
-      ast <- parseSuccessFile "ClassDeclShadowingRefRef.para"
-      let t1 = modifyBodyDecl 0 $ modifyFieldDeclType $ 
+      ast <- parseSuccessFile "ClassDeclShadowingRefRef"
+      let t1 = modifyBodyDecl 0 $ modifyFieldDeclType $
                  modifyRefTypePrefix $ prefixNameType PkgName
       let t2 = modifyBodyDecl 1 $ modifyFieldDeclInitExp 0 $ modifyPolicyClause 0 $
                  modifyDeclHeadRef $ modifyRefTypePrefix $ prefixNameType PkgName
@@ -166,40 +173,42 @@ spec = do
       let transform = t3 . t2 . t1
       successCase ast (transform ast)
     it "parses class declaration with shadowing primitive type - reference type" $ do
-      ast <- parseSuccessFile "ClassDeclShadowingPrimRef.para"
+      ast <- parseSuccessFile "ClassDeclShadowingPrimRef"
       let t2 = modifyBodyDecl 1 $ modifyFieldDeclInitExp 0 $ modifyPolicyClause 0 $
                  modifyDeclHeadRef $ modifyRefTypePrefix $ prefixNameType PkgName
       let t3 = modifyBodyDecl 2 $ modifyMethodBlockStmt 0 $ modifyLocalVarsType $
                  modifyRefTypePrefix $ prefixNameType PkgName
       let transform = t3 . t2
       successCase ast (transform ast)
-    
+
     -- Failure, error should be as expected.
-    
+
     it "cannot resolve an empty program" $ do
-      let err = unsupportedError "compilation unit without type definition" 
+      let err = unsupportedError "compilation unit without type definition"
                   errorAnnotation [nrCtxt]
-      failureCase "Empty.para" [err]
+      failureCase "Empty" [err]
     it "refuses assignments to undefined variables" $ do
-      let fileName = "ClassDeclVoidMethodSingleAssignLit.para"
+      let baseName = "ClassDeclVoidMethodSingleAssignLit"
+          fileName = mkFileName baseName
           vSrcSpan = makeSrcSpanAnn fileName 3 5 3 5
           vId      = Id vSrcSpan "x"
           vName    = Name vSrcSpan vId ExpName Nothing
           ctxt     = [nrCtxt,defClassBodyContext "C",defMethodContext "f"]
           err      = unresolvedName vName vName ctxt
-      failureCase fileName [err]
+      failureCase baseName [err]
     it "cannot resolve an undefined variable on right-hand side" $ do
-      let fileName = "ClassDeclVoidMethodSingleAssignVar.para"
+      let baseName = "ClassDeclVoidMethodSingleAssignVar"
+          fileName = mkFileName baseName
           vSrcSpan = makeSrcSpanAnn fileName 4 9 4 9
           vId      = Id vSrcSpan "y"
           vName    = Name vSrcSpan vId ExpOrLockName Nothing
           ctxt     = [nrCtxt,defClassBodyContext "C",defMethodContext "f"]
           err      = unresolvedName vName vName ctxt
-      failureCase fileName [err]
+      failureCase baseName [err]
 
 prefixNameType :: NameType -> Maybe Name -> Maybe Name
 prefixNameType _ Nothing     = Nothing
-prefixNameType t (Just name) = 
+prefixNameType t (Just name) =
   Just $ name { nameType   = t
               , namePrefix = prefixNameType t (namePrefix name) }
 

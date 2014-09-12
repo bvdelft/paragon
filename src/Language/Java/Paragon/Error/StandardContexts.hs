@@ -17,8 +17,8 @@ import Language.Java.Paragon.Syntax
 -- Helper:
 
 -- | Join an array (String) using a delimiter.
-joinDel :: [a] -> [[a]] -> [a]
-joinDel delim list = concat (intersperse delim list)
+joinWithDelim :: [a] -> [[a]] -> [a]
+joinWithDelim delim list = concat (intersperse delim list)
 
 -- | In which phase of compilation.
 compPhaseContext :: String -> ErrorContext
@@ -42,7 +42,11 @@ memberDeclContext :: MemberDecl -> ErrorContext
 memberDeclContext fieldDecl@(FieldDecl {}) =
   let fieldNames = map (idIdent . varDeclId) (fieldDeclVarDecls fieldDecl)
   in defaultContext { context = "In the declaration of fields " ++ 
+<<<<<<< HEAD
                                 joinDel ", " fieldNames }
+=======
+                                joinWithDelim ", " fieldNames }
+>>>>>>> master
 memberDeclContext methodDecl@(MethodDecl {}) =
   let methodName = idIdent $ methodDeclId methodDecl
   in defaultContext { context = "In the declaration of method " ++ methodName }

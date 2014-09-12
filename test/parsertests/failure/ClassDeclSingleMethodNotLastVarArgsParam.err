@@ -1,0 +1,2 @@
+"ClassDeclSingleMethodNotLastVarArgsParam.para" (line 2, column 10):
+Only the last formal parameter may be of variable arity
