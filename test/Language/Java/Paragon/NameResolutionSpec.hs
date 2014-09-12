@@ -50,7 +50,7 @@ failureRead baseName = readFile (failureDir </> mkFileName baseName)
 successCase :: AST -> AST -> IO ()
 successCase ast result = do
   piPath <- getPIPATH
-  (Right nrAst) <- runBaseM [] (liftToBaseM piPath (resolveNames ast))
+  (Right nrAst) <- runBaseM [] (runPiReader piPath (resolveNames ast))
   nrAst `shouldBe` result
 
 parseSuccessFile :: String -> IO AST
@@ -74,7 +74,7 @@ failureCase :: String -> [Error] -> IO ()
 failureCase baseName err = do
   ast <- parseFailureFile baseName
   piPath <- getPIPATH
-  (Left e) <- runBaseM [] (liftToBaseM piPath (resolveNames ast))
+  (Left e) <- runBaseM [] (runPiReader piPath (resolveNames ast))
   e `shouldBe` err
 
 mkFileName :: String -> String
@@ -86,7 +86,7 @@ getFailing :: String -> IO [Error]
 getFailing file = do
   ast <- parseFailureFile file
   piPath <- getPIPATH
-  (Left err) <- runBaseM [] (liftToBaseM piPath (resolveNames ast))
+  (Left err) <- runBaseM [] (runPiReader piPath (resolveNames ast))
   return err
 
 -- | Main specification function. Relies on successful parsing.

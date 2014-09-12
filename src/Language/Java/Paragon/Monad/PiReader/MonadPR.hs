@@ -4,9 +4,10 @@ module Language.Java.Paragon.Monad.PiReader.MonadPR
     module Language.Java.Paragon.Monad.Base
   , PiPath
   , PiReader(..)
-  , liftToBaseM
+  , runPiReader
   , MonadPR(..)
   , getPiPath
+  , raiseErrorsPR
   ) where
 
 import Control.Monad (liftM, ap)
@@ -35,8 +36,8 @@ instance Applicative PiReader where
   (<*>) = ap
 
 -- | Transform a @PiReader@ into a @BaseM@ computation by providing a pi-path.
-liftToBaseM :: PiPath -> PiReader a -> BaseM a
-liftToBaseM pp (PiReader f) = f pp
+runPiReader :: PiPath -> PiReader a -> BaseM a
+runPiReader pp (PiReader f) = f pp
 
 instance Functor (PiReader) where
   fmap = liftM
@@ -65,3 +66,7 @@ getPiPathPR = PiReader return
 -- | Read the PiPath from the inner environment.
 getPiPath :: MonadPR m => m PiPath
 getPiPath = liftPR getPiPathPR
+
+raiseErrorsPR :: PiReader a -> PiReader a
+raiseErrorsPR (PiReader f) = PiReader $ \ppath ->
+                             raiseErrors $ f ppath

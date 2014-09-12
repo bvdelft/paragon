@@ -3,7 +3,7 @@ module Language.Java.Paragon.Monad.PiReader
   ( -- * Exported functionality
     PiPath
   , PiReader(..)
-  , liftToBaseM
+  , runPiReader
   , MonadPR(..)
   , getPiPath
   , doesPkgExist
@@ -11,6 +11,7 @@ module Language.Java.Paragon.Monad.PiReader
   , getPkgContents
   , getPiPathContents
   , getTypeContents
+  , raiseErrorsPR
   ) where
 
 import Language.Java.Paragon.Monad.PiReader.MonadPR

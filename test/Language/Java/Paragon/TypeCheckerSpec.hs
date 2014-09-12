@@ -50,7 +50,7 @@ successCase fileName result = do
   let baseName = takeBaseName fileName
   ast <- parseSuccessFile fileName
   piPath <- getPIPATH
-  (Right nrAst) <- runBaseM [] (liftToBaseM piPath (resolveNames ast))
+  (Right nrAst) <- runBaseM [] (runPiReader piPath (resolveNames ast))
   (Right tcAst) <- runBaseM [] (typeCheck piPath baseName nrAst)
   tcAst `shouldBe` result
 -}
@@ -60,8 +60,11 @@ noAltering fileName = do
   let baseName = takeBaseName fileName
   ast <- parseSuccessFile fileName
   piPath <- getPIPATH
-  (Right nrAst) <- runBaseM [] (liftToBaseM piPath (resolveNames ast))
-  (Right tcAst) <- runBaseM [] (typeCheck piPath baseName nrAst)
+  (Right (nrAst, tcAst)) <- 
+      runBaseM [] $ runPiReader piPath $ do
+                        nrAst <- resolveNames ast
+                        tcAst <- typeCheck baseName nrAst
+                        return (nrAst, tcAst)
   tcAst `shouldBe` nrAst
 
 parseSuccessFile :: String -> IO AST
@@ -81,8 +84,9 @@ failureCase fileName err = do
   let baseName = takeBaseName fileName
   ast <- parseFailureFile fileName
   piPath <- getPIPATH
-  (Right nrAst) <- runBaseM [] (liftToBaseM piPath (resolveNames ast))
-  (Left e) <- runBaseM [] (typeCheck piPath baseName nrAst)
+  Left e <- runBaseM [] $ runPiReader piPath $ do
+                             nrAst <- resolveNames ast
+                             typeCheck baseName nrAst
   e `shouldBe` err
 
 -- | Main specification function. Relies on successful parsing.

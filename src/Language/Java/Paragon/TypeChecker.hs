@@ -27,11 +27,11 @@ thisModule = "Language.Java.Paragon.TypeChecker"
 -- | Type checking phase. Returns an AST with type annotation for nodes that
 -- have a type. The base name of the file containing the class of this AST is
 -- required to check that the right type is defined in this .para file.
-typeCheck :: PiPath     -- ^ Directories where .pi files can be found.
-          -> String     -- ^ Base name of the file.
+typeCheck :: -- PiPath     -- ^ Directories where .pi files can be found.
+             String     -- ^ Base name of the file.
           -> AST        -- ^ AST from previous phase.
-          -> BaseM AST  -- ^ AST after type checking phase.
-typeCheck piPath baseName ast = withErrCtxt (compPhaseContext "Type Checking") $ do
+          -> PiReader AST  -- ^ AST after type checking phase.
+typeCheck {-piPath-} baseName ast = withErrCtxt (compPhaseContext "Type Checking") $ do
   when ((length $ cuTypeDecls ast) /= 1) $
     panic (thisModule ++ ".typeCheck") $ "Encountered multiple / zero type " ++
       "declarations in one file. This should not occur in this phase."
@@ -40,7 +40,8 @@ typeCheck piPath baseName ast = withErrCtxt (compPhaseContext "Type Checking") $
   let (typeParamSubst, skClassType) = createSkolemSubst typeDecl
   -- 2. Apply the skolemisation on the type declaration.
   let skolemTypeDecl = instantiate typeParamSubst typeDecl
-  liftToBaseM piPath $ runTcSignatureM skClassType $ do
+  --runPiReader piPath $ 
+  runTcSignatureM skClassType $ do
     -- 3. Get the package name.
     let maybePkgDecl = fmap pdName (cuPkgDecl ast)
     -- 4. Type check type declaration.

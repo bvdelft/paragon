@@ -14,6 +14,8 @@ import Language.Java.Paragon.Monad.Base
 import Language.Java.Paragon.Monad.PiReader
 import Language.Java.Paragon.NameResolution
 import Language.Java.Paragon.Parser
+import Language.Java.Paragon.TypeChecker (typeCheck)
+import Language.Java.Paragon.ActorResolution (resolveActors)
 
 -- | Given the flags and a file to the compiler, run the compilation. 
 parac :: [Flag] -> String -> IO [Error]
@@ -26,9 +28,12 @@ parac flags filePath = do
     content <- liftIO $ readFile $ sourcepath </> filePath
     case parse content filePath of
       Left e    -> failE (parseError e errorAnnotation)
-      Right ast -> do
-        _resolvedAST <- raiseErrors $ liftToBaseM piPath (resolveNames ast)        
+      Right ast -> runPiReader piPath $ do
+        resolvedAST    <- raiseErrorsPR $ resolveNames ast
+        typeCheckedAST <- raiseErrorsPR $ typeCheck filePath resolvedAST
+        actorResAST    <- raiseErrorsPR $ resolveActors typeCheckedAST
         detailPrint $ "Finished compilation of " ++ filePath ++ "\n"
+        debugPrint $ "AST after actor resolution:\n" ++ show actorResAST
         return ()
   case erOrU of
     Left  e  -> return e
