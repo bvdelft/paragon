@@ -32,7 +32,7 @@ instance Monad (PiReader) where
 
 instance Applicative PiReader where
   pure = return
-  (<*>) = ap  
+  (<*>) = ap
 
 -- | Transform a @PiReader@ into a @BaseM@ computation by providing a pi-path.
 liftToBaseM :: PiPath -> PiReader a -> BaseM a
