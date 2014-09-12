@@ -786,10 +786,6 @@ spec = do
       it "given a class declaration with single method with varargs param not at the last position" $
         failureCase "ClassDeclSingleMethodNotLastVarArgsParam"
 
--- Helper
-
-makeSrcSpanAnn :: String -> Int -> Int -> Int -> Int -> Annotation
-makeSrcSpanAnn fileName a b c d = srcSpanToAnn $ SrcSpan fileName a b c d
 
 -- | Takes a file name and a list of integers:
 -- 2 elements - line and column (one character span)

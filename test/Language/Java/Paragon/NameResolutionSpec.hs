@@ -10,11 +10,7 @@ import Test.Hspec
 import Language.Java.Paragon.NameResolution
 import Language.Java.Paragon.NameResolution.Errors
 
-import Control.Exception (tryJust)
-import Control.Monad (guard)
-import System.Environment (getEnv)
-import System.FilePath ((</>), (<.>), splitSearchPath)
-import System.IO.Error (isDoesNotExistError)
+import System.FilePath ((</>), (<.>))
 
 import Language.Java.Paragon.Annotation
 import Language.Java.Paragon.ASTHelpers

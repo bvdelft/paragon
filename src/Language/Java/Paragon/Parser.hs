@@ -199,7 +199,7 @@ methodDeclAfterTypeIdModsFun retT startPos mId = do
     -- Very, very, very ugly hack to get the desired position in the error message
     -- See http://haskell.1045720.n5.nabble.com/Parsec-Custom-Fail-td3131949.html
     setPosition (srcPosToParsec $ srcSpanToStartPos $
-                 annSrcSpan $ ann $
+                 annSrcSpan $ getAnn $
                  fromJust $ find formalParamVarArity formalPs)  -- should not fail
     void anyToken
     fail "Only the last formal parameter may be of variable arity"
