@@ -9,7 +9,8 @@ module Language.Java.Paragon.Monad.PiReader.MonadPR
   , getPiPath
   ) where
 
-import Control.Monad (liftM)
+import Control.Monad (liftM, ap)
+import Control.Applicative
 
 import Language.Java.Paragon.Monad.Base
 
@@ -28,6 +29,10 @@ instance Monad (PiReader) where
                           let PiReader g = k a
                            in g pp
   fail = liftBase . fail
+
+instance Applicative PiReader where
+  pure = return
+  (<*>) = ap  
 
 -- | Transform a @PiReader@ into a @BaseM@ computation by providing a pi-path.
 liftToBaseM :: PiPath -> PiReader a -> BaseM a
