@@ -42,11 +42,7 @@ memberDeclContext :: MemberDecl -> ErrorContext
 memberDeclContext fieldDecl@(FieldDecl {}) =
   let fieldNames = map (idIdent . varDeclId) (fieldDeclVarDecls fieldDecl)
   in defaultContext { context = "In the declaration of fields " ++ 
-<<<<<<< HEAD
-                                joinDel ", " fieldNames }
-=======
                                 joinWithDelim ", " fieldNames }
->>>>>>> master
 memberDeclContext methodDecl@(MethodDecl {}) =
   let methodName = idIdent $ methodDeclId methodDecl
   in defaultContext { context = "In the declaration of method " ++ methodName }
