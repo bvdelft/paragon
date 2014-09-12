@@ -107,8 +107,6 @@ typeCheckClassDecl baseName mPkg classDecl = do
     -- 2. Check the signatures of the members of this type declaration.
     debugPrint "Starting type checking of signatures."
     let memberDecls = [ m | MemberDecl m <- cbDecls $ cdBody classDecl ]
-    -- typeCheckSignatures memberDecls $ \constrWPol -> do
-    -- registerThisTypeSigs mpkg i tps supers -- TODO: Difference with registerThisType ??
     -- 3. Check members' content.
     tcMemberDecls <- typeCheckMemberDecls memberDecls
     let newBody = (cdBody classDecl) { cbDecls = map MemberDecl tcMemberDecls } 

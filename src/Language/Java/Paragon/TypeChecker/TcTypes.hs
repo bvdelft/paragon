@@ -37,10 +37,10 @@ data TcRefType =
   | TcNullType                      -- ^ Type of @null@.
   deriving (Data, Typeable, Show, Eq, Ord)
 
--- | A type checked class, with type checked class parameters.
-data TcClassType = TcClassType Name [TcTypeParam]
+-- | A type checked class, with type checked class arguments.
+data TcClassType = TcClassType Name [TcTypeArgument]
   deriving (Data, Typeable, Show, Eq, Ord)
 
 -- | Unimplemented type checked type parameters.
-data TcTypeParam = TTP
+data TcTypeArgument = TTP
   deriving (Data, Typeable, Show, Eq, Ord)
