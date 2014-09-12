@@ -7,7 +7,7 @@ module Language.Java.Paragon.TypeChecker.TcTypes
   , TcType(..)
   , TcRefType(..)
   , TcClassType(..)
-  , TcTypeParam
+  , TcTypeArgument
   ) where
 
 import Data.Data

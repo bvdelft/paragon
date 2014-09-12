@@ -14,5 +14,5 @@ import Language.Java.Paragon.Syntax
 import Language.Java.Paragon.TypeChecker.TcTypes
 
 -- | Type parameters not yet supported.
-instantiate :: Data a => [(TypeParam,TcTypeParam)] -> a -> a
+instantiate :: Data a => [(TypeParam,TcTypeArgument)] -> a -> a
 instantiate _ = id

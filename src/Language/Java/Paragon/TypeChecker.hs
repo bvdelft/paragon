@@ -56,7 +56,7 @@ typeCheck piPath baseName ast = withErrCtxt (compPhaseContext "Type Checking") $
 
 -- | Create a mapping from type parameter to skolemised type to be used in type
 -- checking.
-createSkolemSubst :: TypeDecl -> ([(TypeParam, TcTypeParam)], TcClassType)
+createSkolemSubst :: TypeDecl -> ([(TypeParam, TcTypeArgument)], TcClassType)
 createSkolemSubst (ClassTypeDecl classDecl) =
   let typeParams   = cdTypeParams classDecl
       skTypeParams = map skolemiseParam typeParams
@@ -71,7 +71,7 @@ createSkolemSubst (InterfaceTypeDecl interfaceDecl) =
   in (skSubst, skClassType)
 
 -- | Create a skolem type for the provided type parameter.
-skolemiseParam :: TypeParam -> TcTypeParam
+skolemiseParam :: TypeParam -> TcTypeArgument
 skolemiseParam _ = notImplemented (thisModule ++ ".skolemiseParam")
 
 -- Type checking functions.
@@ -143,4 +143,5 @@ registerThisType mPkg tdId superTypes = do
     modifyPkgMap $ insertPkgMapType fullN thisSig
 
 typeCheckMemberDecls :: TcSignature [MemberDecl]
-typeCheckMemberDecls = notImplemented (thisModule ++ ".typeCheckMemberDecls")
+typeCheckMemberDecls [] = return []
+typeCheckMemberDecls _  = notImplemented (thisModule ++ ".typeCheckMemberDecls")
